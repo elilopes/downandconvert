@@ -1,0 +1,6 @@
+{
+  "name": "Down&Convert - Conversor de Vídeo e Áudio",
+  "description": "Converta vídeos (MP4, MKV, WebM, MOV, AVI) para MP3 em alta qualidade com corte de áudio, tags ID3, equalizador, download do YouTube e upload para Google Drive.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
