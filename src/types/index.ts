@@ -1,4 +1,7 @@
 export type AudioFormat = 'mp3' | 'wav' | 'aiff' | 'aac' | 'm4a' | 'flac' | 'wma' | 'ogg';
+export type VideoFormat = 'mp4' | 'webm' | 'avi' | 'mov' | 'mkv';
+
+export type OutputFormat = AudioFormat | VideoFormat;
 
 export type EqualizerPreset = 'flat' | 'bass-boost' | 'vocal' | 'treble' | 'acoustic' | 'podcast';
 
@@ -13,7 +16,7 @@ export interface ID3Metadata {
 }
 
 export interface ConversionOptions {
-  format: AudioFormat;
+  format: OutputFormat;
   bitrate: 64 | 128 | 192 | 256 | 320;
   sampleRate: 22050 | 44100 | 48000;
   channels: 'stereo' | 'mono';
@@ -27,6 +30,8 @@ export interface ConversionOptions {
   fadeOut: number; // in seconds
   equalizer: EqualizerPreset;
   metadata: ID3Metadata;
+  // Video specific options
+  videoQuality?: 'high' | 'medium' | 'low';
 }
 
 export type ConversionStatus =
