@@ -351,7 +351,7 @@ export default function App() {
                 outputBlob,
                 outputUrl,
                 outputSize,
-                duration: processedBuf.duration,
+                duration: processedBuf ? processedBuf.duration : (currentItem.duration || 0),
               }
             : it
         )
