@@ -209,44 +209,51 @@ export default function App() {
     );
 
     try {
-      // 1. Extract AudioBuffer
+      const format = currentItem.options.format;
+      const isVideoOutput = ['mp4', 'webm', 'avi', 'mov', 'mkv'].includes(format);
+
       let audioBuf = currentItem.audioBuffer;
-      if (!audioBuf) {
-        audioBuf = await extractAudioBufferFromVideo(currentItem.file, (stage, progress) => {
-          setItems((prev) =>
-            prev.map((it) =>
-              it.id === itemId ? { ...it, progress, progressText: stage } : it
-            )
-          );
-        });
-      }
-
-      // Generate Peaks if not present
-      const peaks = currentItem.waveformPeaks || generateWaveformPeaks(audioBuf, 120);
-
-      // 2. Process DSP (Trim, Volume, EQ, Fade)
-      const processedBuf = await processAudioBuffer(
-        audioBuf,
-        currentItem.options,
-        (stage, progress) => {
-          setItems((prev) =>
-            prev.map((it) =>
-              it.id === itemId ? { ...it, progress, progressText: stage } : it
-            )
-          );
-        }
-      );
-
-      // 3. Extract cover image thumbnail blob if enabled
+      let peaks = currentItem.waveformPeaks;
+      let processedBuf: AudioBuffer | null = null;
       let coverBlob: Blob | null = null;
-      if (currentItem.options.metadata.includeCover) {
-        const thumbResult = await extractVideoThumbnail(currentItem.file, 1.5);
-        coverBlob = thumbResult.blob;
+
+      if (!isVideoOutput) {
+        // 1. Extract AudioBuffer
+        if (!audioBuf) {
+          audioBuf = await extractAudioBufferFromVideo(currentItem.file, (stage, progress) => {
+            setItems((prev) =>
+              prev.map((it) =>
+                it.id === itemId ? { ...it, progress, progressText: stage } : it
+              )
+            );
+          });
+        }
+
+        // Generate Peaks if not present
+        peaks = peaks || generateWaveformPeaks(audioBuf, 120);
+
+        // 2. Process DSP (Trim, Volume, EQ, Fade)
+        processedBuf = await processAudioBuffer(
+          audioBuf,
+          currentItem.options,
+          (stage, progress) => {
+            setItems((prev) =>
+              prev.map((it) =>
+                it.id === itemId ? { ...it, progress, progressText: stage } : it
+              )
+            );
+          }
+        );
+
+        // 3. Extract cover image thumbnail blob if enabled
+        if (currentItem.options.metadata.includeCover) {
+          const thumbResult = await extractVideoThumbnail(currentItem.file, 1.5);
+          coverBlob = thumbResult.blob;
+        }
       }
 
       // 4. Encode to Target Format
       let outputBlob: Blob;
-      const format = currentItem.options.format;
 
       setItems((prev) =>
         prev.map((it) =>
@@ -261,32 +268,9 @@ export default function App() {
         )
       );
 
-      if (format === 'mp3') {
-        outputBlob = await encodeAudioBufferToMp3(
-          processedBuf,
-          currentItem.options,
-          coverBlob,
-          (progress) => {
-            setItems((prev) =>
-              prev.map((it) =>
-                it.id === itemId
-                  ? {
-                      ...it,
-                      progress,
-                      progressText: `Codificando MP3 (${currentItem.options.bitrate} kbps)...`,
-                    }
-                  : it
-              )
-            );
-          }
-        );
-      } else if (format === 'wav') {
-        outputBlob = encodeAudioBufferToWav(processedBuf);
-      } else {
-        // Fallback to FFmpeg.wasm for AAC, M4A, FLAC, WMA, OGG, AIFF
-        const wavTempBlob = encodeAudioBufferToWav(processedBuf);
+      if (isVideoOutput) {
         outputBlob = await encodeWithFFmpeg(
-          wavTempBlob,
+          currentItem.file,
           currentItem.options,
           (progress) => {
             setItems((prev) =>
@@ -295,13 +279,60 @@ export default function App() {
                   ? {
                       ...it,
                       progress,
-                      progressText: `Codificando ${format.toUpperCase()} (${progress}%)...`,
+                      progressText: `Codificando Vídeo ${format.toUpperCase()} (${progress}%)...`,
                     }
                   : it
               )
             );
-          }
+          },
+          true // isVideo
         );
+      } else if (processedBuf) {
+        if (format === 'mp3') {
+          outputBlob = await encodeAudioBufferToMp3(
+            processedBuf,
+            currentItem.options,
+            coverBlob,
+            (progress) => {
+              setItems((prev) =>
+                prev.map((it) =>
+                  it.id === itemId
+                    ? {
+                        ...it,
+                        progress,
+                        progressText: `Codificando MP3 (${currentItem.options.bitrate} kbps)...`,
+                      }
+                    : it
+                )
+              );
+            }
+          );
+        } else if (format === 'wav') {
+          outputBlob = encodeAudioBufferToWav(processedBuf);
+        } else {
+          // Fallback to FFmpeg.wasm for AAC, M4A, FLAC, WMA, OGG, AIFF
+          const wavTempBlob = encodeAudioBufferToWav(processedBuf);
+          outputBlob = await encodeWithFFmpeg(
+            wavTempBlob,
+            currentItem.options,
+            (progress) => {
+              setItems((prev) =>
+                prev.map((it) =>
+                  it.id === itemId
+                    ? {
+                        ...it,
+                        progress,
+                        progressText: `Codificando ${format.toUpperCase()} (${progress}%)...`,
+                      }
+                    : it
+                )
+              );
+            },
+            false
+          );
+        }
+      } else {
+        throw new Error('Processed buffer is null');
       }
 
       const outputUrl = URL.createObjectURL(outputBlob);
