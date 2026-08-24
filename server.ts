@@ -1,58 +1,247 @@
 import express from 'express';
+import cors from 'cors';
 import { createServer as createViteServer } from 'vite';
-import ytdl from '@distube/ytdl-core';
-import ytSearch from 'yt-search';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import ytSearch from 'yt-search';
+import { Readable } from 'stream';
+import ytdl from '@distube/ytdl-core';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+function extractVideoId(url: string) {
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([^&?]+)/);
+  return match ? match[1] : null;
+}
+
+function detectPlatform(url: string) {
+  const lower = url.toLowerCase();
+  if (lower.includes('tiktok.com') || lower.includes('douyin.com')) return 'tiktok';
+  if (lower.includes('instagram.com')) return 'instagram';
+  if (lower.includes('facebook.com') || lower.includes('fb.watch') || lower.includes('fb.com')) return 'facebook';
+  if (lower.includes('vimeo.com')) return 'vimeo';
+  if (lower.includes('twitter.com') || lower.includes('x.com')) return 'twitter';
+  if (lower.includes('pinterest.com') || lower.includes('pin.it')) return 'pinterest';
+  if (lower.includes('reddit.com') || lower.includes('redd.it')) return 'reddit';
+  if (lower.includes('soundcloud.com')) return 'soundcloud';
+  if (lower.includes('spotify.com')) return 'spotify';
+  if (lower.includes('capcut.com')) return 'capcut';
+  if (lower.includes('threads.net')) return 'threads';
+  if (lower.includes('dailymotion.com') || lower.includes('dai.ly')) return 'dailymotion';
+  if (lower.includes('youtube.com') || lower.includes('youtu.be')) return 'youtube';
+  return 'general';
+}
+
+const RAPID_API_KEY = process.env.RAPIDAPI_KEY || '8d0b2005e5msh7794ca50aee0eb4p14f460jsn249cb3b9d70b';
+
+// Helper for fetch with timeout
+async function fetchWithTimeout(url: string, options: any = {}, timeoutMs = 12000) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    return response;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+// 1. YouTube Data Fetcher
+async function fetchYoutubeData(videoId: string) {
+  const host = 'youtube-media-downloader.p.rapidapi.com';
+  const response = await fetchWithTimeout(`https://${host}/v2/video/details?videoId=${videoId}`, {
+    headers: { 'x-rapidapi-host': host, 'x-rapidapi-key': RAPID_API_KEY }
+  });
+  if (!response.ok) throw new Error(`YouTube API Error (Status ${response.status})`);
+  return await response.json();
+}
+
+// 2. TikTok Data Fetcher (No Watermark)
+async function fetchTikTokData(url: string) {
+  const host = 'tiktok-video-no-watermark2.p.rapidapi.com';
+  const response = await fetchWithTimeout(`https://${host}/?url=${encodeURIComponent(url)}`, {
+    headers: { 'x-rapidapi-host': host, 'x-rapidapi-key': RAPID_API_KEY }
+  });
+  if (!response.ok) throw new Error(`TikTok API Error (Status ${response.status})`);
+  const data = await response.json();
+  if (data.code !== 0 || !data.data) throw new Error(data.msg || 'Erro ao processar TikTok.');
+  return data.data;
+}
+
+// 3. Facebook Data Fetcher
+async function fetchFacebookData(url: string) {
+  const host = 'facebook-download-media.p.rapidapi.com';
+  const response = await fetchWithTimeout(`https://${host}/?url=${encodeURIComponent(url)}`, {
+    headers: { 'x-rapidapi-host': host, 'x-rapidapi-key': RAPID_API_KEY }
+  });
+  if (!response.ok) throw new Error(`Facebook API Error (Status ${response.status})`);
+  const data = await response.json();
+  if (data.error || !data.data) throw new Error('Falha ao obter vídeo do Facebook');
+  return data.data;
+}
+
+// 4. Vimeo Data Fetcher
+async function fetchVimeoData(url: string) {
+  const host = 'vimeo-video-downloader-api.p.rapidapi.com';
+  const response = await fetchWithTimeout(`https://${host}/video.php`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'x-rapidapi-host': host,
+      'x-rapidapi-key': RAPID_API_KEY
+    },
+    body: `video_url=${encodeURIComponent(url)}`
+  });
+  if (!response.ok) throw new Error(`Vimeo API Error (Status ${response.status})`);
+  const data = await response.json();
+  return data;
+}
+
+// 5. All-in-One Social Media Downloader (Download Social Media)
+async function fetchAllInOneData(url: string) {
+  const host = 'download-social-media.p.rapidapi.com';
+  const response = await fetchWithTimeout(`https://${host}/autolink?url=${encodeURIComponent(url)}`, {
+    headers: {
+      'x-rapidapi-host': host,
+      'x-rapidapi-key': RAPID_API_KEY
+    }
+  });
+  if (!response.ok) throw new Error(`All-in-One API Error (Status ${response.status})`);
+  const data = await response.json();
+  return data;
+}
+
+// 6. Instagram Reels Downloader API
+async function fetchInstagramReelsData(url: string) {
+  const host = 'instagram-reels-downloader-api.p.rapidapi.com';
+  const response = await fetchWithTimeout(`https://${host}/download?url=${encodeURIComponent(url)}`, {
+    headers: { 'x-rapidapi-host': host, 'x-rapidapi-key': RAPID_API_KEY }
+  });
+  if (!response.ok) throw new Error(`Instagram API Error (Status ${response.status})`);
+  const data = await response.json();
+  return data;
+}
+
+// =========================================================================
+// FALLBACKS DIRETOS (Cookies de Sessão e Assinaturas Criptográficas Locais)
+// =========================================================================
+
+async function fetchYoutubeDirectFallback(url: string, mode: string) {
+  console.log('Using YouTube Direct Fallback (ytdl-core) with possible Cookies...');
+  // Parse cookies from env (format expected by ytdl-core agent or raw string)
+  let agent;
+  try {
+    if (process.env.YOUTUBE_COOKIES) {
+      agent = ytdl.createAgent(JSON.parse(process.env.YOUTUBE_COOKIES));
+    }
+  } catch (e) {
+    console.error('Invalid YOUTUBE_COOKIES format. Proceeding without cookies.');
+  }
+
+  const info = await ytdl.getInfo(url, { agent });
+  const title = (info.videoDetails.title || 'youtube_video').replace(/[^\w\s-]/gi, '').trim() || 'youtube_media';
+  
+  let format;
+  if (mode === 'video') {
+    format = ytdl.chooseFormat(info.formats, { quality: 'highest', filter: 'audioandvideo' }) || 
+             ytdl.chooseFormat(info.formats, { quality: 'highestvideo' });
+  } else {
+    format = ytdl.chooseFormat(info.formats, { quality: 'highestaudio', filter: 'audioonly' });
+  }
+  
+  if (!format || !format.url) throw new Error('Nenhum formato compatível encontrado na extração direta do YouTube.');
+  
+  return { downloadUrl: format.url, extension: mode === 'video' ? 'mp4' : 'm4a', title };
+}
+
+async function fetchInstagramDirectFallback(url: string) {
+  console.log('Using Instagram Direct Fallback with Session Cookie...');
+  const cookie = process.env.INSTAGRAM_COOKIE;
+  if (!cookie) throw new Error('Nenhum cookie de sessão do Instagram configurado (INSTAGRAM_COOKIE).');
+  
+  // Clean URL to base
+  const baseUrl = url.split('?')[0].replace(/\/$/, '');
+  const res = await fetchWithTimeout(`${baseUrl}/?__a=1&__d=dis`, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Cookie': cookie
+    }
+  }, 10000);
+  
+  if (!res.ok) throw new Error(`Instagram Direct HTTP Error (Status ${res.status})`);
+  const data = await res.json();
+  
+  const videoUrl = data?.graphql?.shortcode_media?.video_url || 
+                   data?.items?.[0]?.video_versions?.[0]?.url;
+                   
+  if (!videoUrl) throw new Error('Não foi possível extrair a URL do vídeo do Instagram via Cookie Session.');
+  
+  return { downloadUrl: videoUrl, extension: 'mp4', title: 'instagram_media_fallback' };
+}
+
+async function fetchTikTokDirectFallback(url: string) {
+  console.log('Using TikTok Direct Fallback with Session Cookie...');
+  const cookie = process.env.TIKTOK_COOKIE;
+  
+  const res = await fetchWithTimeout(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Cookie': cookie || ''
+    }
+  }, 10000);
+  
+  const html = await res.text();
+  // Busca pela playAddr injetada no script de estado (assinatura embutida pela plataforma)
+  const match = html.match(/"playAddr":"([^"]+)"/);
+  if (!match) throw new Error('Não foi possível decodificar a assinatura criptográfica do TikTok via scraper direto.');
+  
+  const videoUrl = match[1].replace(/\\u002F/g, '/');
+  
+  return { downloadUrl: videoUrl, extension: 'mp4', title: 'tiktok_media_fallback' };
+}
+
 async function startServer() {
   const app = express();
+  app.use(cors());
 
-  // API Endpoint: Search YouTube
+  // API Endpoint: Pesquisar no YouTube
   app.get('/api/yt/search', async (req, res) => {
     try {
       const query = req.query.q as string;
-      if (!query) {
-        return res.status(400).send('Search query is required');
-      }
+      if (!query) return res.status(400).send('Query obrigatória');
 
-      // Method 1: Direct YouTube InitialData Parser (Bypasses yt-search package bugs)
+      // Method 1: Direct Scrape Fallback
       try {
-        const fetchRes = await fetch(
-          `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`,
-          {
-            headers: {
-              'User-Agent':
-                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-              'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
-            },
+        const scrapeRes = await fetchWithTimeout(`https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7'
           }
-        );
-        const html = await fetchRes.text();
-        const jsonMatch = html.match(/ytInitialData\s*=\s*({.+?});<\/script>/);
-        if (jsonMatch && jsonMatch[1]) {
-          const data = JSON.parse(jsonMatch[1]);
-          const contents =
-            data?.contents?.twoColumnSearchResultsRenderer?.primaryContents
-              ?.sectionListRenderer?.contents?.[0]?.itemSectionRenderer?.contents || [];
-          const videos: any[] = [];
-          for (const item of contents) {
-            const vid = item.videoRenderer;
-            if (vid && vid.videoId) {
-              const title =
-                vid.title?.runs?.[0]?.text || vid.title?.simpleText || 'Vídeo sem título';
-              const thumbnail =
-                vid.thumbnail?.thumbnails?.[0]?.url ||
-                `https://i.ytimg.com/vi/${vid.videoId}/hqdefault.jpg`;
-              const author =
-                vid.ownerText?.runs?.[0]?.text ||
-                vid.shortBylineText?.runs?.[0]?.text ||
+        }, 6000);
+        const html = await scrapeRes.text();
+        const dataMatch = html.match(/ytInitialData = (.*?);<\/script>/);
+        if (dataMatch && dataMatch[1]) {
+          const data = JSON.parse(dataMatch[1]);
+          const contents = data.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer?.contents?.[0]?.itemSectionRenderer?.contents;
+          const videos = [];
+          if (contents) {
+            for (const item of contents) {
+              const vid = item.videoRenderer;
+              if (!vid) continue;
+
+              const title = vid.title?.runs?.[0]?.text || 'Vídeo do YouTube';
+              const thumbnail = vid.thumbnail?.thumbnails?.[0]?.url || '';
+              const author = 
+                vid.ownerText?.runs?.[0]?.text || 
+                vid.shortBylineText?.runs?.[0]?.text || 
                 'YouTube';
-              const duration =
+              const duration = 
                 vid.lengthText?.simpleText || vid.lengthText?.runs?.[0]?.text || 'Vídeo';
+
               videos.push({
                 id: vid.videoId,
                 title,
@@ -61,6 +250,7 @@ async function startServer() {
                 duration,
                 author,
               });
+
               if (videos.length >= 10) break;
             }
           }
@@ -97,144 +287,273 @@ async function startServer() {
     }
   });
 
-  // API Endpoint: Obter Informações do YouTube (Título, etc)
+  // API Endpoint: Obter Informações do Mídia (Título, Thumbnail, Autor)
   app.get('/api/yt/info', async (req, res) => {
     try {
       const url = req.query.url as string;
-      if (!url || !ytdl.validateURL(url)) {
-        return res.status(400).json({ error: 'INVALID_URL', message: 'URL do YouTube inválida.' });
+      if (!url) return res.status(400).json({ error: 'INVALID_URL', message: 'URL é obrigatória.' });
+
+      const platform = detectPlatform(url);
+      let title = 'Mídia Social';
+      let thumbnail = '';
+      let author = '';
+
+      if (platform === 'youtube') {
+        const videoId = extractVideoId(url);
+        if (!videoId) return res.status(400).json({ error: 'INVALID_URL', message: 'URL do YouTube inválida.' });
+        const data = await fetchYoutubeData(videoId);
+        title = data.title || 'Vídeo do YouTube';
+        thumbnail = data.thumbnails?.[0]?.url || '';
+        author = data.channel?.name || 'YouTube';
+      } 
+      else if (platform === 'tiktok') {
+        try {
+          const data = await fetchTikTokData(url);
+          title = data.title || 'TikTok Video';
+          thumbnail = data.origin_cover || data.cover || '';
+          author = data.author?.nickname || 'TikTok Creator';
+        } catch {
+          const aio = await fetchAllInOneData(url);
+          title = aio.title || aio.caption || 'TikTok Video';
+          thumbnail = aio.thumbnail || aio.cover || '';
+          author = aio.author || 'TikTok Creator';
+        }
+      }
+      else if (platform === 'facebook') {
+        try {
+          const data = await fetchFacebookData(url);
+          title = data.title || 'Vídeo do Facebook';
+          thumbnail = data.thumbnail || '';
+          author = 'Facebook';
+        } catch {
+          const aio = await fetchAllInOneData(url);
+          title = aio.title || 'Vídeo do Facebook';
+          thumbnail = aio.thumbnail || '';
+          author = 'Facebook';
+        }
+      }
+      else if (platform === 'vimeo') {
+        try {
+          const data = await fetchVimeoData(url);
+          title = data.title || 'Vídeo do Vimeo';
+          thumbnail = data.thumbnail || data.thumb || '';
+          author = 'Vimeo';
+        } catch {
+          const aio = await fetchAllInOneData(url);
+          title = aio.title || 'Vídeo do Vimeo';
+          thumbnail = aio.thumbnail || '';
+          author = 'Vimeo';
+        }
+      }
+      else if (platform === 'instagram') {
+        try {
+          const aio = await fetchAllInOneData(url);
+          title = aio.title || aio.caption || 'Instagram Reel / Post';
+          thumbnail = aio.thumbnail || aio.cover || '';
+          author = aio.author || aio.username || 'Instagram';
+        } catch {
+          const data = await fetchInstagramReelsData(url);
+          title = data.title || data.caption || 'Instagram Reel';
+          thumbnail = data.thumbnail_url || data.thumbnail || '';
+          author = data.owner_username || 'Instagram';
+        }
+      }
+      else {
+        // Twitter, Pinterest, Reddit, SoundCloud, Spotify, CapCut, etc.
+        const aio = await fetchAllInOneData(url);
+        title = aio.title || aio.caption || `${platform.toUpperCase()} Mídia`;
+        thumbnail = aio.thumbnail || aio.cover || '';
+        author = aio.author || platform;
       }
 
-      const info = await ytdl.getBasicInfo(url, {
-        requestOptions: {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
-            'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
-          }
-        }
-      });
-      res.json({
-        title: info.videoDetails.title,
-        thumbnail: info.videoDetails.thumbnails[0]?.url,
-        author: info.videoDetails.author.name
-      });
+      res.json({ title, thumbnail, author, platform });
     } catch (error: any) {
-      console.log('YouTube Info Issue:', error.message);
-      const is429 = error.message?.includes('429') || error.message?.includes('Too Many Requests') || error.message?.includes('Sign in to confirm') || error.message?.includes('bot');
-      if (is429) {
-        return res.status(429).json({
-          error: 'RATE_LIMIT_429',
-          code: 429,
-          message: 'O YouTube bloqueou temporariamente requisições originadas do servidor em nuvem (Status 429: Proteção Anti-Bot / Too Many Requests).'
-        });
-      }
-      res.status(500).json({ error: 'FETCH_ERROR', message: error.message || 'Erro ao obter informações do vídeo.' });
+      console.log('Media Info Issue:', error.message);
+      res.status(500).json({ error: 'FETCH_ERROR', message: error.message || 'Erro ao obter informações da mídia.' });
     }
   });
 
-  // API Endpoint: Extrair áudio ou vídeo do YouTube
+  // API Endpoint: Extrair e transmitir áudio ou vídeo
   app.get('/api/yt/download', async (req, res) => {
     try {
       const url = req.query.url as string;
-      const mode = (req.query.mode as string) || 'audio'; // 'audio' or 'video'
-      
-      if (!url || !ytdl.validateURL(url)) {
-        return res.status(400).json({ error: 'INVALID_URL', message: 'URL do YouTube inválida.' });
+      const mode = (req.query.mode as string) || 'audio';
+      if (!url) return res.status(400).json({ error: 'INVALID_URL', message: 'URL é obrigatória.' });
+
+      const platform = detectPlatform(url);
+      let downloadUrl = '';
+      let extension = 'mp4';
+      let title = 'media';
+
+      if (platform === 'youtube') {
+        const videoId = extractVideoId(url);
+        if (!videoId) return res.status(400).json({ error: 'INVALID_URL', message: 'URL do YouTube inválida.' });
+        
+        try {
+          const data = await fetchYoutubeData(videoId);
+          title = (data.title || 'youtube_video').replace(/[^\w\s-]/gi, '').trim() || 'youtube_media';
+
+          if (mode === 'video') {
+            const videos = data.videos?.items || [];
+            const videoWithAudio = videos.filter((v: any) => v.hasAudio === true).sort((a: any, b: any) => b.height - a.height);
+            if (videoWithAudio.length > 0) {
+              downloadUrl = videoWithAudio[0].url;
+              extension = videoWithAudio[0].extension || 'mp4';
+            } else if (videos.length > 0) {
+              downloadUrl = videos[0].url;
+              extension = videos[0].extension || 'mp4';
+            }
+          } else {
+            const audios = data.audios?.items || [];
+            if (audios.length > 0) {
+              downloadUrl = audios[0].url;
+              extension = audios[0].extension || 'm4a';
+            }
+          }
+          if (!downloadUrl) throw new Error('No url from RapidAPI');
+        } catch (rapidApiErr) {
+          console.warn('YouTube RapidAPI failed, trying direct fallback...', rapidApiErr);
+          const fallbackData = await fetchYoutubeDirectFallback(url, mode);
+          downloadUrl = fallbackData.downloadUrl;
+          extension = fallbackData.extension;
+          title = fallbackData.title;
+        }
+      }
+      else if (platform === 'tiktok') {
+        try {
+          const data = await fetchTikTokData(url);
+          title = (data.title || 'tiktok_video').replace(/[^\w\s-]/gi, '').trim() || 'tiktok_media';
+          if (mode === 'video') {
+            downloadUrl = data.play || data.wmplay;
+            extension = 'mp4';
+          } else {
+            downloadUrl = data.music || data.music_info?.play || data.play;
+            extension = data.music ? 'mp3' : 'mp4';
+          }
+          if (!downloadUrl) throw new Error('No url');
+        } catch {
+          try {
+            const aio = await fetchAllInOneData(url);
+            title = (aio.title || 'tiktok').replace(/[^\w\s-]/gi, '').trim() || 'tiktok_media';
+            downloadUrl = (mode === 'audio' ? (aio.audio || aio.music || aio.url) : (aio.video || aio.url || aio.medias?.[0]?.url));
+            extension = mode === 'audio' ? 'mp3' : 'mp4';
+            if (!downloadUrl) throw new Error('No url');
+          } catch (err) {
+            console.warn('TikTok RapidAPI failed, trying direct fallback...', err);
+            const fallbackData = await fetchTikTokDirectFallback(url);
+            downloadUrl = fallbackData.downloadUrl;
+            extension = fallbackData.extension;
+            title = fallbackData.title;
+          }
+        }
+      }
+      else if (platform === 'facebook') {
+        try {
+          const data = await fetchFacebookData(url);
+          title = (data.title || 'facebook_video').replace(/[^\w\s-]/gi, '').trim() || 'facebook_media';
+          if (mode === 'video') {
+            downloadUrl = data.hd || data.sd;
+            extension = 'mp4';
+          } else {
+            downloadUrl = data.audio_url || data.music || data.sd || data.hd;
+            extension = data.audio_url || data.music ? 'mp4' : 'mp4';
+          }
+        } catch {
+          const aio = await fetchAllInOneData(url);
+          title = (aio.title || 'facebook_video').replace(/[^\w\s-]/gi, '').trim() || 'facebook_media';
+          downloadUrl = (mode === 'audio' ? (aio.audio || aio.url) : (aio.hd || aio.sd || aio.video || aio.url));
+          extension = 'mp4';
+        }
+      }
+      else if (platform === 'vimeo') {
+        try {
+          const data = await fetchVimeoData(url);
+          title = (data.title || 'vimeo_video').replace(/[^\w\s-]/gi, '').trim() || 'vimeo_media';
+          const downloadLinks = data.download || data.files || data.links || [];
+          if (Array.isArray(downloadLinks) && downloadLinks.length > 0) {
+            downloadUrl = downloadLinks[0].url || downloadLinks[0].link || downloadLinks[0];
+          } else if (typeof data.url === 'string') {
+            downloadUrl = data.url;
+          }
+          extension = 'mp4';
+        } catch {
+          const aio = await fetchAllInOneData(url);
+          title = (aio.title || 'vimeo_video').replace(/[^\w\s-]/gi, '').trim() || 'vimeo_media';
+          downloadUrl = aio.video || aio.url || aio.medias?.[0]?.url;
+          extension = 'mp4';
+        }
+      }
+      else if (platform === 'instagram') {
+        try {
+          const aio = await fetchAllInOneData(url);
+          title = (aio.title || aio.caption || 'instagram_media').replace(/[^\w\s-]/gi, '').trim() || 'instagram_media';
+          downloadUrl = (mode === 'audio' ? (aio.audio || aio.music || aio.url) : (aio.video || aio.url || aio.medias?.[0]?.url));
+          extension = mode === 'audio' && aio.audio ? 'mp3' : 'mp4';
+          if (!downloadUrl) throw new Error('No url');
+        } catch {
+          try {
+            const data = await fetchInstagramReelsData(url);
+            title = (data.title || data.caption || 'instagram_reel').replace(/[^\w\s-]/gi, '').trim() || 'instagram_media';
+            downloadUrl = data.video_url || data.videoUrl || data.url;
+            extension = 'mp4';
+            if (!downloadUrl) throw new Error('No url');
+          } catch (err) {
+            console.warn('Instagram RapidAPI failed, trying direct fallback...', err);
+            const fallbackData = await fetchInstagramDirectFallback(url);
+            downloadUrl = fallbackData.downloadUrl;
+            extension = fallbackData.extension;
+            title = fallbackData.title;
+          }
+        }
+      }
+      else {
+        // General all-in-one platforms (Twitter, Pinterest, Reddit, SoundCloud, Spotify, CapCut, etc.)
+        const aio = await fetchAllInOneData(url);
+        title = (aio.title || `${platform}_media`).replace(/[^\w\s-]/gi, '').trim() || 'social_media';
+        if (mode === 'audio') {
+          downloadUrl = aio.audio || aio.music || aio.url || aio.medias?.[0]?.url;
+          extension = aio.audio ? 'mp3' : 'mp4';
+        } else {
+          downloadUrl = aio.video || aio.hd || aio.sd || aio.url || aio.medias?.[0]?.url;
+          extension = 'mp4';
+        }
       }
 
-      const requestOptions = {
+      if (!downloadUrl) {
+        return res.status(404).json({ error: 'NO_FORMATS', message: 'Nenhum link de download direto foi retornado para esta mídia.' });
+      }
+
+      // Stream the media back to client
+      const streamRes = await fetchWithTimeout(downloadUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
-          'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
         }
-      };
+      }, 30000);
 
-      const info = await ytdl.getInfo(url, { requestOptions });
-      const title = (info.videoDetails.title || 'video').replace(/[^\w\s-]/gi, '').trim() || 'youtube_media';
+      if (!streamRes.ok) {
+        return res.status(502).json({ error: 'STREAM_ERROR', message: 'Não foi possível se conectar aos servidores de mídia do provedor.' });
+      }
 
-      if (mode === 'video') {
-        const qualityPref = (req.query.quality as string) || 'highest';
-        res.header('Content-Disposition', `attachment; filename="${encodeURIComponent(title)}.mp4"`);
-        res.header('Content-Type', 'video/mp4');
+      res.header('Content-Disposition', `attachment; filename="${encodeURIComponent(title)}.${extension}"`);
+      res.header('Content-Type', streamRes.headers.get('content-type') || (extension === 'mp3' ? 'audio/mpeg' : 'video/mp4'));
 
-        let format;
-        try {
-          if (qualityPref === '360p') {
-            format = ytdl.chooseFormat(info.formats, { quality: '18', filter: 'audioandvideo' });
-          } else if (qualityPref === 'lowest') {
-            format = ytdl.chooseFormat(info.formats, { quality: 'lowest', filter: 'audioandvideo' });
-          } else {
-            format = ytdl.chooseFormat(info.formats, { quality: 'highest', filter: 'audioandvideo' });
-          }
-        } catch (e) {
-          format = ytdl.chooseFormat(info.formats, { quality: 'highest', filter: 'audioandvideo' });
-        }
-
-        const stream = ytdl.downloadFromInfo(info, { format, requestOptions });
-        
-        stream.on('error', (error: any) => {
-          console.log('YouTube Stream Issue (Video):', error.message);
-          const is429 = error.message?.includes('429') || error.message?.includes('Too Many Requests') || error.message?.includes('Sign in to confirm') || error.message?.includes('bot');
-          if (!res.headersSent) {
-            res.status(is429 ? 429 : 500).json({
-              error: is429 ? 'RATE_LIMIT_429' : 'STREAM_ERROR',
-              code: is429 ? 429 : 500,
-              message: is429 
-                ? 'O YouTube bloqueou temporariamente o download no servidor em nuvem (Status 429: Proteção Anti-Bot / Too Many Requests).'
-                : (error.message || 'Erro ao processar o vídeo do YouTube.')
-            });
-          } else {
-            res.end();
-          }
-        });
-
-        stream.pipe(res);
+      if (streamRes.body) {
+        const nodeStream = Readable.fromWeb(streamRes.body as any);
+        nodeStream.pipe(res);
       } else {
-        // Modo áudio (padrão)
-        res.header('Content-Disposition', `attachment; filename="${encodeURIComponent(title)}.webm"`);
-        res.header('Content-Type', 'audio/webm');
-
-        const stream = ytdl.downloadFromInfo(info, { 
-          filter: 'audioonly', 
-          quality: 'highestaudio',
-          requestOptions 
-        });
-        
-        stream.on('error', (error: any) => {
-          console.log('YouTube Stream Issue (Audio):', error.message);
-          const is429 = error.message?.includes('429') || error.message?.includes('Too Many Requests') || error.message?.includes('Sign in to confirm') || error.message?.includes('bot');
-          if (!res.headersSent) {
-            res.status(is429 ? 429 : 500).json({
-              error: is429 ? 'RATE_LIMIT_429' : 'STREAM_ERROR',
-              code: is429 ? 429 : 500,
-              message: is429 
-                ? 'O YouTube bloqueou temporariamente o download no servidor em nuvem (Status 429: Proteção Anti-Bot / Too Many Requests).'
-                : (error.message || 'Erro ao processar o áudio do YouTube.')
-            });
-          } else {
-            res.end();
-          }
-        });
-
-        stream.pipe(res);
+        res.status(500).end();
       }
+
     } catch (error: any) {
-      console.log('YouTube Fetch Issue:', error.message);
-      const is429 = error.message?.includes('429') || error.message?.includes('Too Many Requests') || error.message?.includes('Sign in to confirm') || error.message?.includes('bot') || error.message?.includes('UnrecoverableError');
-      
-      if (!res.headersSent) {
-        res.status(is429 ? 429 : 500).json({
-          error: is429 ? 'RATE_LIMIT_429' : 'FETCH_ERROR',
-          code: is429 ? 429 : 500,
-          message: is429
-            ? 'O YouTube bloqueou temporariamente o acesso do servidor em nuvem (Status 429: Proteção Anti-Bot / Too Many Requests).'
-            : (error.message || 'Erro ao processar o link do YouTube.')
-        });
-      }
+      console.log('Media Download Issue:', error.message);
+      res.status(500).json({
+        error: 'FETCH_ERROR',
+        code: 500,
+        message: error.message || 'Erro ao processar o download da mídia.'
+      });
     }
   });
 
-  // Configuração do Vite para Development e Static para Production
   const isProd = process.env.NODE_ENV === 'production';
   if (!isProd) {
     const vite = await createViteServer({
