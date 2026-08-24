@@ -198,42 +198,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
     setSearchError('');
     setErrorDetails(null);
     try {
-      // 1. Se o usuário estiver autenticado, tenta primeiro a API do YouTube
-      if (token) {
-        try {
-          const res = await fetch(
-            `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(
-              query
-            )}&type=video`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-
-          if (res.ok) {
-            const data = await res.json();
-            if (data.items && data.items.length > 0) {
-              const mapped = data.items.map((item: any) => ({
-                id: item.id.videoId,
-                title: item.snippet.title,
-                url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
-                thumbnail:
-                  item.snippet.thumbnails?.medium?.url ||
-                  item.snippet.thumbnails?.default?.url,
-                author: item.snippet.channelTitle,
-                duration: 'Vídeo',
-              }));
-              setSearchResults(mapped);
-              setIsSearching(false);
-              return;
-            }
-          }
-        } catch (apiErr) {
-          console.warn('YouTube Data API fallback:', apiErr);
-        }
-      }
-
-      // 2. Fallback: Busca robusta via servidor
+      // Busca de vídeos via endpoint do servidor (yt-search)
       const res = await fetch(`/api/yt/search?q=${encodeURIComponent(query)}`);
 
       if (!res.ok) {
