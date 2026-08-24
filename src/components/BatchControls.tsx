@@ -1,12 +1,12 @@
 import React from 'react';
 import { Play, Download, Trash2, Sliders, CheckCircle2, FileArchive, Settings2, Sparkles, RefreshCw } from 'lucide-react';
-import { AudioFormat, VideoItem } from '../types';
+import { OutputFormat, VideoItem } from '../types';
 import { formatBytes } from '../utils/audioEncoder';
 
 interface BatchControlsProps {
   items: VideoItem[];
-  globalFormat: AudioFormat;
-  setGlobalFormat: (format: AudioFormat) => void;
+  globalFormat: OutputFormat;
+  setGlobalFormat: (format: OutputFormat) => void;
   globalBitrate: 64 | 128 | 192 | 256 | 320;
   setGlobalBitrate: (bitrate: 64 | 128 | 192 | 256 | 320) => void;
   onConvertAll: () => void;
@@ -56,7 +56,7 @@ export const BatchControls: React.FC<BatchControlsProps> = ({
           <div className="flex items-center gap-2">
             <label className="text-xs font-medium text-slate-400">Formato:</label>
             <div className="inline-flex rounded-xl bg-slate-950 p-1 border border-slate-800">
-              {(['mp3', 'wav', 'ogg'] as AudioFormat[]).map((fmt) => (
+              {(['mp3', 'wav', 'ogg', 'mp4', 'mkv', 'avi'] as OutputFormat[]).map((fmt) => (
                 <button
                   key={fmt}
                   type="button"
