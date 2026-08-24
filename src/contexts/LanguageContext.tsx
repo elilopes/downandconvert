@@ -187,6 +187,69 @@ const dict: Translations = {
     RU: "Все права защищены.",
     HI: "सभी अधिकार सुरक्षित।",
     KO: "모든 권리 보유."
+  },
+  "error.429.title": {
+    PT: "Status 429: Limite de Requisições / Bloqueio Anti-Bot do YouTube",
+    EN: "Status 429: Rate Limit / YouTube Anti-Bot Block",
+    RU: "Статус 429: Лимит запросов / Защита YouTube от ботов",
+    HI: "स्थिति 429: अनुरोध सीमा / YouTube एंटी-बॉट ब्लॉक",
+    KO: "상태 429: 요청 한도 초과 / YouTube 봇 방지 차단"
+  },
+  "error.429.desc": {
+    PT: "O YouTube bloqueou temporariamente o download direto via servidor em nuvem (Erro HTTP 429 Too Many Requests).",
+    EN: "YouTube has temporarily blocked direct server-side downloads from cloud hosting (HTTP 429 Too Many Requests).",
+    RU: "YouTube временно заблокировал прямую загрузку через облачный сервер (Ошибка HTTP 429 Too Many Requests).",
+    HI: "YouTube ने क्लाउड सर्वर के माध्यम से सीधे डाउनलोड को अस्थायी रूप से अवरुद्ध कर दिया है (HTTP 429 Too Many Requests)।",
+    KO: "YouTube가 클라우드 서버를 통한 직접 다운로드를 일시적으로 차단했습니다 (HTTP 429 Too Many Requests)."
+  },
+  "error.429.why": {
+    PT: "Por que isso acontece? Provedores de hospedagem em nuvem (Render, AWS, DigitalOcean) usam faixas de IP compartilhadas de datacenter. O YouTube impõe restrições automáticas contra esses IPs para evitar extração massiva.",
+    EN: "Why does this happen? Cloud hosting providers (Render, AWS, DigitalOcean) use shared datacenter IP ranges. YouTube automatically enforces rate limits on these IPs to prevent mass scraping.",
+    RU: "Почему это происходит? Облачные провайдеры (Render, AWS, DigitalOcean) используют общие IP-адреса дата-центров. YouTube автоматически блокирует эти IP-адреса для предотвращения массового скачивания.",
+    HI: "ऐसा क्यों होता है? क्लाउड होस्टिंग प्रदाता (Render, AWS, DigitalOcean) साझा डेटासेंटर आईपी का उपयोग करते हैं। YouTube अत्यधिक डाउनलोड रोकने के लिए इन आईपी को स्वचालित रूप से ब्लॉक करता है।",
+    KO: "왜 이런 일이 발생하나요? 클라우드 호스팅 제공업체(Render, AWS, DigitalOcean)는 공유 데이터센터 IP 대역을 사용합니다. YouTube는 대량 추출을 방지하기 위해 이러한 IP에 자동 제한을 적용합니다."
+  },
+  "error.429.solution": {
+    PT: "Soluções recomendadas:",
+    EN: "Recommended solutions:",
+    RU: "Рекомендуемые решения:",
+    HI: "अनुशंसित समाधान:",
+    KO: "권장 해결 방법:"
+  },
+  "error.429.sol1": {
+    PT: "Arraste e solte o arquivo de vídeo do seu computador (processamento 100% local, ilimitado e privado no seu navegador).",
+    EN: "Drag and drop the video file from your computer (100% local, unlimited, and private in your browser).",
+    RU: "Перетащите видеофайл со своего компьютера (100% локальная, неограниченная и конфиденциальная обработка в браузере).",
+    HI: "अपने कंप्यूटर से वीडियो फ़ाइल खींचें और छोड़ें (आपके ब्राउज़र में 100% स्थानीय, असीमित और निजी)।",
+    KO: "컴퓨터에서 동영상 파일을 직접 드래그 앤 드롭하세요 (브라우저 내 100% 로컬, 무제한 및 비공개 처리)."
+  },
+  "error.429.sol2": {
+    PT: "Grave a reprodução em tempo real com o botão 'Gravar Tela ou Câmera'.",
+    EN: "Record playback in real-time using the 'Record Screen or Camera' button.",
+    RU: "Запишите воспроизведение в реальном времени с помощью кнопки 'Запись экрана или камеры'.",
+    HI: "'स्क्रीन या कैमरा रिकॉर्ड करें' बटन का उपयोग करके रीयल-टाइम में रिकॉर्ड करें।",
+    KO: "'화면 또는 카메라 녹화' 버튼으로 실시간 재생을 직접 캡처하세요."
+  },
+  "error.429.sol3": {
+    PT: "Teste a conversão de mídia agora mesmo com o botão 'Testar com Vídeo de Exemplo'.",
+    EN: "Test media conversion right now using the 'Test with Sample Video' button.",
+    RU: "Проверьте конвертацию прямо сейчас с помощью кнопки 'Тестировать с примером видео'.",
+    HI: "'नमूना वीडियो के साथ परीक्षण करें' बटन का उपयोग करके अभी मीडिया रूपांतरण का परीक्षण करें।",
+    KO: "'샘플 비디오로 테스트' 버튼을 눌러 변환 기능을 즉시 확인해 보세요."
+  },
+  "faq.q4": {
+    PT: "O que significa o erro 'Status 429' ao tentar baixar um link do YouTube?",
+    EN: "What does the 'Status 429' error mean when downloading a YouTube link?",
+    RU: "Что означает ошибка 'Status 429' при попытке скачать ссылку с YouTube?",
+    HI: "YouTube लिंक डाउनलोड करते समय 'Status 429' त्रुटि का क्या अर्थ है?",
+    KO: "YouTube 링크를 다운로드할 때 'Status 429' 오류는 무엇을 의미하나요?"
+  },
+  "faq.a4": {
+    PT: "O código HTTP 429 significa 'Too Many Requests' (Muitas Requisições). Como o site está hospedado em servidores de nuvem (como Render/AWS), o YouTube bloqueia o endereço IP do servidor com proteções anti-bot. Para contornar isso com total privacidade e sem limites, você pode arrastar qualquer arquivo de vídeo do seu computador ou usar o recurso 'Gravar Tela ou Câmera'.",
+    EN: "HTTP status 429 means 'Too Many Requests'. Because the app is hosted on cloud servers (such as Render/AWS), YouTube blocks data center IP addresses using anti-bot mechanisms. To bypass this seamlessly with full privacy, simply drop your video file directly from your computer or use the built-in Screen/Camera Recorder.",
+    RU: "Код HTTP 429 означает 'Too Many Requests' (Слишком много запросов). Так как сервис размещен на облачных серверах (Render/AWS), YouTube блокирует IP-адреса дата-центров защитой от ботов. Чтобы обойти это, просто перетащите видеофайл со своего ПК или используйте функцию записи экрана/камеры.",
+    HI: "HTTP कोड 429 का अर्थ है 'Too Many Requests' (अत्यधिक अनुरोध)। चूंकि साइट क्लाउड सर्वर (Render/AWS) पर होस्ट की गई है, YouTube डेटासेंटर आईपी को ब्लॉक कर देता है। आप अपने कंप्यूटर से वीडियो फ़ाइल खींचकर या स्क्रीन रिकॉर्डर का उपयोग करके बिना किसी सीमा के रूपांतरण कर सकते हैं।",
+    KO: "HTTP 429 코드는 'Too Many Requests' (너무 많은 요청)를 의미합니다. 웹사이트가 클라우드 서버(Render/AWS 등)에서 호스팅되기 때문에 YouTube는 봇 방지 메커니즘을 통해 데이터센터 IP를 일시 차단합니다. 제한 없이 안전하게 사용하려면 PC에서 직접 파일을 드래그 앤 드롭하거나 내장된 '화면 또는 카메라 녹화' 기능을 사용하세요."
   }
 };
 
