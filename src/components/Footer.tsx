@@ -25,7 +25,11 @@ export const Footer: React.FC<FooterProps> = ({
               </div>
             </div>
             <div>
-              <span className="text-base font-bold text-white">Down&Convert</span>
+              <span className="text-base font-bold">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-emerald-400">Down</span>
+                <span className="text-white">&</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-yellow-400">Convert</span>
+              </span>
               <p className="text-xs text-slate-500">{t('footer.rights')}</p>
             </div>
           </div>
