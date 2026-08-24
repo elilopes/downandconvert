@@ -222,30 +222,38 @@ export const VideoItemCard: React.FC<VideoItemCardProps> = ({
               {/* Info subtitle: size, target format, bitrate */}
               <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-slate-400">
                 {item.status !== 'completed' && !isConvertingThis ? (
-                  <select
-                    value={item.options.format}
-                    onChange={(e) => onUpdateOptions(item.id, { ...item.options, format: e.target.value as any })}
-                    className="bg-slate-900 border border-slate-700 text-slate-300 text-xs rounded-md px-1.5 py-0.5 focus:outline-none focus:border-emerald-500 cursor-pointer font-bold uppercase"
-                    title="Selecione o formato de saída"
-                  >
-                    <optgroup label="Áudio">
-                      <option value="mp3">MP3</option>
-                      <option value="wav">WAV</option>
-                      <option value="aac">AAC</option>
-                      <option value="m4a">M4A</option>
-                      <option value="flac">FLAC</option>
-                      <option value="ogg">OGG</option>
-                      <option value="wma">WMA</option>
-                      <option value="aiff">AIFF</option>
-                    </optgroup>
-                    <optgroup label="Vídeo">
-                      <option value="mp4">MP4</option>
-                      <option value="webm">WEBM</option>
-                      <option value="mkv">MKV</option>
-                      <option value="avi">AVI</option>
-                      <option value="mov">MOV</option>
-                    </optgroup>
-                  </select>
+                  <div className="flex items-center gap-1.5">
+                    <select
+                      value={item.options.format}
+                      onChange={(e) => onUpdateOptions(item.id, { ...item.options, format: e.target.value as any })}
+                      className="bg-slate-900 border border-slate-700 text-slate-300 text-xs rounded-md px-1.5 py-0.5 focus:outline-none focus:border-emerald-500 cursor-pointer font-bold uppercase"
+                      title="Selecione o formato de saída"
+                    >
+                      <optgroup label="Áudio">
+                        <option value="mp3">MP3</option>
+                        <option value="wav">WAV</option>
+                        <option value="aac">AAC</option>
+                        <option value="m4a">M4A</option>
+                        <option value="flac">FLAC</option>
+                        <option value="ogg">OGG</option>
+                        <option value="wma">WMA</option>
+                        <option value="aiff">AIFF</option>
+                      </optgroup>
+                      <optgroup label="Vídeo">
+                        <option value="mp4">MP4</option>
+                        <option value="webm">WEBM</option>
+                        <option value="mkv">MKV</option>
+                        <option value="avi">AVI</option>
+                        <option value="mov">MOV</option>
+                      </optgroup>
+                    </select>
+
+                    {item.file.size > 25 * 1024 * 1024 && ['mp4', 'webm', 'mkv', 'avi', 'mov'].includes(item.options.format) && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 flex items-center gap-1" title="Arquivo grande (>25MB) processado no servidor para alta velocidade">
+                        ⚡ Servidor Turbo
+                      </span>
+                    )}
+                  </div>
                 ) : (
                   <span className="bg-slate-800/80 px-2 py-0.5 rounded text-[10px] uppercase font-bold text-slate-300">
                     {item.options.format}
