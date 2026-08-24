@@ -55,6 +55,56 @@ export default function App() {
   const [isProcessingAny, setIsProcessingAny] = useState(false);
   const [isZipping, setIsZipping] = useState(false);
 
+  // Sync URL routes/parameters with modals (supports /privacy, /terms, ?legal=privacy, #privacy, etc.)
+  useEffect(() => {
+    const parseUrlForModals = () => {
+      const path = window.location.pathname.toLowerCase();
+      const searchParams = new URLSearchParams(window.location.search);
+      const hash = window.location.hash.toLowerCase();
+      const legalParam = (searchParams.get('legal') || searchParams.get('modal') || searchParams.get('page') || '').toLowerCase();
+
+      if (path.includes('privacy') || legalParam === 'privacy' || hash === '#privacy' || hash === '#privacidade') {
+        setLegalModalType('privacy');
+      } else if (path.includes('term') || legalParam === 'terms' || hash === '#terms' || hash === '#termos') {
+        setLegalModalType('terms');
+      } else if (path.includes('contact') || legalParam === 'contact' || hash === '#contact' || hash === '#contato') {
+        setLegalModalType('contact');
+      } else if (path.includes('faq') || searchParams.get('modal') === 'faq' || hash === '#faq') {
+        setIsFAQOpen(true);
+      }
+    };
+
+    parseUrlForModals();
+
+    const handlePopState = () => {
+      parseUrlForModals();
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const openLegalModal = (type: 'terms' | 'privacy' | 'contact') => {
+    setLegalModalType(type);
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('legal', type);
+      window.history.pushState({ modal: type }, '', url.toString());
+    } catch (e) {}
+  };
+
+  const closeLegalModal = () => {
+    setLegalModalType(null);
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('legal');
+      url.searchParams.delete('modal');
+      url.searchParams.delete('page');
+      const cleanPath = url.pathname === '/privacy' || url.pathname === '/terms' || url.pathname === '/contact' ? '/' : url.pathname;
+      window.history.replaceState({}, '', cleanPath + (url.search ? url.search : ''));
+    } catch (e) {}
+  };
+
   // Trigger celebration confetti
   const triggerConfetti = () => {
     try {
@@ -503,9 +553,9 @@ export default function App() {
 
       {/* Footer */}
       <Footer
-        onOpenTerms={() => setLegalModalType('terms')}
-        onOpenPrivacy={() => setLegalModalType('privacy')}
-        onOpenContact={() => setLegalModalType('contact')}
+        onOpenTerms={() => openLegalModal('terms')}
+        onOpenPrivacy={() => openLegalModal('privacy')}
+        onOpenContact={() => openLegalModal('contact')}
       />
 
       {/* Audio Trimmer & EQ & Tags Modal */}
@@ -549,7 +599,7 @@ export default function App() {
       {legalModalType && (
         <LegalModal
           type={legalModalType}
-          onClose={() => setLegalModalType(null)}
+          onClose={closeLegalModal}
         />
       )}
 
