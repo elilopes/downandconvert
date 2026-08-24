@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@keyframes rainbowLetterShift {
+  0% {
+    color: #ff1e56;
+    text-shadow: 0 0 8px rgba(255, 30, 86, 0.9), 0 0 16px rgba(255, 30, 86, 0.5);
+  }
+  14% {
+    color: #ff7700;
+    text-shadow: 0 0 8px rgba(255, 119, 0, 0.9), 0 0 16px rgba(255, 119, 0, 0.5);
+  }
+  28% {
+    color: #ffdd00;
+    text-shadow: 0 0 8px rgba(255, 221, 0, 0.9), 0 0 16px rgba(255, 221, 0, 0.5);
+  }
+  42% {
+    color: #00ff88;
+    text-shadow: 0 0 8px rgba(0, 255, 136, 0.9), 0 0 16px rgba(0, 255, 136, 0.5);
+  }
+  57% {
+    color: #00d4ff;
+    text-shadow: 0 0 8px rgba(0, 212, 255, 0.9), 0 0 16px rgba(0, 212, 255, 0.5);
+  }
+  71% {
+    color: #3b82f6;
+    text-shadow: 0 0 8px rgba(59, 130, 246, 0.9), 0 0 16px rgba(59, 130, 246, 0.5);
+  }
+  85% {
+    color: #a855f7;
+    text-shadow: 0 0 8px rgba(168, 85, 247, 0.9), 0 0 16px rgba(168, 85, 247, 0.5);
+  }
+  100% {
+    color: #ff1e56;
+    text-shadow: 0 0 8px rgba(255, 30, 86, 0.9), 0 0 16px rgba(255, 30, 86, 0.5);
+  }
+}
+
+.animate-rainbow-letter {
+  animation: rainbowLetterShift 3.5s linear infinite;
+}
