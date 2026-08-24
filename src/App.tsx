@@ -381,24 +381,56 @@ export default function App() {
         } else {
           // Fallback to FFmpeg.wasm for AAC, M4A, FLAC, WMA, OGG, AIFF
           const wavTempBlob = encodeAudioBufferToWav(processedBuf);
-          outputBlob = await encodeWithFFmpeg(
-            wavTempBlob,
-            currentItem.options,
-            (progress) => {
-              setItems((prev) =>
-                prev.map((it) =>
-                  it.id === itemId
-                    ? {
-                        ...it,
-                        progress,
-                        progressText: `Codificando ${format.toUpperCase()} (${progress}%)...`,
-                      }
-                    : it
-                )
-              );
-            },
-            false
-          );
+          try {
+            outputBlob = await encodeWithFFmpeg(
+              wavTempBlob,
+              currentItem.options,
+              (progress) => {
+                setItems((prev) =>
+                  prev.map((it) =>
+                    it.id === itemId
+                      ? {
+                          ...it,
+                          progress,
+                          progressText: `Codificando ${format.toUpperCase()} (${progress}%)...`,
+                        }
+                      : it
+                  )
+                );
+              },
+              false
+            );
+          } catch (wasmErr) {
+            console.warn('WASM falhou no áudio. Acionando conversor do servidor...', wasmErr);
+            setItems((prev) =>
+              prev.map((it) =>
+                it.id === itemId
+                  ? {
+                      ...it,
+                      progress: 25,
+                      progressText: 'Recorrendo ao conversor do servidor...',
+                    }
+                  : it
+              )
+            );
+            outputBlob = await encodeOnServer(
+              currentItem.file,
+              currentItem.options,
+              (progress, stage) => {
+                setItems((prev) =>
+                  prev.map((it) =>
+                    it.id === itemId
+                      ? {
+                          ...it,
+                          progress,
+                          progressText: stage,
+                        }
+                      : it
+                  )
+                );
+              }
+            );
+          }
         }
       } else {
         throw new Error('Processed buffer is null');
