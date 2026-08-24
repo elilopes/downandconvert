@@ -21,11 +21,11 @@ const dict: Translations = {
     KO: "동영상, 오디오, 릴스 변환 및 다운로드"
   },
   "hero.title": {
-    PT: "Baixe mídias da web",
-    EN: "Download web media",
-    RU: "Скачивайте медиа из интернета",
-    HI: "वेब से मीडिया डाउनलोड करें",
-    KO: "웹에서 미디어 다운로드"
+    PT: "Baixe e converta mídias da web",
+    EN: "Download and convert web media",
+    RU: "Скачивайте и конвертируйте медиа из интернета",
+    HI: "वेब से मीडिया डाउनलोड और कनवर्ट करें",
+    KO: "웹에서 미디어 다운로드 및 변환"
   },
   "hero.desc": {
     PT: "Converta vídeos, baixe conteúdo do YouTube, grave sua tela ou câmera e salve tudo diretamente no seu Google Drive. Corte áudio, ajuste volume, adicione metadados e converta arquivos localmente no navegador com total privacidade.",
