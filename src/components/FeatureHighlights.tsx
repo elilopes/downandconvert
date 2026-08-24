@@ -57,7 +57,11 @@ export const FeatureHighlights: React.FC = () => {
     <div className="my-12">
       <div className="text-center max-w-2xl mx-auto mb-10">
         <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-          Por que usar o <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">AudioMorph</span>?
+          Por que usar o{' '}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-emerald-400">Down</span>
+          <span className="text-white">&</span>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-yellow-400">Convert</span>
+          ?
         </h3>
         <p className="text-sm sm:text-base text-slate-400 mt-2">
           Tecnologia moderna Web Audio para conversões ultra-rápidas sem depender de servidores remotos.
