@@ -384,6 +384,26 @@ async function startServer() {
         if (!videoId) return res.status(400).json({ error: 'INVALID_URL', message: 'URL do YouTube inválida.' });
         
         try {
+          // 1. Try direct ytdl-core first
+          const fallbackData = await fetchYoutubeDirectFallback(url, mode);
+          if (fallbackData.useYtdl) {
+            res.header('Content-Disposition', `attachment; filename="${encodeURIComponent(fallbackData.title)}.${fallbackData.extension}"`);
+            res.header('Content-Type', fallbackData.extension === 'mp4' ? 'video/mp4' : 'audio/mpeg');
+            const ytStream = ytdl.downloadFromInfo(fallbackData.info as any, {
+              quality: mode === 'video' ? 'highest' : 'highestaudio',
+              filter: mode === 'video' ? 'audioandvideo' : 'audioonly',
+              agent: fallbackData.agent
+            });
+            ytStream.pipe(res);
+            ytStream.on('error', (err) => {
+              console.error('ytdl stream error:', err);
+              if (!res.headersSent) res.status(502).json({ error: 'STREAM_ERROR', message: 'Erro na transmissão do YouTube.' });
+            });
+            return;
+          }
+        } catch (directErr) {
+          console.warn('YouTube direct fallback failed, trying RapidAPI...', directErr);
+          // 2. Fallback to RapidAPI
           const data = await fetchYoutubeData(videoId);
           title = (data.title || 'youtube_video').replace(/[^\w\s-]/gi, '').trim() || 'youtube_media';
 
@@ -405,24 +425,6 @@ async function startServer() {
             }
           }
           if (!downloadUrl) throw new Error('No url from RapidAPI');
-        } catch (rapidApiErr) {
-          console.warn('YouTube RapidAPI failed, trying direct fallback...', rapidApiErr);
-          const fallbackData = await fetchYoutubeDirectFallback(url, mode);
-          if (fallbackData.useYtdl) {
-            res.header('Content-Disposition', `attachment; filename="${encodeURIComponent(fallbackData.title)}.${fallbackData.extension}"`);
-            res.header('Content-Type', fallbackData.extension === 'mp4' ? 'video/mp4' : 'audio/mpeg');
-            const ytStream = ytdl.downloadFromInfo(fallbackData.info as any, {
-              quality: mode === 'video' ? 'highest' : 'highestaudio',
-              filter: mode === 'video' ? 'audioandvideo' : 'audioonly',
-              agent: fallbackData.agent
-            });
-            ytStream.pipe(res);
-            ytStream.on('error', (err) => {
-              console.error('ytdl stream error:', err);
-              if (!res.headersSent) res.status(502).json({ error: 'STREAM_ERROR', message: 'Erro na transmissão do YouTube.' });
-            });
-            return;
-          }
         }
       }
       else if (platform === 'tiktok') {
