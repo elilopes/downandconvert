@@ -7,7 +7,6 @@ const auth = getAuth(app);
 
 const provider = new GoogleAuthProvider();
 const SCOPES = [
-  'https://www.googleapis.com/auth/youtube.readonly',
   'https://www.googleapis.com/auth/drive.file',
 ];
 
