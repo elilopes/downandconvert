@@ -228,14 +228,23 @@ export const VideoItemCard: React.FC<VideoItemCardProps> = ({
                     className="bg-slate-900 border border-slate-700 text-slate-300 text-xs rounded-md px-1.5 py-0.5 focus:outline-none focus:border-emerald-500 cursor-pointer font-bold uppercase"
                     title="Selecione o formato de saída"
                   >
-                    <option value="mp3">MP3</option>
-                    <option value="wav">WAV</option>
-                    <option value="aac">AAC</option>
-                    <option value="m4a">M4A</option>
-                    <option value="flac">FLAC</option>
-                    <option value="ogg">OGG</option>
-                    <option value="wma">WMA</option>
-                    <option value="aiff">AIFF</option>
+                    <optgroup label="Áudio">
+                      <option value="mp3">MP3</option>
+                      <option value="wav">WAV</option>
+                      <option value="aac">AAC</option>
+                      <option value="m4a">M4A</option>
+                      <option value="flac">FLAC</option>
+                      <option value="ogg">OGG</option>
+                      <option value="wma">WMA</option>
+                      <option value="aiff">AIFF</option>
+                    </optgroup>
+                    <optgroup label="Vídeo">
+                      <option value="mp4">MP4</option>
+                      <option value="webm">WEBM</option>
+                      <option value="mkv">MKV</option>
+                      <option value="avi">AVI</option>
+                      <option value="mov">MOV</option>
+                    </optgroup>
                   </select>
                 ) : (
                   <span className="bg-slate-800/80 px-2 py-0.5 rounded text-[10px] uppercase font-bold text-slate-300">
@@ -257,8 +266,23 @@ export const VideoItemCard: React.FC<VideoItemCardProps> = ({
                     <option value={64}>64 kbps</option>
                   </select>
                 )}
+                {['mp4', 'webm', 'mkv', 'avi', 'mov'].includes(item.options.format) && item.status !== 'completed' && !isConvertingThis && (
+                  <select
+                    value={item.options.videoQuality || 'medium'}
+                    onChange={(e) => onUpdateOptions(item.id, { ...item.options, videoQuality: e.target.value })}
+                    className="bg-slate-900 border border-slate-700 text-slate-300 text-xs rounded-md px-1.5 py-0.5 focus:outline-none focus:border-emerald-500 cursor-pointer"
+                    title="Selecione a qualidade do vídeo"
+                  >
+                    <option value="high">Alta (Lento)</option>
+                    <option value="medium">Média (Padrão)</option>
+                    <option value="low">Baixa (Rápido)</option>
+                  </select>
+                )}
                 {(item.options.format === 'mp3' || item.options.format === 'aac' || item.options.format === 'm4a' || item.options.format === 'ogg' || item.options.format === 'wma') && (item.status === 'completed' || isConvertingThis) && (
                   <span>({item.options.bitrate} kbps)</span>
+                )}
+                {['mp4', 'webm', 'mkv', 'avi', 'mov'].includes(item.options.format) && (item.status === 'completed' || isConvertingThis) && (
+                  <span>(Qualidade {item.options.videoQuality === 'high' ? 'Alta' : item.options.videoQuality === 'low' ? 'Baixa' : 'Média'})</span>
                 )}
 
                 {item.outputSize ? (
@@ -293,9 +317,9 @@ export const VideoItemCard: React.FC<VideoItemCardProps> = ({
             <button
               type="button"
               onClick={() => onOpenTrimmer(item)}
-              disabled={isConvertingThis}
+              disabled={isConvertingThis || ['mp4', 'webm', 'mkv', 'avi', 'mov'].includes(item.options.format)}
               className="px-3 py-2 text-xs font-semibold rounded-xl bg-slate-800/80 hover:bg-slate-750 text-slate-300 hover:text-white border border-slate-700/70 hover:border-slate-600 transition-all flex items-center gap-1.5 disabled:opacity-50"
-              title="Cortar trechos, dividir em partes, equalizar e editar tags"
+              title={['mp4', 'webm', 'mkv', 'avi', 'mov'].includes(item.options.format) ? "Editor visual disponível apenas para áudio" : "Cortar trechos, dividir em partes, equalizar e editar tags"}
             >
               <Scissors className="w-3.5 h-3.5 text-emerald-400" />
               <span>Cortar / Dividir</span>
@@ -398,7 +422,7 @@ export const VideoItemCard: React.FC<VideoItemCardProps> = ({
         )}
 
         {/* Completed Audio Player with Waveform Preview */}
-        {item.status === 'completed' && item.outputUrl && (
+        {item.status === 'completed' && item.outputUrl && !['mp4', 'webm', 'mkv', 'avi', 'mov'].includes(item.options.format) && (
           <div className="mt-4 pt-3.5 border-t border-slate-800/80">
             <div className="flex items-center gap-3">
               {/* Play/Pause Button */}
@@ -458,7 +482,7 @@ export const VideoItemCard: React.FC<VideoItemCardProps> = ({
                 {formatTime(audioDuration)}
               </div>
             </div>
-
+            
             {/* Google Drive upload feedback */}
             {driveUrl && (
               <div className="mt-2.5 px-3 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs flex items-center justify-between gap-2">
@@ -510,7 +534,7 @@ export const VideoItemCard: React.FC<VideoItemCardProps> = ({
             </div>
             <div className="rounded-xl overflow-hidden bg-black aspect-video flex items-center justify-center">
               <video
-                src={URL.createObjectURL(item.file)}
+                src={item.status === 'completed' && ['mp4', 'webm', 'mkv', 'avi', 'mov'].includes(item.options.format) && item.outputUrl ? item.outputUrl : URL.createObjectURL(item.file)}
                 controls
                 autoPlay
                 className="w-full h-full object-contain"
