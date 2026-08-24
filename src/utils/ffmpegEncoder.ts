@@ -29,26 +29,34 @@ const toBlobURL = async (url: string, mimeType: string): Promise<string> => {
 };
 
 export async function encodeWithFFmpeg(
-  wavBlob: Blob,
+  inputBlob: Blob,
   options: ConversionOptions,
-  onProgress?: (progress: number) => void
+  onProgress?: (progress: number) => void,
+  isVideo: boolean = false
 ): Promise<Blob> {
   const ff = await getFFmpeg();
   
   // Write input file
-  const inputName = 'input.wav';
+  const inputExt = isVideo ? 'mp4' : 'wav';
+  const inputName = `input.${inputExt}`;
+  
   const formatExt = options.format === 'aac' ? 'aac' : 
                    options.format === 'm4a' ? 'm4a' :
                    options.format === 'flac' ? 'flac' :
                    options.format === 'wma' ? 'wma' :
                    options.format === 'aiff' ? 'aiff' :
-                   options.format === 'ogg' ? 'ogg' : 'mp3';
+                   options.format === 'ogg' ? 'ogg' : 
+                   options.format === 'mp4' ? 'mp4' :
+                   options.format === 'webm' ? 'webm' :
+                   options.format === 'avi' ? 'avi' :
+                   options.format === 'mov' ? 'mov' :
+                   options.format === 'mkv' ? 'mkv' : 'mp3';
                    
   const outputName = `output.${formatExt}`;
   
-  await ff.writeFile(inputName, await fetchFile(wavBlob));
+  await ff.writeFile(inputName, await fetchFile(inputBlob));
   
-  ff.on('progress', ({ progress, time }) => {
+  ff.on('progress', ({ progress }) => {
     if (onProgress) {
       onProgress(Math.min(99, Math.round(progress * 100)));
     }
@@ -57,33 +65,57 @@ export async function encodeWithFFmpeg(
   // Prepare ffmpeg arguments
   const args = ['-i', inputName];
   
-  // Add metadata
-  if (options.metadata.title) args.push('-metadata', `title=${options.metadata.title}`);
-  if (options.metadata.artist) args.push('-metadata', `artist=${options.metadata.artist}`);
-  if (options.metadata.album) args.push('-metadata', `album=${options.metadata.album}`);
-  if (options.metadata.genre) args.push('-metadata', `genre=${options.metadata.genre}`);
+  // Audio metadata
+  if (!isVideo) {
+    if (options.metadata.title) args.push('-metadata', `title=${options.metadata.title}`);
+    if (options.metadata.artist) args.push('-metadata', `artist=${options.metadata.artist}`);
+    if (options.metadata.album) args.push('-metadata', `album=${options.metadata.album}`);
+    if (options.metadata.genre) args.push('-metadata', `genre=${options.metadata.genre}`);
+  }
 
   // Format specific arguments
-  switch (options.format) {
-    case 'aac':
-    case 'm4a':
-      args.push('-c:a', 'aac', '-b:a', `${options.bitrate}k`);
-      break;
-    case 'flac':
-      args.push('-c:a', 'flac');
-      break;
-    case 'wma':
-      args.push('-c:a', 'wmav2', '-b:a', `${options.bitrate}k`);
-      break;
-    case 'ogg':
-      args.push('-c:a', 'libvorbis', '-b:a', `${options.bitrate}k`);
-      break;
-    case 'aiff':
-      args.push('-c:a', 'pcm_s16be');
-      break;
-    default:
-      // Fallback
-      args.push('-b:a', `${options.bitrate}k`);
+  if (isVideo) {
+    // Basic video encoding args
+    const preset = options.videoQuality === 'high' ? 'slow' : options.videoQuality === 'low' ? 'ultrafast' : 'medium';
+    const crf = options.videoQuality === 'high' ? '18' : options.videoQuality === 'low' ? '28' : '23';
+
+    switch (options.format) {
+      case 'webm':
+        args.push('-c:v', 'libvpx-vp9', '-crf', crf, '-b:v', '0', '-c:a', 'libopus');
+        break;
+      case 'mp4':
+      case 'mkv':
+      case 'mov':
+        args.push('-c:v', 'libx264', '-preset', preset, '-crf', crf, '-c:a', 'aac', '-b:a', '128k');
+        break;
+      case 'avi':
+        args.push('-c:v', 'mpeg4', '-q:v', '5', '-c:a', 'libmp3lame');
+        break;
+      default:
+        args.push('-c:v', 'copy', '-c:a', 'copy');
+    }
+  } else {
+    switch (options.format) {
+      case 'aac':
+      case 'm4a':
+        args.push('-c:a', 'aac', '-b:a', `${options.bitrate}k`);
+        break;
+      case 'flac':
+        args.push('-c:a', 'flac');
+        break;
+      case 'wma':
+        args.push('-c:a', 'wmav2', '-b:a', `${options.bitrate}k`);
+        break;
+      case 'ogg':
+        args.push('-c:a', 'libvorbis', '-b:a', `${options.bitrate}k`);
+        break;
+      case 'aiff':
+        args.push('-c:a', 'pcm_s16be');
+        break;
+      default:
+        // Fallback
+        args.push('-b:a', `${options.bitrate}k`);
+    }
   }
   
   args.push(outputName);
@@ -98,12 +130,16 @@ export async function encodeWithFFmpeg(
   await ff.deleteFile(outputName);
   
   let mimeType = 'audio/mpeg';
-  if (formatExt === 'aac') mimeType = 'audio/aac';
-  else if (formatExt === 'm4a') mimeType = 'audio/mp4';
-  else if (formatExt === 'flac') mimeType = 'audio/flac';
-  else if (formatExt === 'wma') mimeType = 'audio/x-ms-wma';
-  else if (formatExt === 'ogg') mimeType = 'audio/ogg';
-  else if (formatExt === 'aiff') mimeType = 'audio/aiff';
+  if (isVideo) {
+    mimeType = `video/${formatExt === 'mkv' ? 'x-matroska' : formatExt}`;
+  } else {
+    if (formatExt === 'aac') mimeType = 'audio/aac';
+    else if (formatExt === 'm4a') mimeType = 'audio/mp4';
+    else if (formatExt === 'flac') mimeType = 'audio/flac';
+    else if (formatExt === 'wma') mimeType = 'audio/x-ms-wma';
+    else if (formatExt === 'ogg') mimeType = 'audio/ogg';
+    else if (formatExt === 'aiff') mimeType = 'audio/aiff';
+  }
   
   return new Blob([data], { type: mimeType });
 }
