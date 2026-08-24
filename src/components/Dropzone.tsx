@@ -1,5 +1,30 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { UploadCloud, Video, Radio, Sparkles, Film, FileVideo, Disc3, Link as LinkIcon, AlertCircle, Search, Clipboard, Youtube, Play, Plus, RefreshCw, LogIn, User as UserIcon } from 'lucide-react';
+import { 
+  UploadCloud, 
+  Video, 
+  Radio, 
+  Sparkles, 
+  Film, 
+  FileVideo, 
+  Disc3, 
+  Link as LinkIcon, 
+  AlertCircle, 
+  Search, 
+  Clipboard, 
+  Youtube, 
+  Play, 
+  Plus, 
+  RefreshCw, 
+  LogIn, 
+  User as UserIcon,
+  AlertTriangle,
+  Info,
+  ChevronDown,
+  ChevronUp,
+  ShieldAlert,
+  FileUp,
+  X
+} from 'lucide-react';
 import { initAuth, googleSignIn, getAccessToken, logout } from '../lib/auth';
 import type { User } from 'firebase/auth';
 import { SponsoredAdModal } from './SponsoredAdModal';
@@ -28,6 +53,12 @@ export const Dropzone: React.FC<DropzoneProps> = ({
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchError, setSearchError] = useState('');
+  const [errorDetails, setErrorDetails] = useState<{
+    is429: boolean;
+    message: string;
+    code?: number;
+  } | null>(null);
+  const [show429Details, setShow429Details] = useState(true);
   const [videoInfo, setVideoInfo] = useState<any>(null); // For pasted URL info
   const [isDownloading, setIsDownloading] = useState(false);
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -144,6 +175,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
 
   const handleSearchClick = () => {
     setSearchError('');
+    setErrorDetails(null);
     setSearchResults([]);
     if (!searchInput.trim()) return;
 
@@ -170,6 +202,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
   const performSearch = async (query: string) => {
     setIsSearching(true);
     setSearchError('');
+    setErrorDetails(null);
     try {
       // 1. Se o usuário estiver autenticado, tenta primeiro a API do YouTube
       if (token) {
@@ -211,7 +244,26 @@ export const Dropzone: React.FC<DropzoneProps> = ({
 
       if (!res.ok) {
         const errorText = await res.text().catch(() => '');
-        throw new Error(errorText || 'Falha ao buscar vídeos no YouTube');
+        let is429 = res.status === 429;
+        let msg = errorText;
+        try {
+          const parsed = JSON.parse(errorText);
+          if (parsed.code === 429 || parsed.error === 'RATE_LIMIT_429') is429 = true;
+          msg = parsed.message || msg;
+        } catch (e) {
+          if (errorText.includes('429') || errorText.includes('Too Many Requests') || errorText.includes('Anti-Bot')) {
+            is429 = true;
+          }
+        }
+        if (is429) {
+          setErrorDetails({
+            is429: true,
+            code: 429,
+            message: 'O YouTube bloqueou temporariamente as requisições do servidor em nuvem (Status 429: Too Many Requests / Proteção Anti-Bot).'
+          });
+          return;
+        }
+        throw new Error(msg || 'Falha ao buscar vídeos no YouTube');
       }
 
       const data = await res.json();
@@ -237,6 +289,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
     if (isDownloading) return;
     setIsDownloading(true);
     setSearchError('');
+    setErrorDetails(null);
     try {
       const isYouTube = url.includes('youtube.com') || url.includes('youtu.be');
       const fetchUrl = isYouTube 
@@ -246,7 +299,30 @@ export const Dropzone: React.FC<DropzoneProps> = ({
       const response = await fetch(fetchUrl);
       if (!response.ok) {
         const errText = await response.text().catch(() => '');
-        throw new Error(errText || `Erro ao baixar arquivo (status ${response.status}).`);
+        let is429 = response.status === 429;
+        let detailedMsg = errText;
+        try {
+          const parsed = JSON.parse(errText);
+          if (parsed.code === 429 || parsed.error === 'RATE_LIMIT_429') {
+            is429 = true;
+          }
+          detailedMsg = parsed.message || detailedMsg;
+        } catch(e) {
+          if (errText.includes('429') || errText.includes('Too Many Requests') || errText.includes('Anti-Bot') || errText.includes('Sign in to confirm')) {
+            is429 = true;
+          }
+        }
+
+        if (is429) {
+          setErrorDetails({
+            is429: true,
+            code: 429,
+            message: 'O YouTube bloqueou temporariamente o download no servidor em nuvem (Status 429: Proteção Anti-Bot / Too Many Requests).'
+          });
+          return;
+        }
+
+        throw new Error(detailedMsg || `Erro ao baixar arquivo (status ${response.status}).`);
       }
       const blob = await response.blob();
       
@@ -254,7 +330,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
       if (isYouTube) {
         const contentDisposition = response.headers.get('content-disposition');
         if (contentDisposition && contentDisposition.includes('filename="')) {
-          filename = contentDisposition.split('filename="')[1].split('"')[0];
+          filename = decodeURIComponent(contentDisposition.split('filename="')[1].split('"')[0]);
         } else {
           filename = title ? `${title}.${downloadMode === 'video' ? 'mp4' : 'webm'}` : `youtube_${downloadMode}.${downloadMode === 'video' ? 'mp4' : 'webm'}`;
         }
@@ -397,12 +473,120 @@ export const Dropzone: React.FC<DropzoneProps> = ({
           </button>
         </div>
 
-        {searchError && (
-          <div className="mt-2 text-rose-400 text-xs flex flex-col sm:flex-row items-start sm:items-center gap-2 px-2 bg-rose-950/30 p-2 rounded-lg border border-rose-900/50">
-            <div className="flex items-center gap-1.5">
-              <AlertCircle className="w-4 h-4 shrink-0" /> 
+        {/* Error 429 Rich Explanatory Card */}
+        {errorDetails?.is429 && (
+          <div className="mt-3 rounded-2xl bg-amber-950/40 border border-amber-500/40 p-4 sm:p-5 text-left shadow-xl shadow-amber-950/20 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 shrink-0">
+                  <ShieldAlert className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className="text-sm font-bold text-amber-200">
+                      {t('error.429.title')}
+                    </h4>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      HTTP 429 Too Many Requests
+                    </span>
+                  </div>
+                  <p className="text-xs text-amber-300/90 mt-0.5">
+                    {t('error.429.desc')}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setErrorDetails(null)}
+                className="p-1 text-amber-400/70 hover:text-amber-200 hover:bg-amber-500/10 rounded-lg transition-colors shrink-0"
+                title="Fechar"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Explanation Section */}
+            <div className="mt-3.5 pt-3 border-t border-amber-500/20 text-xs text-slate-300 space-y-2.5">
+              <div className="flex items-start gap-2 bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                <Info className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                <p className="leading-relaxed text-slate-300 text-[11px] sm:text-xs">
+                  {t('error.429.why')}
+                </p>
+              </div>
+
+              <div>
+                <p className="font-semibold text-amber-200 text-xs mb-2 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  {t('error.429.solution')}
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fileInputRef.current?.click();
+                    }}
+                    className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-emerald-500/50 text-left transition-all group cursor-pointer"
+                  >
+                    <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:scale-110 transition-transform">
+                      <FileUp className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-bold text-white group-hover:text-emerald-300">Carregar Arquivo Local</p>
+                      <p className="text-[10px] text-slate-400 truncate">100% privado e sem limites</p>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenRecorder();
+                    }}
+                    className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-cyan-500/50 text-left transition-all group cursor-pointer"
+                  >
+                    <div className="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 group-hover:scale-110 transition-transform">
+                      <Radio className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-bold text-white group-hover:text-cyan-300">Gravar Tela / Câmera</p>
+                      <p className="text-[10px] text-slate-400 truncate">Captura em tempo real</p>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenSampleModal();
+                    }}
+                    className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-indigo-500/50 text-left transition-all group cursor-pointer"
+                  >
+                    <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 group-hover:scale-110 transition-transform">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-bold text-white group-hover:text-indigo-300">Vídeo de Exemplo</p>
+                      <p className="text-[10px] text-slate-400 truncate">Testar conversão agora</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {searchError && !errorDetails?.is429 && (
+          <div className="mt-2 text-rose-400 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 px-3 py-2 bg-rose-950/30 rounded-xl border border-rose-900/50">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" /> 
               <span>{searchError}</span>
             </div>
+            <button
+              onClick={() => setSearchError('')}
+              className="text-[11px] text-rose-400 hover:text-rose-200 underline ml-auto shrink-0"
+            >
+              Fechar
+            </button>
           </div>
         )}
 
