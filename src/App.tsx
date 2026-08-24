@@ -39,6 +39,7 @@ import {
   encodeAudioBufferToWav,
 } from './utils/audioEncoder';
 import { encodeWithFFmpeg } from './utils/ffmpegEncoder';
+import { encodeOnServer } from './utils/serverEncoder';
 import { useLanguage } from './contexts/LanguageContext';
 
 export default function App() {
@@ -269,24 +270,92 @@ export default function App() {
       );
 
       if (isVideoOutput) {
-        outputBlob = await encodeWithFFmpeg(
-          currentItem.file,
-          currentItem.options,
-          (progress) => {
+        const isLargeFile = currentItem.file.size > 25 * 1024 * 1024; // > 25MB
+
+        if (isLargeFile) {
+          // Send directly to high-performance Server-Side FFmpeg
+          setItems((prev) =>
+            prev.map((it) =>
+              it.id === itemId
+                ? {
+                    ...it,
+                    progress: 15,
+                    progressText: 'Arquivo grande: convertendo no servidor em alta performance...',
+                  }
+                : it
+            )
+          );
+
+          outputBlob = await encodeOnServer(
+            currentItem.file,
+            currentItem.options,
+            (progress, stage) => {
+              setItems((prev) =>
+                prev.map((it) =>
+                  it.id === itemId
+                    ? {
+                        ...it,
+                        progress,
+                        progressText: stage,
+                      }
+                    : it
+                )
+              );
+            }
+          );
+        } else {
+          // Client-side WebAssembly with automatic Server-Side fallback
+          try {
+            outputBlob = await encodeWithFFmpeg(
+              currentItem.file,
+              currentItem.options,
+              (progress) => {
+                setItems((prev) =>
+                  prev.map((it) =>
+                    it.id === itemId
+                      ? {
+                          ...it,
+                          progress,
+                          progressText: `Codificando Vídeo ${format.toUpperCase()} (${progress}%)...`,
+                        }
+                      : it
+                  )
+                );
+              },
+              true // isVideo
+            );
+          } catch (wasmErr) {
+            console.warn('WASM falhou ou limite de memória excedido. Acionando conversor do servidor...', wasmErr);
             setItems((prev) =>
               prev.map((it) =>
                 it.id === itemId
                   ? {
                       ...it,
-                      progress,
-                      progressText: `Codificando Vídeo ${format.toUpperCase()} (${progress}%)...`,
+                      progress: 25,
+                      progressText: 'Recorrendo ao conversor do servidor...',
                     }
                   : it
               )
             );
-          },
-          true // isVideo
-        );
+            outputBlob = await encodeOnServer(
+              currentItem.file,
+              currentItem.options,
+              (progress, stage) => {
+                setItems((prev) =>
+                  prev.map((it) =>
+                    it.id === itemId
+                      ? {
+                          ...it,
+                          progress,
+                          progressText: stage,
+                        }
+                      : it
+                  )
+                );
+              }
+            );
+          }
+        }
       } else if (processedBuf) {
         if (format === 'mp3') {
           outputBlob = await encodeAudioBufferToMp3(
