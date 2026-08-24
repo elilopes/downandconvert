@@ -149,17 +149,7 @@ async function fetchYoutubeDirectFallback(url: string, mode: string) {
   const info = await ytdl.getInfo(url, { agent });
   const title = (info.videoDetails.title || 'youtube_video').replace(/[^\w\s-]/gi, '').trim() || 'youtube_media';
   
-  let format;
-  if (mode === 'video') {
-    format = ytdl.chooseFormat(info.formats, { quality: 'highest', filter: 'audioandvideo' }) || 
-             ytdl.chooseFormat(info.formats, { quality: 'highestvideo' });
-  } else {
-    format = ytdl.chooseFormat(info.formats, { quality: 'highestaudio', filter: 'audioonly' });
-  }
-  
-  if (!format || !format.url) throw new Error('Nenhum formato compatível encontrado na extração direta do YouTube.');
-  
-  return { downloadUrl: format.url, extension: mode === 'video' ? 'mp4' : 'm4a', title };
+  return { useYtdl: true, info, agent, extension: mode === 'video' ? 'mp4' : 'm4a', title };
 }
 
 async function fetchInstagramDirectFallback(url: string) {
@@ -418,9 +408,21 @@ async function startServer() {
         } catch (rapidApiErr) {
           console.warn('YouTube RapidAPI failed, trying direct fallback...', rapidApiErr);
           const fallbackData = await fetchYoutubeDirectFallback(url, mode);
-          downloadUrl = fallbackData.downloadUrl;
-          extension = fallbackData.extension;
-          title = fallbackData.title;
+          if (fallbackData.useYtdl) {
+            res.header('Content-Disposition', `attachment; filename="${encodeURIComponent(fallbackData.title)}.${fallbackData.extension}"`);
+            res.header('Content-Type', fallbackData.extension === 'mp4' ? 'video/mp4' : 'audio/mpeg');
+            const ytStream = ytdl.downloadFromInfo(fallbackData.info as any, {
+              quality: mode === 'video' ? 'highest' : 'highestaudio',
+              filter: mode === 'video' ? 'audioandvideo' : 'audioonly',
+              agent: fallbackData.agent
+            });
+            ytStream.pipe(res);
+            ytStream.on('error', (err) => {
+              console.error('ytdl stream error:', err);
+              if (!res.headersSent) res.status(502).json({ error: 'STREAM_ERROR', message: 'Erro na transmissão do YouTube.' });
+            });
+            return;
+          }
         }
       }
       else if (platform === 'tiktok') {
