@@ -102,10 +102,17 @@ async function startServer() {
     try {
       const url = req.query.url as string;
       if (!url || !ytdl.validateURL(url)) {
-        return res.status(400).send('URL do YouTube inválida');
+        return res.status(400).json({ error: 'INVALID_URL', message: 'URL do YouTube inválida.' });
       }
 
-      const info = await ytdl.getBasicInfo(url);
+      const info = await ytdl.getBasicInfo(url, {
+        requestOptions: {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+            'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+          }
+        }
+      });
       res.json({
         title: info.videoDetails.title,
         thumbnail: info.videoDetails.thumbnails[0]?.url,
@@ -113,11 +120,15 @@ async function startServer() {
       });
     } catch (error: any) {
       console.log('YouTube Info Issue:', error.message);
-      let errorMsg = error.message || 'Erro ao obter informações do vídeo';
-      if (errorMsg.includes('Sign in to confirm') || errorMsg.includes('bot')) {
-         errorMsg = 'Acesso bloqueado pelo YouTube (Proteção Anti-Bot). Não é possível baixar via servidor.';
+      const is429 = error.message?.includes('429') || error.message?.includes('Too Many Requests') || error.message?.includes('Sign in to confirm') || error.message?.includes('bot');
+      if (is429) {
+        return res.status(429).json({
+          error: 'RATE_LIMIT_429',
+          code: 429,
+          message: 'O YouTube bloqueou temporariamente requisições originadas do servidor em nuvem (Status 429: Proteção Anti-Bot / Too Many Requests).'
+        });
       }
-      res.status(500).send(errorMsg);
+      res.status(500).json({ error: 'FETCH_ERROR', message: error.message || 'Erro ao obter informações do vídeo.' });
     }
   });
 
@@ -125,18 +136,25 @@ async function startServer() {
   app.get('/api/yt/download', async (req, res) => {
     try {
       const url = req.query.url as string;
-      const mode = req.query.mode as string || 'audio'; // 'audio' or 'video'
+      const mode = (req.query.mode as string) || 'audio'; // 'audio' or 'video'
       
       if (!url || !ytdl.validateURL(url)) {
-        return res.status(400).send('URL do YouTube inválida');
+        return res.status(400).json({ error: 'INVALID_URL', message: 'URL do YouTube inválida.' });
       }
 
-      const info = await ytdl.getInfo(url);
-      const title = info.videoDetails.title.replace(/[^\w\s-]/gi, '');
+      const requestOptions = {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+          'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+        }
+      };
+
+      const info = await ytdl.getInfo(url, { requestOptions });
+      const title = (info.videoDetails.title || 'video').replace(/[^\w\s-]/gi, '').trim() || 'youtube_media';
 
       if (mode === 'video') {
-        const qualityPref = req.query.quality as string || 'highest';
-        res.header('Content-Disposition', `attachment; filename="${title}.mp4"`);
+        const qualityPref = (req.query.quality as string) || 'highest';
+        res.header('Content-Disposition', `attachment; filename="${encodeURIComponent(title)}.mp4"`);
         res.header('Content-Type', 'video/mp4');
 
         let format;
@@ -148,21 +166,23 @@ async function startServer() {
           } else {
             format = ytdl.chooseFormat(info.formats, { quality: 'highest', filter: 'audioandvideo' });
           }
-        } catch(e) {
-          // Fallback to highest if requested format doesn't exist
+        } catch (e) {
           format = ytdl.chooseFormat(info.formats, { quality: 'highest', filter: 'audioandvideo' });
         }
 
-        const stream = ytdl.downloadFromInfo(info, { format });
+        const stream = ytdl.downloadFromInfo(info, { format, requestOptions });
         
         stream.on('error', (error: any) => {
           console.log('YouTube Stream Issue (Video):', error.message);
-          let errorMsg = error.message || 'Erro ao processar o vídeo do YouTube';
-          if (errorMsg.includes('Sign in to confirm') || errorMsg.includes('bot')) {
-             errorMsg = 'O YouTube bloqueou o acesso do servidor (Proteção Anti-Bot). Por favor, baixe o vídeo manualmente e faça o upload.';
-          }
+          const is429 = error.message?.includes('429') || error.message?.includes('Too Many Requests') || error.message?.includes('Sign in to confirm') || error.message?.includes('bot');
           if (!res.headersSent) {
-            res.status(500).send(errorMsg);
+            res.status(is429 ? 429 : 500).json({
+              error: is429 ? 'RATE_LIMIT_429' : 'STREAM_ERROR',
+              code: is429 ? 429 : 500,
+              message: is429 
+                ? 'O YouTube bloqueou temporariamente o download no servidor em nuvem (Status 429: Proteção Anti-Bot / Too Many Requests).'
+                : (error.message || 'Erro ao processar o vídeo do YouTube.')
+            });
           } else {
             res.end();
           }
@@ -171,22 +191,28 @@ async function startServer() {
         stream.pipe(res);
       } else {
         // Modo áudio (padrão)
-        res.header('Content-Disposition', `attachment; filename="${title}.webm"`);
+        res.header('Content-Disposition', `attachment; filename="${encodeURIComponent(title)}.webm"`);
         res.header('Content-Type', 'audio/webm');
 
-        // Extrai a melhor qualidade de áudio disponível
-        const stream = ytdl(url, { filter: 'audioonly', quality: 'highestaudio' });
+        const stream = ytdl.downloadFromInfo(info, { 
+          filter: 'audioonly', 
+          quality: 'highestaudio',
+          requestOptions 
+        });
         
         stream.on('error', (error: any) => {
           console.log('YouTube Stream Issue (Audio):', error.message);
-          let errorMsg = error.message || 'Erro ao processar o áudio do YouTube';
-          if (errorMsg.includes('Sign in to confirm') || errorMsg.includes('bot')) {
-             errorMsg = 'O YouTube bloqueou o acesso do servidor (Proteção Anti-Bot). Por favor, baixe o vídeo manualmente e faça o upload.';
-          }
+          const is429 = error.message?.includes('429') || error.message?.includes('Too Many Requests') || error.message?.includes('Sign in to confirm') || error.message?.includes('bot');
           if (!res.headersSent) {
-            res.status(500).send(errorMsg);
+            res.status(is429 ? 429 : 500).json({
+              error: is429 ? 'RATE_LIMIT_429' : 'STREAM_ERROR',
+              code: is429 ? 429 : 500,
+              message: is429 
+                ? 'O YouTube bloqueou temporariamente o download no servidor em nuvem (Status 429: Proteção Anti-Bot / Too Many Requests).'
+                : (error.message || 'Erro ao processar o áudio do YouTube.')
+            });
           } else {
-            res.end(); // Fechar a conexão se o cabeçalho já foi enviado
+            res.end();
           }
         });
 
@@ -194,15 +220,16 @@ async function startServer() {
       }
     } catch (error: any) {
       console.log('YouTube Fetch Issue:', error.message);
-      
-      let errorMsg = error.message || 'Erro ao processar o link do YouTube';
-      
-      if (errorMsg.includes('Sign in to confirm') || errorMsg.includes('bot') || errorMsg.includes('UnrecoverableError')) {
-         errorMsg = 'O YouTube bloqueou o acesso do servidor (Proteção Anti-Bot). Por favor, baixe o arquivo manualmente e faça o upload.';
-      }
+      const is429 = error.message?.includes('429') || error.message?.includes('Too Many Requests') || error.message?.includes('Sign in to confirm') || error.message?.includes('bot') || error.message?.includes('UnrecoverableError');
       
       if (!res.headersSent) {
-        res.status(500).send(errorMsg);
+        res.status(is429 ? 429 : 500).json({
+          error: is429 ? 'RATE_LIMIT_429' : 'FETCH_ERROR',
+          code: is429 ? 429 : 500,
+          message: is429
+            ? 'O YouTube bloqueou temporariamente o acesso do servidor em nuvem (Status 429: Proteção Anti-Bot / Too Many Requests).'
+            : (error.message || 'Erro ao processar o link do YouTube.')
+        });
       }
     }
   });
