@@ -179,18 +179,12 @@ export const Dropzone: React.FC<DropzoneProps> = ({
     setSearchResults([]);
     if (!searchInput.trim()) return;
 
-    if (platform !== 'youtube' && platform !== 'unknown') {
-      setSearchError(`O download de vídeos do ${platform.charAt(0).toUpperCase() + platform.slice(1)} está temporariamente indisponível devido a bloqueios de segurança do servidor em nuvem. No momento, apenas links do YouTube são suportados.`);
-      return;
-    }
-
     const query = searchInput.trim();
-    const isYouTube = query.includes('youtube.com') || query.includes('youtu.be');
     const isHttp = query.startsWith('http://') || query.startsWith('https://');
 
     // Trigger sponsored modal first, then proceed with the search/download
     setPendingAction(() => () => {
-      if (isYouTube || isHttp) {
+      if (isHttp) {
         downloadUrl(query);
       } else {
         performSearch(query);
@@ -291,8 +285,9 @@ export const Dropzone: React.FC<DropzoneProps> = ({
     setSearchError('');
     setErrorDetails(null);
     try {
-      const isYouTube = url.includes('youtube.com') || url.includes('youtu.be');
-      const fetchUrl = isYouTube 
+      const isHttp = url.startsWith('http://') || url.startsWith('https://');
+
+      const fetchUrl = isHttp
         ? `/api/yt/download?url=${encodeURIComponent(url)}&mode=${downloadMode}&quality=${videoQuality}` 
         : url;
 
@@ -317,7 +312,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
           setErrorDetails({
             is429: true,
             code: 429,
-            message: 'O YouTube bloqueou temporariamente o download no servidor em nuvem (Status 429: Proteção Anti-Bot / Too Many Requests).'
+            message: 'O provedor bloqueou temporariamente a requisição no servidor em nuvem (Status 429: Proteção Anti-Bot / Too Many Requests).'
           });
           return;
         }
@@ -326,16 +321,16 @@ export const Dropzone: React.FC<DropzoneProps> = ({
       }
       const blob = await response.blob();
       
-      let filename = 'video_web.mp4';
-      if (isYouTube) {
+      let filename = 'media.mp4';
+      if (isHttp) {
         const contentDisposition = response.headers.get('content-disposition');
         if (contentDisposition && contentDisposition.includes('filename="')) {
           filename = decodeURIComponent(contentDisposition.split('filename="')[1].split('"')[0]);
         } else {
-          filename = title ? `${title}.${downloadMode === 'video' ? 'mp4' : 'webm'}` : `youtube_${downloadMode}.${downloadMode === 'video' ? 'mp4' : 'webm'}`;
+          filename = title ? `${title}.${downloadMode === 'video' ? 'mp4' : 'm4a'}` : `media_${downloadMode}.${downloadMode === 'video' ? 'mp4' : 'm4a'}`;
         }
       } else {
-        filename = url.split('/').pop()?.split('?')[0] || 'video_web.mp4';
+        filename = url.split('/').pop()?.split('?')[0] || 'media.mp4';
       }
 
       if (downloadMode === 'video') {
@@ -350,7 +345,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
         setTimeout(() => URL.revokeObjectURL(downloadAnchor.href), 100);
       } else {
         // Modo áudio (adiciona ao Dropzone para converter/cortar)
-        const file = new File([blob], filename, { type: blob.type || (isYouTube ? 'audio/webm' : 'video/mp4') });
+        const file = new File([blob], filename, { type: blob.type || 'audio/mp4' });
         onFilesSelected([file]);
       }
 
@@ -380,7 +375,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
       <div className="mb-6 relative z-10 flex flex-col gap-2">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between px-1 gap-2 sm:gap-0">
           <div className="flex items-center gap-3">
-            <p className="text-xs text-slate-400 font-medium">Baixar por URL ou Pesquisar (YouTube)</p>
+            <p className="text-xs text-slate-400 font-medium">Baixar por URL (YouTube, TikTok, Instagram, Facebook, Vimeo, etc.) ou Pesquisar (YouTube)</p>
             <div className="flex items-center gap-2">
               <div className="flex bg-slate-800 rounded-lg p-0.5 border border-slate-700 w-fit">
                 <button
