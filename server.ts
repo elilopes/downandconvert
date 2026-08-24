@@ -6,6 +6,10 @@ import { fileURLToPath } from 'url';
 import ytSearch from 'yt-search';
 import { Readable } from 'stream';
 import ytdl from '@distube/ytdl-core';
+import multer from 'multer';
+import os from 'os';
+import fs from 'fs';
+import { spawn } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -551,6 +555,149 @@ async function startServer() {
         code: 500,
         message: error.message || 'Erro ao processar o download da mídia.'
       });
+    }
+  });
+
+  // Server-Side High-Speed FFmpeg Converter for Large Files
+  const upload = multer({
+    dest: path.join(os.tmpdir(), 'audiomorph_uploads'),
+    limits: { fileSize: 1024 * 1024 * 1024 } // 1GB limit
+  });
+
+  app.post('/api/convert-server', upload.single('file'), async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Nenhum arquivo de mídia enviado para conversão.' });
+    }
+
+    const inputPath = req.file.path;
+    const format = (req.body.format || 'mp4').toLowerCase();
+    const videoQuality = req.body.videoQuality || 'medium';
+    const bitrate = req.body.bitrate || '192';
+    const isVideo = ['mp4', 'webm', 'mkv', 'avi', 'mov'].includes(format);
+
+    const safeId = Math.random().toString(36).substring(2, 8);
+    const outputFilename = `converted_${Date.now()}_${safeId}.${format}`;
+    const outputPath = path.join(os.tmpdir(), outputFilename);
+
+    const args: string[] = ['-y', '-i', inputPath];
+
+    if (isVideo) {
+      const preset = videoQuality === 'high' ? 'slow' : videoQuality === 'low' ? 'ultrafast' : 'medium';
+      const crf = videoQuality === 'high' ? '18' : videoQuality === 'low' ? '28' : '23';
+
+      switch (format) {
+        case 'webm':
+          args.push('-c:v', 'libvpx-vp9', '-crf', crf, '-b:v', '0', '-c:a', 'libopus');
+          break;
+        case 'mp4':
+        case 'mkv':
+        case 'mov':
+          args.push('-c:v', 'libx264', '-preset', preset, '-crf', crf, '-c:a', 'aac', '-b:a', '128k', '-pix_fmt', 'yuv420p');
+          break;
+        case 'avi':
+          args.push('-c:v', 'mpeg4', '-q:v', '5', '-c:a', 'libmp3lame');
+          break;
+        default:
+          args.push('-c:v', 'copy', '-c:a', 'copy');
+      }
+    } else {
+      // Audio conversion
+      if (req.body.title) args.push('-metadata', `title=${req.body.title}`);
+      if (req.body.artist) args.push('-metadata', `artist=${req.body.artist}`);
+      if (req.body.album) args.push('-metadata', `album=${req.body.album}`);
+      if (req.body.genre) args.push('-metadata', `genre=${req.body.genre}`);
+
+      switch (format) {
+        case 'mp3':
+          args.push('-vn', '-c:a', 'libmp3lame', '-b:a', `${bitrate}k`);
+          break;
+        case 'wav':
+          args.push('-vn', '-c:a', 'pcm_s16le');
+          break;
+        case 'aac':
+        case 'm4a':
+          args.push('-vn', '-c:a', 'aac', '-b:a', `${bitrate}k`);
+          break;
+        case 'flac':
+          args.push('-vn', '-c:a', 'flac');
+          break;
+        case 'ogg':
+          args.push('-vn', '-c:a', 'libvorbis', '-b:a', `${bitrate}k`);
+          break;
+        case 'wma':
+          args.push('-vn', '-c:a', 'wmav2', '-b:a', `${bitrate}k`);
+          break;
+        case 'aiff':
+          args.push('-vn', '-c:a', 'pcm_s16be');
+          break;
+        default:
+          args.push('-vn', '-b:a', `${bitrate}k`);
+      }
+    }
+
+    args.push(outputPath);
+
+    const cleanup = () => {
+      try {
+        if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
+      } catch {}
+      try {
+        if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
+      } catch {}
+    };
+
+    try {
+      const ffmpegProc = spawn('ffmpeg', args);
+
+      ffmpegProc.on('error', (err) => {
+        console.error('Erro ao executar FFmpeg no servidor:', err);
+        cleanup();
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'FFmpeg não está disponível no servidor de hospedagem.' });
+        }
+      });
+
+      ffmpegProc.on('close', (code) => {
+        if (code !== 0) {
+          cleanup();
+          if (!res.headersSent) {
+            return res.status(500).json({ error: `Conversão no servidor falhou com código ${code}.` });
+          }
+          return;
+        }
+
+        let mimeType = 'application/octet-stream';
+        if (isVideo) {
+          mimeType = format === 'mkv' ? 'video/x-matroska' : `video/${format}`;
+        } else {
+          if (format === 'mp3') mimeType = 'audio/mpeg';
+          else if (format === 'wav') mimeType = 'audio/wav';
+          else if (format === 'aac') mimeType = 'audio/aac';
+          else if (format === 'ogg') mimeType = 'audio/ogg';
+          else if (format === 'flac') mimeType = 'audio/flac';
+        }
+
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `attachment; filename="${outputFilename}"`);
+
+        const readStream = fs.createReadStream(outputPath);
+        readStream.pipe(res);
+
+        readStream.on('end', () => {
+          cleanup();
+        });
+
+        readStream.on('error', (err) => {
+          console.error('Erro ao transmitir arquivo convertido:', err);
+          cleanup();
+        });
+      });
+    } catch (err: any) {
+      cleanup();
+      console.error('Erro fatal na conversão server-side:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: err.message || 'Erro interno na conversão do arquivo.' });
+      }
     }
   });
 
