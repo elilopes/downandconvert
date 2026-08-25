@@ -74,13 +74,13 @@ export const UssdTool: React.FC = () => {
       <div className="text-center max-w-3xl mx-auto mb-10">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-800/60 text-cyan-400 text-xs font-semibold mb-4 shadow-sm">
           <Smartphone className="w-3.5 h-3.5" />
-          <span>Utilitários de Telefonia & Android</span>
+          <span>{t('ussd.badge')}</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight mb-3">
-          Códigos <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400">USSD & MMI</span>
+          {t('ussd.title')}
         </h1>
         <p className="text-sm sm:text-base text-slate-400">
-          Pesquise atalhos rápidos de operadoras (Vivo, Claro, TIM, Oi) para consultar saldo, internet, além de códigos secretos de teste e diagnóstico do seu celular.
+          {t('ussd.desc')}
         </p>
       </div>
 
@@ -92,7 +92,7 @@ export const UssdTool: React.FC = () => {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Buscar código, operadora ou função..."
+              placeholder={t('ussd.search')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full bg-slate-950/80 border border-slate-700/70 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
@@ -102,12 +102,12 @@ export const UssdTool: React.FC = () => {
           {/* Carrier Filter Tabs */}
           <div className="flex flex-wrap items-center gap-1.5 w-full md:w-auto justify-start md:justify-end">
             {[
-              { id: 'todos', label: 'Todas' },
+              { id: 'todos', label: t('ussd.all') },
               { id: 'vivo', label: 'Vivo' },
               { id: 'claro', label: 'Claro' },
               { id: 'tim', label: 'TIM' },
               { id: 'oi', label: 'Oi' },
-              { id: 'geral', label: 'Universal' },
+              { id: 'geral', label: t('ussd.universal') },
               { id: 'samsung', label: 'Samsung/Android' },
             ].map(c => (
               <button
@@ -128,16 +128,16 @@ export const UssdTool: React.FC = () => {
         {/* Category Filter Pills */}
         <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-slate-800/60">
           <span className="text-xs text-slate-400 font-medium mr-1 flex items-center gap-1">
-            <Filter className="w-3 h-3 text-cyan-400" /> Categoria:
+            <Filter className="w-3 h-3 text-cyan-400" /> {t('ussd.cat')}
           </span>
           {[
-            { id: 'todos', label: 'Todas as Categorias' },
-            { id: 'saldo', label: '💰 Saldo' },
-            { id: 'recarga', label: '💳 Recarga' },
-            { id: 'internet', label: '📶 Internet' },
-            { id: 'numero', label: '📞 Meu Número' },
-            { id: 'teste', label: '🛠️ Testes de Hardware' },
-            { id: 'sistema', label: '⚙️ Sistema & IMEI' },
+            { id: 'todos', label: t('ussd.cat.all') },
+            { id: 'saldo', label: t('ussd.cat.saldo') },
+            { id: 'recarga', label: t('ussd.cat.recarga') },
+            { id: 'internet', label: t('ussd.cat.internet') },
+            { id: 'numero', label: t('ussd.cat.numero') },
+            { id: 'teste', label: t('ussd.cat.teste') },
+            { id: 'sistema', label: t('ussd.cat.sistema') },
           ].map(cat => (
             <button
               key={cat.id}
@@ -222,7 +222,7 @@ export const UssdTool: React.FC = () => {
                     {copiedCode === item.code ? (
                       <>
                         <Check className="w-4 h-4" />
-                        <span>Copiado</span>
+                        <span>{t('ussd.copied')}</span>
                       </>
                     ) : (
                       <>
@@ -240,7 +240,7 @@ export const UssdTool: React.FC = () => {
       {/* Info Notice */}
       <div className="mt-12 bg-slate-900/50 border border-cyan-900/30 rounded-2xl p-6 text-center max-w-3xl mx-auto space-y-3">
         <p className="text-xs text-slate-400 leading-relaxed">
-          💡 <strong className="text-slate-300">Dica:</strong> Se você estiver acessando este site pelo celular, basta clicar no ícone do telefone verde para abrir o discador automático com o código USSD ou MMI pronto para ser executado.
+          💡 {t('ussd.tip')}
         </p>
         <div className="pt-2 border-t border-slate-800 flex items-center justify-center gap-2 text-xs">
           <a
