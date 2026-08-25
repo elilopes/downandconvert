@@ -1,6 +1,7 @@
 import React from 'react';
 import { Music, ShieldCheck, Heart, Sparkles } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { VisitorCounter } from './VisitorCounter';
 
 interface FooterProps {
   onOpenTerms: () => void;
@@ -17,7 +18,11 @@ export const Footer: React.FC<FooterProps> = ({
   return (
     <footer className="w-full border-t border-slate-800/80 bg-slate-950/90 py-10 mt-16 text-slate-400">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="flex flex-col items-center justify-between gap-6 mb-8">
+          <VisitorCounter />
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-6 border-t border-slate-900">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-500 p-0.5 shadow-md">
               <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
@@ -65,4 +70,5 @@ export const Footer: React.FC<FooterProps> = ({
     </footer>
   );
 };
+
 
