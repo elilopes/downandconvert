@@ -649,10 +649,12 @@ export const Dropzone: React.FC<DropzoneProps> = ({
           </span>
         </div>
 
-        {/* Safe Badge Note */}
-        <div className="inline-flex items-center gap-2 text-xs text-slate-400 bg-slate-800/60 px-4 py-1.5 rounded-full border border-slate-700/50">
-          <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-          Conversão 100% no navegador • Seus vídeos não são enviados para nenhum servidor externo
+        {/* Safe Badge Note & Size Limit */}
+        <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
+          <div className="inline-flex items-center gap-2 text-slate-400 bg-slate-800/60 px-4 py-1.5 rounded-full border border-slate-700/50">
+            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+            Conversão 100% no navegador • Máx. 250MB por arquivo
+          </div>
         </div>
       </div>
 
