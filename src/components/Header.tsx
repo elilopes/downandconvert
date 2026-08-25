@@ -49,6 +49,9 @@ export const Header: React.FC<HeaderProps> = ({ darkMode, setDarkMode, onOpenFAQ
                 <span className="text-white">&</span>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Convert</span>
               </span>
+              <span className="text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 rounded-md">
+                Beta
+              </span>
             </div>
             <p className="text-xs text-slate-400 hidden sm:block">
               {t('header.subtitle')}
