@@ -264,6 +264,139 @@ const dict: Translations = {
     RU: "Код HTTP 429 означает 'Too Many Requests' (Слишком много запросов). Так как сервис размещен на облачных серверах (Render/AWS), YouTube блокирует IP-адреса дата-центров защитой от ботов. Чтобы обойти это, просто перетащите видеофайл со своего ПК или используйте функцию записи экрана/камеры.",
     HI: "HTTP कोड 429 का अर्थ है 'Too Many Requests' (अत्यधिक अनुरोध)। चूंकि साइट क्लाउड सर्वर (Render/AWS) पर होस्ट की गई है, YouTube डेटासेंटर आईपी को ब्लॉक कर देता है। आप अपने कंप्यूटर से वीडियो फ़ाइल खींचकर या स्क्रीन रिकॉर्डर का उपयोग करके बिना किसी सीमा के रूपांतरण कर सकते हैं।",
     KO: "HTTP 429 코드는 'Too Many Requests' (너무 많은 요청)를 의미합니다. 웹사이트가 클라우드 서버(Render/AWS 등)에서 호스팅되기 때문에 YouTube는 봇 방지 메커니즘을 통해 데이터센터 IP를 일시 차단합니다. 제한 없이 안전하게 사용하려면 PC에서 직접 파일을 드래그 앤 드롭하거나 내장된 '화면 또는 카메라 녹화' 기능을 사용하세요."
+  },
+  "ussd.badge": {
+    PT: "Utilitários de Telefonia & Android",
+    EN: "Telephony & Android Utilities",
+    RU: "Утилиты телефонии и Android",
+    HI: "टेलीफोनी और एंड्रॉइड यूटिलिटीज",
+    KO: "전화 및 안드로이드 유틸리티"
+  },
+  "ussd.title": {
+    PT: "Códigos USSD & MMI",
+    EN: "USSD & MMI Codes",
+    RU: "USSD и MMI коды",
+    HI: "USSD और MMI कोड",
+    KO: "USSD 및 MMI 코드"
+  },
+  "ussd.desc": {
+    PT: "Pesquise atalhos rápidos de operadoras (Vivo, Claro, TIM, Oi) para consultar saldo, internet, além de códigos secretos de teste e diagnóstico do seu celular.",
+    EN: "Search quick carrier shortcuts (Vivo, Claro, TIM, Oi) to check balance, internet, and secret mobile test & diagnostic codes.",
+    RU: "Ищите быстрые сокращения операторов (Vivo, Claro, TIM, Oi) для проверки баланса, интернета, а также секретные коды тестирования и диагностики мобильного телефона.",
+    HI: "संतुलन, इंटरनेट और गुप्त मोबाइल परीक्षण और नैदानिक कोड की जांच करने के लिए त्वरित वाहक शॉर्टकट (Vivo, Claro, TIM, Oi) खोजें.",
+    KO: "잔액, 인터넷, 휴대전화 테스트 및 진단용 비밀 코드를 확인하기 위한 빠른 통신사 단축키(Vivo, Claro, TIM, Oi)를 검색하세요."
+  },
+  "ussd.search": {
+    PT: "Buscar código, operadora ou função...",
+    EN: "Search code, carrier or function...",
+    RU: "Поиск кода, оператора или функции...",
+    HI: "कोड, ऑपरेटर या फ़ंक्शन खोजें...",
+    KO: "코드, 통신사 또는 기능 검색..."
+  },
+  "ussd.all": {
+    PT: "Todas",
+    EN: "All",
+    RU: "Все",
+    HI: "सभी",
+    KO: "전체"
+  },
+  "ussd.universal": {
+    PT: "Universal",
+    EN: "Universal",
+    RU: "Универсальный",
+    HI: "सार्वभौमिक",
+    KO: "범용"
+  },
+  "ussd.cat": {
+    PT: "Categoria:",
+    EN: "Category:",
+    RU: "Категория:",
+    HI: "श्रेणी:",
+    KO: "카테고리:"
+  },
+  "ussd.cat.all": {
+    PT: "Todas as Categorias",
+    EN: "All Categories",
+    RU: "Все категории",
+    HI: "सभी श्रेणियां",
+    KO: "모든 카테고리"
+  },
+  "ussd.cat.saldo": {
+    PT: "💰 Saldo",
+    EN: "💰 Balance",
+    RU: "💰 Баланс",
+    HI: "💰 शेष राशि",
+    KO: "💰 잔액"
+  },
+  "ussd.cat.recarga": {
+    PT: "💳 Recarga",
+    EN: "💳 Recharge",
+    RU: "💳 Пополнение",
+    HI: "💳 रीचार्ज",
+    KO: "💳 충전"
+  },
+  "ussd.cat.internet": {
+    PT: "📶 Internet",
+    EN: "📶 Internet",
+    RU: "📶 Интернет",
+    HI: "📶 इंटरनेट",
+    KO: "📶 인터넷"
+  },
+  "ussd.cat.numero": {
+    PT: "📞 Meu Número",
+    EN: "📞 My Number",
+    RU: "📞 Мой номер",
+    HI: "📞 मेरा नंबर",
+    KO: "📞 내 번호"
+  },
+  "ussd.cat.teste": {
+    PT: "🛠️ Testes de Hardware",
+    EN: "🛠️ Hardware Tests",
+    RU: "🛠️ Тесты оборудования",
+    HI: "🛠️ हार्डवेयर परीक्षण",
+    KO: "🛠️ 하드웨어 테스트"
+  },
+  "ussd.cat.sistema": {
+    PT: "⚙️ Sistema & IMEI",
+    EN: "⚙️ System & IMEI",
+    RU: "⚙️ Система и IMEI",
+    HI: "⚙️ सिस्टम और IMEI",
+    KO: "⚙️ 시스템 및 IMEI"
+  },
+  "ussd.copied": {
+    PT: "Copiado",
+    EN: "Copied",
+    RU: "Скопировано",
+    HI: "कॉपी किया गया",
+    KO: "복사됨"
+  },
+  "ussd.tip": {
+    PT: "Dica: Se você estiver acessando este site pelo celular, basta clicar no ícone do telefone verde para abrir o discador automático com o código USSD ou MMI pronto para ser executado.",
+    EN: "Tip: If you are accessing this site from your mobile phone, simply click the green phone icon to open the automatic dialer with the USSD or MMI code ready to run.",
+    RU: "Совет: Если вы заходите на этот сайт с мобильного телефона, просто нажмите на значок зеленого телефона, чтобы открыть автоматический номеронабиратель с готовым к запуску USSD или MMI кодом.",
+    HI: "सुझाव: यदि आप अपने मोबाइल फोन से इस साइट पर पहुँच रहे हैं, तो USSD या MMI कोड चलाने के लिए तैयार स्वचालित डायलर खोलने के लिए बस हरे रंग के फोन आइकन पर क्लिक करें।",
+    KO: "팁: 휴대전화로 이 사이트에 접속하는 경우 녹색 전화 아이콘을 클릭하기만 하면 실행할 준비가 된 USSD 또는 MMI 코드가 포함된 자동 다이얼러가 열립니다."
+  },
+  "header.popularCodes": {
+    PT: "Códigos Populares",
+    EN: "Popular Codes",
+    RU: "Популярные коды",
+    HI: "लोकप्रिय कोड",
+    KO: "인기 코드"
+  },
+  "popular.modal.title": {
+    PT: "Códigos USSD & MMI Mais Pesquisados",
+    EN: "Most Searched USSD & MMI Codes",
+    RU: "Самые популярные USSD и MMI коды",
+    HI: "सबसे अधिक खोजे गए USSD और MMI कोड",
+    KO: "가장 많이 검색된 USSD 및 MMI 코드"
+  },
+  "popular.modal.desc": {
+    PT: "Atalhos rápidos mais utilizados para operadoras e diagnóstico de dispositivos móveis.",
+    EN: "Most used quick shortcuts for carriers and mobile device diagnostics.",
+    RU: "Наиболее используемые быстрые ярлыки для операторов и диагностики мобильных устройств.",
+    HI: "वाहकों और मोबाइल डिवाइस निदान के लिए सबसे अधिक उपयोग किए جانے वाले त्वरित शॉर्टकट।",
+    KO: "통신사 및 모바일 기기 진단을 위한 가장 많이 사용되는 빠른 단축키입니다."
   }
 };
 
