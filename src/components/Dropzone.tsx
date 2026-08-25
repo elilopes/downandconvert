@@ -282,7 +282,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
             setErrorDetails({
               is429: true,
               code: 429,
-              message: 'O provedor bloqueou temporariamente a requisição no servidor em nuvem (Status 429: Proteção Anti-Bot / Too Many Requests).'
+              message: detailedMsg || 'O provedor bloqueou temporariamente a requisição no servidor em nuvem (Status 429: Proteção Anti-Bot / Too Many Requests).'
             });
             return;
           }
