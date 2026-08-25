@@ -269,7 +269,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose }) => {
                     <Mail className="w-5 h-5 text-indigo-400" />
                   </div>
                   <div>
-                    <span className="text-xs text-slate-400 block">E-mail de Contato / Suporte</span>
+                    <span className="text-xs text-slate-400 block">{t('contact.emailLabel')}</span>
                     <a
                       href="mailto:liclopes@gmail.com"
                       className="text-base sm:text-lg font-bold text-white hover:text-emerald-400 transition-colors"
