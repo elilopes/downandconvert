@@ -4,44 +4,44 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 interface UssdCode {
   code: string;
-  title: string;
-  description: string;
+  titleKey: string;
+  descKey: string;
   carrier: 'vivo' | 'claro' | 'tim' | 'oi' | 'geral' | 'android' | 'samsung' | 'xiaomi' | 'motorola';
   category: 'saldo' | 'recarga' | 'numero' | 'internet' | 'teste' | 'sistema' | 'limpeza';
 }
 
 const USSD_DATABASE: UssdCode[] = [
   // Vivo
-  { code: '*8000', title: 'Consultar Saldo Vivo', description: 'Recebe um SMS com o saldo de créditos e validade atual.', carrier: 'vivo', category: 'saldo' },
-  { code: '*800', title: 'Atendimento Vivo', description: 'Central de atendimento telefônico da operadora Vivo.', carrier: 'vivo', category: 'saldo' },
-  { code: '*8486', title: 'Central de Relacionamento Vivo', description: 'Falar diretamente com atendente Vivo.', carrier: 'vivo', category: 'saldo' },
-  { code: '*7000', title: 'Recarga Vivo com Cartão', description: 'Recarregue seus créditos informando o cartão de crédito.', carrier: 'vivo', category: 'recarga' },
+  { code: '*8000', titleKey: 'ussd.code.vivo.8000.title', descKey: 'ussd.code.vivo.8000.desc', carrier: 'vivo', category: 'saldo' },
+  { code: '*800', titleKey: 'ussd.code.vivo.800.title', descKey: 'ussd.code.vivo.800.desc', carrier: 'vivo', category: 'saldo' },
+  { code: '*8486', titleKey: 'ussd.code.vivo.8486.title', descKey: 'ussd.code.vivo.8486.desc', carrier: 'vivo', category: 'saldo' },
+  { code: '*7000', titleKey: 'ussd.code.vivo.7000.title', descKey: 'ussd.code.vivo.7000.desc', carrier: 'vivo', category: 'recarga' },
 
   // Claro
-  { code: '*544#', title: 'Consultar Internet Claro', description: 'Verifica o saldo de internet móvel e bônus disponíveis.', carrier: 'claro', category: 'internet' },
-  { code: '*546#', title: 'Consultar Saldo Claro', description: 'Mostra o saldo atual em créditos na tela do celular.', carrier: 'claro', category: 'saldo' },
-  { code: '*555#', title: 'Recarga Claro', description: 'Menu interativo para recarga e consulta de benefícios.', carrier: 'claro', category: 'recarga' },
-  { code: '*510#', title: 'Descobrir Meu Número Claro', description: 'Exibe o número da linha Claro na tela.', carrier: 'claro', category: 'numero' },
+  { code: '*544#', titleKey: 'ussd.code.claro.544.title', descKey: 'ussd.code.claro.544.desc', carrier: 'claro', category: 'internet' },
+  { code: '*546#', titleKey: 'ussd.code.claro.546.title', descKey: 'ussd.code.claro.546.desc', carrier: 'claro', category: 'saldo' },
+  { code: '*555#', titleKey: 'ussd.code.claro.555.title', descKey: 'ussd.code.claro.555.desc', carrier: 'claro', category: 'recarga' },
+  { code: '*510#', titleKey: 'ussd.code.claro.510.title', descKey: 'ussd.code.claro.510.desc', carrier: 'claro', category: 'numero' },
 
   // TIM
-  { code: '*222#', title: 'Consultar Saldo TIM', description: 'Exibe o saldo de créditos e validade na tela.', carrier: 'tim', category: 'saldo' },
-  { code: '*144#', title: 'Menu Principal TIM', description: 'Acesse promoções, saldo e atendimento TIM.', carrier: 'tim', category: 'saldo' },
-  { code: '*271#', title: 'Descobrir Meu Número TIM', description: 'Mostra o DDD e número do seu chip TIM.', carrier: 'tim', category: 'numero' },
-  { code: '*244#', title: 'Recarga TIM', description: 'Serviço rápido de recarga de créditos.', carrier: 'tim', category: 'recarga' },
+  { code: '*222#', titleKey: 'ussd.code.tim.222.title', descKey: 'ussd.code.tim.222.desc', carrier: 'tim', category: 'saldo' },
+  { code: '*144#', titleKey: 'ussd.code.tim.144.title', descKey: 'ussd.code.tim.144.desc', carrier: 'tim', category: 'saldo' },
+  { code: '*271#', titleKey: 'ussd.code.tim.271.title', descKey: 'ussd.code.tim.271.desc', carrier: 'tim', category: 'numero' },
+  { code: '*244#', titleKey: 'ussd.code.tim.244.title', descKey: 'ussd.code.tim.244.desc', carrier: 'tim', category: 'recarga' },
 
   // Oi
-  { code: '*880#', title: 'Menu Oi Interativo', description: 'Consulte saldo, internet, recargas e promoções.', carrier: 'oi', category: 'saldo' },
-  { code: '*800', title: 'Saldo Oi por Voz', description: 'Ouvir o saldo de créditos por ligação automática.', carrier: 'oi', category: 'saldo' },
+  { code: '*880#', titleKey: 'ussd.code.oi.880.title', descKey: 'ussd.code.oi.880.desc', carrier: 'oi', category: 'saldo' },
+  { code: '*800', titleKey: 'ussd.code.oi.800.title', descKey: 'ussd.code.oi.800.desc', carrier: 'oi', category: 'saldo' },
 
   // Android & Sistema / Diagnóstico / Testes
-  { code: '*#06#', title: 'Consultar IMEI (Universal)', description: 'Exibe o número de série de identificação global do aparelho (IMEI). Essencial para bloqueio em caso de roubo.', carrier: 'geral', category: 'sistema' },
-  { code: '*#*#4636#*#*', title: 'Menu de Informações e Diagnóstico', description: 'Mostra estatísticas de uso, bateria, conexão Wi-Fi e testes de rede.', carrier: 'android', category: 'teste' },
-  { code: '*#0*#', title: 'Modo de Teste de Hardware (Samsung)', description: 'Testa tela (cores RGB), touch screen, alto-falante, vibração, câmeras e sensores.', carrier: 'samsung', category: 'teste' },
-  { code: '*#*#34971539#*#*', title: 'Informações da Câmera', description: 'Exibe detalhes completos sobre o firmware e especificações das lentes da câmera.', carrier: 'android', category: 'sistema' },
-  { code: '*#*#7594#*#*', title: 'Alterar Comportamento do Botão Power', description: 'Permite desligar o aparelho diretamente ao segurar o botão power sem exibir o menu.', carrier: 'android', category: 'sistema' },
-  { code: '*#*#232338#*#*', title: 'Endereço MAC do Wi-Fi', description: 'Mostra o endereço MAC físico da placa de rede Wi-Fi.', carrier: 'android', category: 'sistema' },
-  { code: '*#*#0289#*#*', title: 'Teste de Áudio / Melodia', description: 'Testa o funcionamento dos alto-falantes e campainha do smartphone.', carrier: 'android', category: 'teste' },
-  { code: '*#*#0842#*#*', title: 'Teste de Vibração e Luz de Fundo', description: 'Testa o motor de vibração e o brilho da tela.', carrier: 'android', category: 'teste' },
+  { code: '*#06#', titleKey: 'ussd.code.geral.06.title', descKey: 'ussd.code.geral.06.desc', carrier: 'geral', category: 'sistema' },
+  { code: '*#*#4636#*#*', titleKey: 'ussd.code.android.4636.title', descKey: 'ussd.code.android.4636.desc', carrier: 'android', category: 'teste' },
+  { code: '*#0*#', titleKey: 'ussd.code.samsung.0.title', descKey: 'ussd.code.samsung.0.desc', carrier: 'samsung', category: 'teste' },
+  { code: '*#*#34971539#*#*', titleKey: 'ussd.code.android.34971539.title', descKey: 'ussd.code.android.34971539.desc', carrier: 'android', category: 'sistema' },
+  { code: '*#*#7594#*#*', titleKey: 'ussd.code.android.7594.title', descKey: 'ussd.code.android.7594.desc', carrier: 'android', category: 'sistema' },
+  { code: '*#*#232338#*#*', titleKey: 'ussd.code.android.232338.title', descKey: 'ussd.code.android.232338.desc', carrier: 'android', category: 'sistema' },
+  { code: '*#*#0289#*#*', titleKey: 'ussd.code.android.0289.title', descKey: 'ussd.code.android.0289.desc', carrier: 'android', category: 'teste' },
+  { code: '*#*#0842#*#*', titleKey: 'ussd.code.android.0842.title', descKey: 'ussd.code.android.0842.desc', carrier: 'android', category: 'teste' },
 ];
 
 export const UssdTool: React.FC = () => {
@@ -59,8 +59,8 @@ export const UssdTool: React.FC = () => {
 
   const filteredCodes = USSD_DATABASE.filter(item => {
     const matchesSearch = item.code.toLowerCase().includes(search.toLowerCase()) ||
-                          item.title.toLowerCase().includes(search.toLowerCase()) ||
-                          item.description.toLowerCase().includes(search.toLowerCase());
+                          t(item.titleKey).toLowerCase().includes(search.toLowerCase()) ||
+                          t(item.descKey).toLowerCase().includes(search.toLowerCase());
     
     const matchesCarrier = selectedCarrier === 'todos' || item.carrier === selectedCarrier;
     const matchesCategory = selectedCategory === 'todos' || item.category === selectedCategory;
@@ -189,10 +189,10 @@ export const UssdTool: React.FC = () => {
                 </div>
 
                 <h3 className="text-base font-bold text-white mb-1 group-hover:text-cyan-300 transition-colors">
-                  {item.title}
+                  {t(item.titleKey)}
                 </h3>
                 <p className="text-xs text-slate-400 mb-4 leading-relaxed">
-                  {item.description}
+                  {t(item.descKey)}
                 </p>
               </div>
 
@@ -253,6 +253,30 @@ export const UssdTool: React.FC = () => {
           </a>
         </div>
       </div>
+
+      {/* Editorial Content Section for AdSense Policy Compliance */}
+      <section className="mt-16 max-w-4xl mx-auto bg-slate-900/70 border border-slate-800/80 rounded-3xl p-8 shadow-xl">
+        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-cyan-400" />
+          {t('editorial.ussd.title')}
+        </h2>
+        <div className="space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
+          <p>
+            {t('editorial.ussd.p1')}
+          </p>
+          <h3 className="text-sm font-bold text-cyan-300 mt-4">{t('editorial.ussd.h2')}</h3>
+          <p>
+            {t('editorial.ussd.p2')}
+          </p>
+          <p>
+            {t('editorial.ussd.p3')}
+          </p>
+          <h3 className="text-sm font-bold text-cyan-300 mt-4">{t('editorial.ussd.h3')}</h3>
+          <p>
+            {t('editorial.ussd.p4')}
+          </p>
+        </div>
+      </section>
     </div>
   );
 };
