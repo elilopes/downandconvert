@@ -62,6 +62,20 @@ const dict: Translations = {
     HI: "यह कैसे काम करता है?",
     KO: "이용 방법"
   },
+  "dropzone.urlHint": {
+    PT: "Baixar a mídia usando a URL (tiktok, instagram, facebook, vimeo) - o youtube está em manutenção.",
+    EN: "Download media using URL (tiktok, instagram, facebook, vimeo) - YouTube is under maintenance.",
+    RU: "Скачайте медиа по URL (tiktok, instagram, facebook, vimeo) - YouTube находится на обслуживании.",
+    HI: "URL का उपयोग करके मीडिया डाउनलोड करें (tiktok, instagram, facebook, vimeo) - YouTube रखरखाव के अधीन है।",
+    KO: "URL을 사용하여 미디어 다운로드 (tiktok, instagram, facebook, vimeo) - YouTube는 유지 관리 중입니다."
+  },
+  "ussd.wikipedia": {
+    PT: "Saiba mais sobre esta tecnologia na wikipedia (USSD)",
+    EN: "Learn more about this technology on Wikipedia (USSD)",
+    RU: "Узнайте больше об этой технологии в Википедии (USSD)",
+    HI: "विकिपीडिया पर इस तकनीक के बारे में अधिक जानें (USSD)",
+    KO: "Wikipedia에서 이 기술에 대해 자세히 알아보세요 (USSD)"
+  },
   "dropzone.placeholder": {
     PT: "Cole o link do YouTube, Instagram, Facebook...",
     EN: "Paste YouTube, Instagram, Facebook link...",
