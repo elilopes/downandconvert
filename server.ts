@@ -55,7 +55,7 @@ async function fetchWithTimeout(url: string, options: any = {}, timeoutMs = 1200
   }
 }
 
-// 1. YouTube Data Fetcher
+// 1. YouTube Data Fetcher (youtube-media-downloader)
 async function fetchYoutubeData(videoId: string) {
   const host = 'youtube-media-downloader.p.rapidapi.com';
   const response = await fetchWithTimeout(`https://${host}/v2/video/details?videoId=${videoId}`, {
@@ -63,6 +63,153 @@ async function fetchYoutubeData(videoId: string) {
   });
   if (!response.ok) throw new Error(`YouTube API Error (Status ${response.status})`);
   return await response.json();
+}
+
+// 1.1. YouTube Video & MP3 Downloader API (youtube-video-mp3-downloader-api)
+async function fetchYoutubeVideoMp3DownloaderApi(url: string, mode: string = 'video') {
+  const host = 'youtube-video-mp3-downloader-api.p.rapidapi.com';
+  const response = await fetchWithTimeout(`https://${host}/download?url=${encodeURIComponent(url)}`, {
+    headers: {
+      'x-rapidapi-host': host,
+      'x-rapidapi-key': RAPID_API_KEY,
+      'Accept': 'application/json'
+    }
+  }, 10000);
+  if (!response.ok) throw new Error(`youtube-video-mp3-downloader-api returned status ${response.status}`);
+  const json = await response.json();
+  const data = json.data || json;
+  if (!data) throw new Error('Invalid response from youtube-video-mp3-downloader-api');
+
+  const title = (data.title || 'youtube_media').replace(/[^\w\s-]/gi, '').trim() || 'youtube_media';
+  const medias = Array.isArray(data.medias) ? data.medias : [];
+
+  if (mode === 'audio') {
+    const audioMedia = medias.find((m: any) => m.type === 'audio' || m.is_audio || m.quality?.includes('audio') || m.label?.includes('mp3') || m.ext === 'mp3' || m.ext === 'm4a');
+    if (audioMedia && audioMedia.url) {
+      return { downloadUrl: audioMedia.url, extension: audioMedia.ext || 'mp3', title };
+    }
+  }
+
+  // Video mode or fallback to video media
+  const videoMedia = medias.find((m: any) => (m.type === 'video' || !m.type) && m.url) || medias[0];
+  if (videoMedia && videoMedia.url) {
+    return { downloadUrl: videoMedia.url, extension: videoMedia.ext || 'mp4', title };
+  }
+
+  throw new Error('No media URL found in youtube-video-mp3-downloader-api');
+}
+
+// 1.2. YouTube to MP3 2025 API (youtube-mp3-2025)
+async function fetchYoutubeMp32025(videoId: string, mode: string = 'video') {
+  const host = 'youtube-mp3-2025.p.rapidapi.com';
+  const endpoint = mode === 'audio' ? '/v1/social/youtube/audio' : '/v1/social/youtube/video';
+  const response = await fetchWithTimeout(`https://${host}${endpoint}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-rapidapi-host': host,
+      'x-rapidapi-key': RAPID_API_KEY
+    },
+    body: JSON.stringify({ id: videoId })
+  }, 10000);
+
+  if (!response.ok) throw new Error(`youtube-mp3-2025 returned status ${response.status}`);
+  const data = await response.json();
+  const title = (data.title || 'youtube_media').replace(/[^\w\s-]/gi, '').trim() || 'youtube_media';
+
+  const downloadUrl = data.linkDownload || data.linkStream || data.downloadUrl || data.url || (data.formats?.[0]?.url);
+  if (!downloadUrl) throw new Error('No download URL returned from youtube-mp3-2025');
+
+  return { downloadUrl, extension: mode === 'audio' ? 'mp3' : 'mp4', title };
+}
+
+// 1.3. YouTube Quick Video Downloader API (youtube-quick-video-downloader)
+async function fetchYoutubeQuickVideoDownloader(url: string, mode: string = 'video') {
+  const host = 'youtube-quick-video-downloader.p.rapidapi.com';
+  const response = await fetchWithTimeout(`https://${host}/api/youtube/links`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-rapidapi-host': host,
+      'x-rapidapi-key': RAPID_API_KEY,
+      'X-Forwarded-For': '70.41.3.18'
+    },
+    body: JSON.stringify({ url })
+  }, 10000);
+
+  if (!response.ok) throw new Error(`youtube-quick-video-downloader returned status ${response.status}`);
+  const data = await response.json();
+  const title = (data.title || data.meta?.title || 'youtube_media').replace(/[^\w\s-]/gi, '').trim() || 'youtube_media';
+
+  let downloadUrl = '';
+  if (mode === 'audio') {
+    downloadUrl = data.audio || data.mp3 || data.audioUrl || (data.links?.audio?.[0]?.url) || (data.audios?.[0]?.url);
+  } else {
+    downloadUrl = data.video || data.mp4 || data.videoUrl || (data.links?.mp4?.[0]?.url) || (data.videos?.[0]?.url) || data.url;
+  }
+
+  if (!downloadUrl && (data.links || data.urls || data.medias)) {
+    const list = data.links || data.urls || data.medias;
+    if (Array.isArray(list) && list.length > 0) downloadUrl = list[0].url || list[0];
+  }
+
+  if (!downloadUrl) throw new Error('No download URL from youtube-quick-video-downloader');
+  return { downloadUrl, extension: mode === 'audio' ? 'mp3' : 'mp4', title };
+}
+
+// 1.4. YouTube Audio Video Download (youtube-audio-video-download)
+async function fetchYoutubeAudioVideoDownload(url: string, mode: string = 'video') {
+  const host = 'youtube-audio-video-download.p.rapidapi.com';
+  const response = await fetchWithTimeout(`https://${host}/geturl?video_url=${encodeURIComponent(url)}`, {
+    headers: {
+      'x-rapidapi-host': host,
+      'x-rapidapi-key': RAPID_API_KEY,
+      'Accept': 'application/json'
+    }
+  }, 10000);
+
+  if (!response.ok) throw new Error(`youtube-audio-video-download returned status ${response.status}`);
+  const data = await response.json();
+  const title = (data.title || data.video_title || 'youtube_media').replace(/[^\w\s-]/gi, '').trim() || 'youtube_media';
+
+  let downloadUrl = '';
+  if (mode === 'audio') {
+    downloadUrl = data.audio_url || data.audio || data.download_audio || (data.audios?.[0]?.url) || data.url;
+  } else {
+    downloadUrl = data.video_url || data.video || data.download_url || (data.videos?.[0]?.url) || data.url;
+  }
+
+  if (!downloadUrl) throw new Error('No download URL from youtube-audio-video-download');
+  return { downloadUrl, extension: mode === 'audio' ? 'mp3' : 'mp4', title };
+}
+
+// 1.5. YouTube Video / Stream Download (youtube-video-stream-download)
+async function fetchYoutubeVideoStreamDownload(videoId: string, mode: string = 'video') {
+  const host = 'youtube-video-stream-download.p.rapidapi.com';
+  const response = await fetchWithTimeout(`https://${host}/api/v1/Youtube/getAllDetails/${videoId}`, {
+    headers: {
+      'x-rapidapi-host': host,
+      'x-rapidapi-key': RAPID_API_KEY,
+      'Accept': 'application/json'
+    }
+  }, 10000);
+
+  if (!response.ok) throw new Error(`youtube-video-stream-download returned status ${response.status}`);
+  const data = await response.json();
+  const title = (data.title || data.videoDetails?.title || 'youtube_media').replace(/[^\w\s-]/gi, '').trim() || 'youtube_media';
+
+  let downloadUrl = '';
+  if (mode === 'audio') {
+    const audios = data.audioDetails || data.audios || (data.streamingData?.adaptiveFormats?.filter((f: any) => f.mimeType?.includes('audio')));
+    if (audios && audios.length > 0) downloadUrl = audios[0].url || audios[0].downloadUrl;
+  } else {
+    const videos = data.videoDetails || data.videos || (data.streamingData?.formats);
+    if (videos && videos.length > 0) downloadUrl = videos[0].url || videos[0].downloadUrl;
+  }
+
+  if (!downloadUrl && data.url) downloadUrl = data.url;
+  if (!downloadUrl) throw new Error('No download URL from youtube-video-stream-download');
+  return { downloadUrl, extension: mode === 'audio' ? 'mp3' : 'mp4', title };
 }
 
 // 2. TikTok Data Fetcher (No Watermark)
@@ -129,6 +276,56 @@ async function fetchInstagramReelsData(url: string) {
   if (!response.ok) throw new Error(`Instagram API Error (Status ${response.status})`);
   const data = await response.json();
   return data;
+}
+
+// 7. Invidious Open Source Fallback for YouTube
+async function fetchInvidiousFallback(videoId: string, mode: string = 'video'): Promise<any> {
+  const knownInstances = [
+    'https://inv.nadeko.net',
+    'https://invidious.nerdvpn.de',
+    'https://invidious.jing.rocks',
+    'https://invidious.private.coffee',
+    'https://yt.drgnz.club',
+    'https://inv.tux.pizza',
+    'https://invidious.projectsegfau.lt'
+  ];
+
+  for (const inst of knownInstances) {
+    try {
+      const res = await fetchWithTimeout(`${inst}/api/v1/videos/${videoId}`, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+      }, 5000);
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (!data || !data.title) continue;
+
+      const cleanTitle = (data.title || 'youtube_video').replace(/[^\w\s-]/gi, '').trim() || 'youtube_media';
+
+      if (mode === 'audio') {
+        const audios = (data.adaptiveFormats || []).filter((f: any) => f.type?.startsWith('audio/') && f.url);
+        if (audios.length > 0) {
+          const bestAudio = audios[0];
+          const ext = bestAudio.type?.includes('mp4') || bestAudio.container === 'm4a' ? 'm4a' : 'webm';
+          return { downloadUrl: bestAudio.url, extension: ext, title: cleanTitle, thumbnail: data.videoThumbnails?.[0]?.url || '' };
+        }
+      } else {
+        // Video mode
+        const formatStreams = (data.formatStreams || []).filter((f: any) => f.url);
+        if (formatStreams.length > 0) {
+          const bestStream = formatStreams[0];
+          return { downloadUrl: bestStream.url, extension: bestStream.container || 'mp4', title: cleanTitle, thumbnail: data.videoThumbnails?.[0]?.url || '' };
+        }
+        // Adaptive video fallback
+        const videos = (data.adaptiveFormats || []).filter((f: any) => f.type?.startsWith('video/') && f.url);
+        if (videos.length > 0) {
+          return { downloadUrl: videos[0].url, extension: 'mp4', title: cleanTitle, thumbnail: data.videoThumbnails?.[0]?.url || '' };
+        }
+      }
+    } catch (e) {
+      // Continue to next instance
+    }
+  }
+  throw new Error('Invidious instances unavailable');
 }
 
 // =========================================================================
@@ -319,17 +516,79 @@ async function startServer() {
       if (platform === 'youtube') {
         const videoId = extractVideoId(url);
         if (!videoId) return res.status(400).json({ error: 'INVALID_URL', message: 'URL do YouTube inválida.' });
+        
+        let infoSuccess = false;
+
+        // 1. Try youtube-video-mp3-downloader-api
         try {
-          const data = await fetchYoutubeData(videoId);
-          title = data.title || 'Vídeo do YouTube';
-          thumbnail = data.thumbnails?.[0]?.url || '';
-          author = data.channel?.name || 'YouTube';
-        } catch (err) {
-          console.warn('YouTube info RapidAPI failed, trying youtubedl fallback...', err);
-          const output: any = await fetchYtdlpFallback(url, platform, 'video');
-          title = output.title;
-          thumbnail = output.thumbnail;
-          author = output.author;
+          const ytApiData = await fetchYoutubeVideoMp3DownloaderApi(url, 'video');
+          if (ytApiData.title) {
+            title = ytApiData.title;
+            thumbnail = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+            author = 'YouTube';
+            infoSuccess = true;
+          }
+        } catch (e) {}
+
+        // 2. Try youtube-media-downloader
+        if (!infoSuccess) {
+          try {
+            const data = await fetchYoutubeData(videoId);
+            title = data.title || 'Vídeo do YouTube';
+            thumbnail = data.thumbnails?.[0]?.url || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+            author = data.channel?.name || 'YouTube';
+            infoSuccess = true;
+          } catch (err) {}
+        }
+
+        // 3. Try youtube-mp3-2025
+        if (!infoSuccess) {
+          try {
+            const yt2025 = await fetchYoutubeMp32025(videoId, 'video');
+            if (yt2025.title) {
+              title = yt2025.title;
+              thumbnail = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+              author = 'YouTube';
+              infoSuccess = true;
+            }
+          } catch (e) {}
+        }
+
+        // 4. Try All-In-One
+        if (!infoSuccess) {
+          try {
+            const aio = await fetchAllInOneData(url);
+            title = aio.title || aio.caption || 'Vídeo do YouTube';
+            thumbnail = aio.thumbnail || aio.cover || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+            author = aio.author || 'YouTube';
+            infoSuccess = true;
+          } catch (e) {}
+        }
+
+        // 5. Try Invidious
+        if (!infoSuccess) {
+          try {
+            const inv = await fetchInvidiousFallback(videoId, 'video');
+            title = inv.title;
+            thumbnail = inv.thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+            author = 'YouTube';
+            infoSuccess = true;
+          } catch (e) {}
+        }
+
+        // 6. Fallback to youtubedl
+        if (!infoSuccess) {
+          try {
+            const output: any = await fetchYtdlpFallback(url, platform, 'video');
+            title = output.title;
+            thumbnail = output.thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+            author = output.author;
+          } catch (err) {
+            // Default fallback with videoId thumbnail
+            title = 'Vídeo do YouTube';
+            thumbnail = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+            author = 'YouTube';
+          }
         }
       }
       else if (platform === 'tiktok') {
@@ -417,33 +676,157 @@ async function startServer() {
       if (platform === 'youtube') {
         const videoId = extractVideoId(url);
         if (!videoId) return res.status(400).json({ error: 'INVALID_URL', message: 'URL do YouTube inválida.' });
+
+        let ytSuccess = false;
+
+        // Tier 1: YouTube Video & MP3 Downloader API (youtube-video-mp3-downloader-api)
         try {
-          const data = await fetchYoutubeData(videoId);
-          title = (data.title || 'youtube_video').replace(/[^\w\s-]/gi, '').trim() || 'youtube_media';
-          if (mode === 'video') {
-            const videos = data.videos?.items || [];
-            const videoWithAudio = videos.filter((v: any) => v.hasAudio === true).sort((a: any, b: any) => b.height - a.height);
-            if (videoWithAudio.length > 0) {
-              downloadUrl = videoWithAudio[0].url;
-              extension = videoWithAudio[0].extension || 'mp4';
-            } else if (videos.length > 0) {
-              downloadUrl = videos[0].url;
-              extension = videos[0].extension || 'mp4';
-            }
-          } else {
-            const audios = data.audios?.items || [];
-            if (audios.length > 0) {
-              downloadUrl = audios[0].url;
-              extension = audios[0].extension || 'm4a';
-            }
+          const res1 = await fetchYoutubeVideoMp3DownloaderApi(url, mode);
+          if (res1.downloadUrl) {
+            downloadUrl = res1.downloadUrl;
+            extension = res1.extension;
+            title = res1.title;
+            ytSuccess = true;
           }
-          if (!downloadUrl) throw new Error('No url from RapidAPI');
-        } catch (err) {
-          console.warn('YouTube RapidAPI failed, trying yt-dlp fallback...', err);
-          const fallbackData: any = await fetchYtdlpFallback(url, platform, mode);
-          downloadUrl = fallbackData.downloadUrl;
-          extension = fallbackData.extension;
-          title = fallbackData.title;
+        } catch (e) {
+          console.warn('YouTube Tier 1 (youtube-video-mp3-downloader-api) failed, trying Tier 2...');
+        }
+
+        // Tier 2: YouTube to MP3 2025 API (youtube-mp3-2025)
+        if (!ytSuccess) {
+          try {
+            const res2 = await fetchYoutubeMp32025(videoId, mode);
+            if (res2.downloadUrl) {
+              downloadUrl = res2.downloadUrl;
+              extension = res2.extension;
+              title = res2.title;
+              ytSuccess = true;
+            }
+          } catch (e) {
+            console.warn('YouTube Tier 2 (youtube-mp3-2025) failed, trying Tier 3...');
+          }
+        }
+
+        // Tier 3: YouTube Quick Video Downloader (youtube-quick-video-downloader)
+        if (!ytSuccess) {
+          try {
+            const res3 = await fetchYoutubeQuickVideoDownloader(url, mode);
+            if (res3.downloadUrl) {
+              downloadUrl = res3.downloadUrl;
+              extension = res3.extension;
+              title = res3.title;
+              ytSuccess = true;
+            }
+          } catch (e) {
+            console.warn('YouTube Tier 3 (youtube-quick-video-downloader) failed, trying Tier 4...');
+          }
+        }
+
+        // Tier 4: YouTube Audio Video Download (youtube-audio-video-download)
+        if (!ytSuccess) {
+          try {
+            const res4 = await fetchYoutubeAudioVideoDownload(url, mode);
+            if (res4.downloadUrl) {
+              downloadUrl = res4.downloadUrl;
+              extension = res4.extension;
+              title = res4.title;
+              ytSuccess = true;
+            }
+          } catch (e) {
+            console.warn('YouTube Tier 4 (youtube-audio-video-download) failed, trying Tier 5...');
+          }
+        }
+
+        // Tier 5: YouTube Video Stream Download (youtube-video-stream-download)
+        if (!ytSuccess) {
+          try {
+            const res5 = await fetchYoutubeVideoStreamDownload(videoId, mode);
+            if (res5.downloadUrl) {
+              downloadUrl = res5.downloadUrl;
+              extension = res5.extension;
+              title = res5.title;
+              ytSuccess = true;
+            }
+          } catch (e) {
+            console.warn('YouTube Tier 5 (youtube-video-stream-download) failed, trying Tier 6...');
+          }
+        }
+
+        // Tier 6: Dedicated YouTube Media Downloader (youtube-media-downloader)
+        if (!ytSuccess) {
+          try {
+            const data = await fetchYoutubeData(videoId);
+            title = (data.title || 'youtube_video').replace(/[^\w\s-]/gi, '').trim() || 'youtube_media';
+            if (mode === 'video') {
+              const videos = data.videos?.items || [];
+              const videoWithAudio = videos.filter((v: any) => v.hasAudio === true).sort((a: any, b: any) => b.height - a.height);
+              if (videoWithAudio.length > 0) {
+                downloadUrl = videoWithAudio[0].url;
+                extension = videoWithAudio[0].extension || 'mp4';
+              } else if (videos.length > 0) {
+                downloadUrl = videos[0].url;
+                extension = videos[0].extension || 'mp4';
+              }
+            } else {
+              const audios = data.audios?.items || [];
+              if (audios.length > 0) {
+                downloadUrl = audios[0].url;
+                extension = audios[0].extension || 'm4a';
+              }
+            }
+            if (downloadUrl) ytSuccess = true;
+          } catch (e) {
+            console.warn('YouTube Tier 6 (youtube-media-downloader) failed, trying Tier 7 (All-In-One)...');
+          }
+        }
+
+        // Tier 7: All-in-One Social Downloader RapidAPI
+        if (!ytSuccess) {
+          try {
+            const aio = await fetchAllInOneData(url);
+            title = (aio.title || 'youtube_video').replace(/[^\w\s-]/gi, '').trim() || 'youtube_media';
+            downloadUrl = mode === 'audio' 
+              ? (aio.audio || aio.music || aio.url || aio.medias?.find((m: any) => m.type === 'audio')?.url)
+              : (aio.video || aio.url || aio.medias?.find((m: any) => m.type === 'video')?.url || aio.medias?.[0]?.url);
+            extension = mode === 'audio' ? 'mp3' : 'mp4';
+            if (downloadUrl) ytSuccess = true;
+          } catch (e) {
+            console.warn('YouTube Tier 7 failed, trying Tier 8 (Invidious Network)...');
+          }
+        }
+
+        // Tier 8: Invidious Open Source High-Speed Mirror Network
+        if (!ytSuccess) {
+          try {
+            const invData = await fetchInvidiousFallback(videoId, mode);
+            downloadUrl = invData.downloadUrl;
+            extension = invData.extension;
+            title = invData.title;
+            if (downloadUrl) ytSuccess = true;
+          } catch (e) {
+            console.warn('YouTube Tier 8 failed, trying Tier 9 (yt-dlp engine)...');
+          }
+        }
+
+        // Tier 9: Local yt-dlp binary with Cookies and Anti-Bot bypass
+        if (!ytSuccess) {
+          try {
+            const fallbackData: any = await fetchYtdlpFallback(url, platform, mode);
+            downloadUrl = fallbackData.downloadUrl;
+            extension = fallbackData.extension;
+            title = fallbackData.title;
+          } catch (err: any) {
+            console.error('All YouTube extraction layers exhausted:', err.message);
+            const isBotBlock = (err.message || '').includes('Sign in to confirm you') || (err.message || '').includes('bot');
+            if (isBotBlock) {
+              return res.status(429).json({
+                error: 'RATE_LIMIT_429',
+                code: 429,
+                message: 'O YouTube bloqueou temporariamente a requisição em nuvem por proteção Anti-Bot (Sign in to confirm you are not a bot). Forneça cookies válidos ou use links do TikTok, Instagram, Facebook ou Vimeo.'
+              });
+            }
+            throw err;
+          }
         }
       }
       else if (platform === 'tiktok') {
@@ -576,15 +959,32 @@ async function startServer() {
 
       for (let attempt = 1; attempt <= 3; attempt++) {
         try {
+          const reqHeaders: Record<string, string> = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Accept': '*/*',
+            'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Range': 'bytes=0-'
+          };
+          if (downloadUrl.includes('googlevideo.com') || downloadUrl.includes('youtube.com')) {
+            reqHeaders['Referer'] = 'https://www.youtube.com/';
+            reqHeaders['Origin'] = 'https://www.youtube.com';
+          }
+
           const resAttempt = await fetchWithTimeout(downloadUrl, {
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
-            }
+            headers: reqHeaders
           }, 30000);
 
-          if (resAttempt.ok) {
+          if (resAttempt.ok || resAttempt.status === 206) {
             streamRes = resAttempt;
             break;
+          }
+
+          if (resAttempt.status === 403 && (downloadUrl.includes('googlevideo.com') || downloadUrl.includes('youtube.com'))) {
+            return res.status(429).json({
+              error: 'RATE_LIMIT_429',
+              code: 429,
+              message: 'O link de transmissão do YouTube expirou ou foi restringido pelo Google Anti-Bot. Utilize links diretos de outras redes (TikTok, Instagram, Facebook, Vimeo) ou configure cookies no servidor.'
+            });
           }
 
           if (attempt <= 2 && (resAttempt.status === 500 || resAttempt.status === 502 || resAttempt.status === 503 || resAttempt.status === 504)) {
@@ -606,7 +1006,7 @@ async function startServer() {
         }
       }
 
-      if (!streamRes || !streamRes.ok) {
+      if (!streamRes || (!streamRes.ok && streamRes.status !== 206)) {
         return res.status(502).json({ 
           error: 'STREAM_ERROR', 
           message: streamError?.message || 'Não foi possível se conectar aos servidores de mídia do provedor após múltiplas tentativas.' 
