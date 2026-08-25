@@ -159,20 +159,20 @@ async function fetchYtdlpFallback(url: string, platform: string): Promise<any> {
   const ytOptions: any = {
     dumpJson: true,
     noWarnings: true,
-    noCallHome: true,
     noCheckCertificate: true,
     preferFreeFormats: true,
-    youtubeSkipDashManifest: true,
   };
+
+  // Se existir um arquivo cookies.txt ou variável COOKIES_FILE
+  const defaultCookiePath = path.resolve('./cookies.txt');
+  const cookiesFile = process.env.COOKIES_FILE || (fs.existsSync(defaultCookiePath) ? defaultCookiePath : undefined);
+  const cookieString = process.env[`${platform.toUpperCase()}_COOKIE`];
 
   let output;
   try {
     output = await youtubedl(url, ytOptions) as any;
   } catch (err) {
     console.warn(`yt-dlp sem cookies falhou para ${platform}, tentando com cookies (3ª opção)...`);
-    // 3rd option: try with platform-specific cookie or generic cookies file
-    const cookieString = process.env[`${platform.toUpperCase()}_COOKIE`];
-    const cookiesFile = process.env.COOKIES_FILE;
     
     if (cookiesFile) {
       ytOptions.cookies = cookiesFile;
@@ -184,7 +184,7 @@ async function fetchYtdlpFallback(url: string, platform: string): Promise<any> {
     
     try {
       output = await youtubedl(url, ytOptions) as any;
-    } catch (cookieErr) {
+    } catch (cookieErr: any) {
       throw new Error(`Erro no yt-dlp (com cookies): ${cookieErr.message || cookieErr.stderr || cookieErr}`);
     }
   }
