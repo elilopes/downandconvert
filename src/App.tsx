@@ -33,6 +33,7 @@ import { MouseFollower } from './components/MouseFollower';
 import { Footer } from './components/Footer';
 import { BottomAdBanner } from './components/BottomAdBanner';
 import { UssdTool } from './components/UssdTool';
+import { CookieBanner } from './components/CookieBanner';
 import {
   extractAudioBufferFromVideo,
   extractVideoThumbnail,
@@ -865,6 +866,7 @@ export default function App() {
 
       {/* Floating Rainbow Mouse Follower */}
       <MouseFollower />
+      <CookieBanner />
     </div>
   );
 }
