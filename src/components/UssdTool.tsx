@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Phone, Wrench, Smartphone, Copy, Check, Filter, ExternalLink, ShieldAlert, Sparkles, Zap } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface UssdCode {
   code: string;
@@ -44,6 +45,7 @@ const USSD_DATABASE: UssdCode[] = [
 ];
 
 export const UssdTool: React.FC = () => {
+  const { t } = useLanguage();
   const [search, setSearch] = useState('');
   const [selectedCarrier, setSelectedCarrier] = useState<string>('todos');
   const [selectedCategory, setSelectedCategory] = useState<string>('todos');
@@ -241,14 +243,13 @@ export const UssdTool: React.FC = () => {
           💡 <strong className="text-slate-300">Dica:</strong> Se você estiver acessando este site pelo celular, basta clicar no ícone do telefone verde para abrir o discador automático com o código USSD ou MMI pronto para ser executado.
         </p>
         <div className="pt-2 border-t border-slate-800 flex items-center justify-center gap-2 text-xs">
-          <span className="text-slate-500">Saiba mais sobre a tecnologia:</span>
           <a
             href="https://pt.wikipedia.org/wiki/Dados_de_Servi%C3%A7os_Suplementares_N%C3%A3o_estruturados"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-cyan-400 hover:text-cyan-300 underline inline-flex items-center gap-1 font-medium"
+            className="text-cyan-400 hover:text-cyan-300 underline inline-flex items-center gap-1.5 font-medium"
           >
-            Wikipedia (USSD) <ExternalLink className="w-3 h-3" />
+            {t('ussd.wikipedia')} <ExternalLink className="w-3.5 h-3.5" />
           </a>
         </div>
       </div>
