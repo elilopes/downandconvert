@@ -1,9 +1,11 @@
 import { ConversionOptions } from '../types';
 
-export async function encodeOnServer(
+async function singleEncodeAttempt(
   inputBlob: Blob,
   options: ConversionOptions,
-  onProgress?: (progress: number, stage: string) => void
+  onProgress?: (progress: number, stage: string) => void,
+  attemptNum: number = 1,
+  maxRetries: number = 2
 ): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
@@ -28,31 +30,29 @@ export async function encodeOnServer(
     xhr.open('POST', '/api/convert-server', true);
     xhr.responseType = 'blob';
 
-    // Track upload progress (0% -> 50%)
+    const prefix = attemptNum > 1 ? `[Tentativa ${attemptNum}/${maxRetries + 1}] ` : '';
+
+    // Track upload progress (0% -> 45%)
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable && onProgress) {
         const uploadPercent = Math.round((event.loaded / event.total) * 45);
-        onProgress(uploadPercent, `Enviando para o servidor (${uploadPercent * 2}%)...`);
+        onProgress(uploadPercent, `${prefix}Enviando para o servidor (${uploadPercent * 2}%)...`);
       }
     };
 
-    // Server processing state (45% -> 90%)
+    // Server processing state (45% -> 95%)
     let processingInterval: NodeJS.Timeout | null = null;
     let fakeProgress = 45;
 
-    xhr.onloadstart = () => {
-      // after upload completes, start simulating server processing progress
-    };
-
     xhr.upload.onload = () => {
       if (onProgress) {
-        onProgress(50, 'Processando no servidor em alta performance...');
+        onProgress(50, `${prefix}Processando no servidor em alta performance...`);
       }
       processingInterval = setInterval(() => {
         if (fakeProgress < 95) {
           fakeProgress += Math.floor(Math.random() * 5) + 2;
           if (onProgress) {
-            onProgress(Math.min(95, fakeProgress), 'Codificando no servidor (FFmpeg)...');
+            onProgress(Math.min(95, fakeProgress), `${prefix}Codificando no servidor (FFmpeg)...`);
           }
         }
       }, 500);
@@ -65,31 +65,84 @@ export async function encodeOnServer(
         if (onProgress) onProgress(100, 'Conversão finalizada!');
         resolve(xhr.response);
       } else {
-        // Try to read error text
+        // Read server error response and attach status
         const reader = new FileReader();
         reader.onload = () => {
           try {
             const errObj = JSON.parse(reader.result as string);
-            reject(new Error(errObj.error || errObj.message || `Erro do servidor (${xhr.status})`));
+            const err: any = new Error(errObj.error || errObj.message || `Erro do servidor (${xhr.status})`);
+            err.status = xhr.status;
+            reject(err);
           } catch {
-            reject(new Error(`Falha na conversão no servidor (${xhr.status})`));
+            const err: any = new Error(`Falha na conversão no servidor (${xhr.status})`);
+            err.status = xhr.status;
+            reject(err);
           }
         };
-        reader.onerror = () => reject(new Error(`Erro HTTP ${xhr.status}`));
+        reader.onerror = () => {
+          const err: any = new Error(`Erro HTTP ${xhr.status}`);
+          err.status = xhr.status;
+          reject(err);
+        };
         reader.readAsText(xhr.response);
       }
     };
 
     xhr.onerror = () => {
       if (processingInterval) clearInterval(processingInterval);
-      reject(new Error('Erro de conexão com o servidor.'));
+      const err: any = new Error('Erro de conexão com o servidor.');
+      err.status = 502; // Treated as retryable gateway/network error
+      reject(err);
     };
 
     xhr.ontimeout = () => {
       if (processingInterval) clearInterval(processingInterval);
-      reject(new Error('Tempo limite excedido ao converter no servidor.'));
+      const err: any = new Error('Tempo limite excedido ao converter no servidor.');
+      err.status = 504;
+      reject(err);
     };
 
     xhr.send(formData);
   });
+}
+
+/**
+ * Encodes audio/video on the server with automatic retry and exponential backoff
+ * for transient 500, 502, 503, and 504 server errors.
+ */
+export async function encodeOnServer(
+  inputBlob: Blob,
+  options: ConversionOptions,
+  onProgress?: (progress: number, stage: string) => void,
+  maxRetries: number = 2
+): Promise<Blob> {
+  let lastError: any = null;
+
+  for (let attempt = 1; attempt <= maxRetries + 1; attempt++) {
+    try {
+      return await singleEncodeAttempt(inputBlob, options, onProgress, attempt, maxRetries);
+    } catch (err: any) {
+      lastError = err;
+      const status = err.status || 500;
+      const isRetryable = status === 500 || status === 502 || status === 503 || status === 504 || status === 0;
+
+      if (attempt <= maxRetries && isRetryable) {
+        // Exponential backoff: 1.5s, 3.0s
+        const delayMs = Math.pow(2, attempt - 1) * 1500;
+        console.warn(`[encodeOnServer] Erro ${status} na tentativa ${attempt}/${maxRetries + 1}. Tentando novamente em ${delayMs}ms...`, err);
+        
+        if (onProgress) {
+          onProgress(
+            15,
+            `Servidor instável (${status}). Tentando reconectar em ${(delayMs / 1000).toFixed(1)}s (Tentativa ${attempt + 1}/${maxRetries + 1})...`
+          );
+        }
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      } else {
+        break;
+      }
+    }
+  }
+
+  throw lastError || new Error('Falha na conversão no servidor após múltiplas tentativas.');
 }
