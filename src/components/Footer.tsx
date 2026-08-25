@@ -30,16 +30,21 @@ export const Footer: React.FC<FooterProps> = ({
               </div>
             </div>
             <div>
-              <span className="text-base font-bold">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400">Down</span>
-                <span className="text-white">&</span>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Convert</span>
+              <span className="text-base font-bold inline-flex items-center gap-2">
+                <div>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400">Down</span>
+                  <span className="text-white">&</span>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Convert</span>
+                </div>
+                <span className="text-[9px] font-bold uppercase tracking-widest px-1 py-0.2 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 rounded">
+                  Beta
+                </span>
               </span>
               <p className="text-xs text-slate-500">{t('footer.rights')}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-6 text-xs text-slate-400">
+          <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 text-xs text-slate-400">
             <button
               onClick={onOpenTerms}
               className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors"
@@ -59,6 +64,34 @@ export const Footer: React.FC<FooterProps> = ({
               className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors"
             >
               {t('footer.contact')}
+            </button>
+            <span className="hidden md:inline">•</span>
+            <button
+              onClick={() => window.location.href = '/?modal=popular'}
+              className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors"
+            >
+              {t('footer.popular')}
+            </button>
+            <span className="hidden md:inline">•</span>
+            <button
+              onClick={() => window.location.href = '/?modal=faq'}
+              className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors"
+            >
+              {t('footer.howItWorks')}
+            </button>
+            <span className="hidden md:inline">•</span>
+            <button
+              onClick={() => window.location.href = '/?tab=downloader'}
+              className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors"
+            >
+              Downloader
+            </button>
+            <span className="hidden md:inline">•</span>
+            <button
+              onClick={() => window.location.href = '/?tab=ussd'}
+              className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors"
+            >
+              USSD
             </button>
           </div>
 
