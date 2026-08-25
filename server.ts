@@ -570,15 +570,47 @@ async function startServer() {
         return res.status(404).json({ error: 'NO_FORMATS', message: 'Nenhum link de download direto foi retornado para esta mídia.' });
       }
 
-      // Stream the media back to client
-      const streamRes = await fetchWithTimeout(downloadUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
-        }
-      }, 30000);
+      // Stream the media back to client with automatic retry (up to 2 retries on 500/502)
+      let streamRes: Response | null = null;
+      let streamError: any = null;
 
-      if (!streamRes.ok) {
-        return res.status(502).json({ error: 'STREAM_ERROR', message: 'Não foi possível se conectar aos servidores de mídia do provedor.' });
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          const resAttempt = await fetchWithTimeout(downloadUrl, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+            }
+          }, 30000);
+
+          if (resAttempt.ok) {
+            streamRes = resAttempt;
+            break;
+          }
+
+          if (attempt <= 2 && (resAttempt.status === 500 || resAttempt.status === 502 || resAttempt.status === 503 || resAttempt.status === 504)) {
+            const delay = Math.pow(2, attempt - 1) * 1000;
+            console.warn(`Upstream returned ${resAttempt.status}. Retrying in ${delay}ms (attempt ${attempt}/3)...`);
+            await new Promise((r) => setTimeout(r, delay));
+            continue;
+          }
+
+          streamRes = resAttempt;
+          break;
+        } catch (err: any) {
+          streamError = err;
+          if (attempt <= 2) {
+            const delay = Math.pow(2, attempt - 1) * 1000;
+            console.warn(`Upstream stream connection error. Retrying in ${delay}ms (attempt ${attempt}/3)...`, err.message);
+            await new Promise((r) => setTimeout(r, delay));
+          }
+        }
+      }
+
+      if (!streamRes || !streamRes.ok) {
+        return res.status(502).json({ 
+          error: 'STREAM_ERROR', 
+          message: streamError?.message || 'Não foi possível se conectar aos servidores de mídia do provedor após múltiplas tentativas.' 
+        });
       }
 
       res.header('Content-Disposition', `attachment; filename="${encodeURIComponent(title)}.${extension}"`);
