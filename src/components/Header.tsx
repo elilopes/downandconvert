@@ -45,9 +45,9 @@ export const Header: React.FC<HeaderProps> = ({ darkMode, setDarkMode, onOpenFAQ
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xl sm:text-2xl font-black tracking-tight">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-emerald-400">Down</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400">Down</span>
                 <span className="text-white">&</span>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-yellow-400">Convert</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Convert</span>
               </span>
             </div>
             <p className="text-xs text-slate-400 hidden sm:block">
