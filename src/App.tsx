@@ -773,6 +773,27 @@ export default function App() {
                 </div>
               </div>
             )}
+
+            {/* Editorial Guide Section for AdSense Policy Compliance */}
+            <section className="mt-16 max-w-4xl mx-auto bg-slate-900/70 border border-slate-800/80 rounded-3xl p-8 shadow-xl">
+              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-emerald-400" />
+                {t('editorial.media.title')}
+              </h2>
+              <div className="space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
+                <p>
+                  {t('editorial.media.p1')}
+                </p>
+                <h3 className="text-sm font-bold text-emerald-300 mt-4">{t('editorial.media.h2')}</h3>
+                <p>
+                  {t('editorial.media.p2')}
+                </p>
+                <h3 className="text-sm font-bold text-emerald-300 mt-4">{t('editorial.media.h3')}</h3>
+                <p>
+                  {t('editorial.media.p3')}
+                </p>
+              </div>
+            </section>
           </>
         )}
       </main>
