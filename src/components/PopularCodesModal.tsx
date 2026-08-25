@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Smartphone, Copy, Check, Phone, Flame, ExternalLink } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 interface PopularCodesModalProps {
   isOpen: boolean;
@@ -8,18 +10,31 @@ interface PopularCodesModalProps {
   onNavigateToUssd: () => void;
 }
 
-const POPULAR_CODES = [
-  { code: '*#06#', titleKey: 'ussd.code.geral.06.title', carrier: 'Universal', descKey: 'ussd.code.geral.06.desc' },
-  { code: '*544#', titleKey: 'ussd.code.claro.544.title', carrier: 'Claro', descKey: 'ussd.code.claro.544.desc' },
-  { code: '*8000', titleKey: 'ussd.code.vivo.8000.title', carrier: 'Vivo', descKey: 'ussd.code.vivo.8000.desc' },
-  { code: '*222#', titleKey: 'ussd.code.tim.222.title', carrier: 'TIM', descKey: 'ussd.code.tim.222.desc' },
-  { code: '*#*#4636#*#*', titleKey: 'ussd.code.android.4636.title', carrier: 'Android', descKey: 'ussd.code.android.4636.desc' },
-  { code: '*#0*#', titleKey: 'ussd.code.samsung.0.title', carrier: 'Samsung', descKey: 'ussd.code.samsung.0.desc' },
-];
+interface PopularCode {
+  code: string;
+  titleKey: string;
+  count: number;
+}
 
 export const PopularCodesModal: React.FC<PopularCodesModalProps> = ({ isOpen, onClose, onNavigateToUssd }) => {
   const { t } = useLanguage();
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [popularCodes, setPopularCodes] = useState<PopularCode[]>([]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const q = query(collection(db, 'ussd_searches'), orderBy('count', 'desc'), limit(6));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({
+        code: doc.id,
+        ...doc.data()
+      })) as PopularCode[];
+      setPopularCodes(data);
+    });
+
+    return () => unsubscribe();
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -53,21 +68,18 @@ export const PopularCodesModal: React.FC<PopularCodesModalProps> = ({ isOpen, on
         </div>
 
         <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
-          {POPULAR_CODES.map((item, idx) => (
+          {popularCodes.map((item, idx) => (
             <div
               key={idx}
               className="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 flex items-center justify-between gap-4 hover:border-cyan-500/40 transition-all group"
             >
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-cyan-950/60 text-cyan-300 border border-cyan-800/60">
-                    {item.carrier}
-                  </span>
                   <h4 className="text-sm font-bold text-slate-200 group-hover:text-cyan-300 transition-colors">
                     {t(item.titleKey)}
                   </h4>
                 </div>
-                <p className="text-xs text-slate-400">{t(item.descKey)}</p>
+                <p className="text-[10px] text-slate-500">Pesquisado {item.count} vez(es)</p>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
