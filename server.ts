@@ -10,6 +10,7 @@ import multer from 'multer';
 import os from 'os';
 import fs from 'fs';
 import { spawn } from 'child_process';
+import youtubedl from 'youtube-dl-exec';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -152,29 +153,51 @@ async function fetchYoutubeDirectFallback(url: string, mode: string) {
   return { useYtdl: true, info, agent, extension: mode === 'video' ? 'mp4' : 'm4a', title };
 }
 
-async function fetchInstagramDirectFallback(url: string) {
-  console.log('Using Instagram Direct Fallback with Session Cookie...');
-  const cookie = process.env.INSTAGRAM_COOKIE;
-  if (!cookie) throw new Error('Nenhum cookie de sessão do Instagram configurado (INSTAGRAM_COOKIE).');
-  
-  // Clean URL to base
-  const baseUrl = url.split('?')[0].replace(/\/$/, '');
-  const res = await fetchWithTimeout(`${baseUrl}/?__a=1&__d=dis`, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      'Cookie': cookie
+
+async function fetchYtdlpFallback(url: string, platform: string): Promise<any> {
+  console.log(`Using yt-dlp fallback for ${platform}...`);
+  const ytOptions: any = {
+    dumpJson: true,
+    noWarnings: true,
+    noCallHome: true,
+    noCheckCertificate: true,
+    preferFreeFormats: true,
+    youtubeSkipDashManifest: true,
+  };
+
+  let output;
+  try {
+    output = await youtubedl(url, ytOptions) as any;
+  } catch (err) {
+    console.warn(`yt-dlp sem cookies falhou para ${platform}, tentando com cookies (3ª opção)...`);
+    // 3rd option: try with platform-specific cookie or generic cookies file
+    const cookieString = process.env[`${platform.toUpperCase()}_COOKIE`];
+    const cookiesFile = process.env.COOKIES_FILE;
+    
+    if (cookiesFile) {
+      ytOptions.cookies = cookiesFile;
+    } else if (cookieString) {
+      ytOptions.addHeader = ['Cookie: ' + cookieString];
+    } else {
+      throw err; // Re-throw se não houver cookies configurados
     }
-  }, 10000);
+    
+    try {
+      output = await youtubedl(url, ytOptions) as any;
+    } catch (cookieErr) {
+      throw new Error(`Erro no yt-dlp (com cookies): ${cookieErr.message || cookieErr.stderr || cookieErr}`);
+    }
+  }
   
-  if (!res.ok) throw new Error(`Instagram Direct HTTP Error (Status ${res.status})`);
-  const data = await res.json();
+  const videoUrl = output.requested_formats ? output.requested_formats[0].url : output.url;
+  if (!videoUrl) throw new Error(`Não foi possível extrair a URL do vídeo de ${platform} via yt-dlp.`);
   
-  const videoUrl = data?.graphql?.shortcode_media?.video_url || 
-                   data?.items?.[0]?.video_versions?.[0]?.url;
-                   
-  if (!videoUrl) throw new Error('Não foi possível extrair a URL do vídeo do Instagram via Cookie Session.');
+  const title = (output.title || output.description || `${platform}_media_fallback`).replace(/[^\w\s-]/gi, '').trim() || `${platform}_media`;
+  const ext = output.ext || 'mp4';
+  const thumbnail = output.thumbnail || '';
+  const author = output.uploader || output.uploader_id || platform;
   
-  return { downloadUrl: videoUrl, extension: 'mp4', title: 'instagram_media_fallback' };
+  return { downloadUrl: videoUrl, extension: ext, title, thumbnail, author };
 }
 
 async function fetchTikTokDirectFallback(url: string) {
@@ -320,23 +343,18 @@ async function startServer() {
           thumbnail = data.thumbnail || '';
           author = 'Facebook';
         } catch {
-          const aio = await fetchAllInOneData(url);
-          title = aio.title || 'Vídeo do Facebook';
-          thumbnail = aio.thumbnail || '';
-          author = 'Facebook';
-        }
-      }
-      else if (platform === 'vimeo') {
-        try {
-          const data = await fetchVimeoData(url);
-          title = data.title || 'Vídeo do Vimeo';
-          thumbnail = data.thumbnail || data.thumb || '';
-          author = 'Vimeo';
-        } catch {
-          const aio = await fetchAllInOneData(url);
-          title = aio.title || 'Vídeo do Vimeo';
-          thumbnail = aio.thumbnail || '';
-          author = 'Vimeo';
+          try {
+            const aio = await fetchAllInOneData(url);
+            title = aio.title || 'Vídeo do Facebook';
+            thumbnail = aio.thumbnail || '';
+            author = 'Facebook';
+          } catch (err) {
+            console.warn('Facebook info RapidAPI failed, trying youtubedl fallback...', err);
+            const output: any = await fetchYtdlpFallback(url, platform);
+            title = output.title;
+            thumbnail = output.thumbnail;
+            author = output.author;
+          }
         }
       }
       else if (platform === 'instagram') {
@@ -346,10 +364,18 @@ async function startServer() {
           thumbnail = aio.thumbnail || aio.cover || '';
           author = aio.author || aio.username || 'Instagram';
         } catch {
-          const data = await fetchInstagramReelsData(url);
-          title = data.title || data.caption || 'Instagram Reel';
-          thumbnail = data.thumbnail_url || data.thumbnail || '';
-          author = data.owner_username || 'Instagram';
+          try {
+            const data = await fetchInstagramReelsData(url);
+            title = data.title || data.caption || 'Instagram Reel';
+            thumbnail = data.thumbnail_url || data.thumbnail || '';
+            author = data.owner_username || 'Instagram';
+          } catch (err) {
+            console.warn('Instagram info RapidAPI failed, trying youtubedl fallback...', err);
+            const output: any = await fetchYtdlpFallback(url, platform);
+            title = output.title;
+            thumbnail = output.thumbnail;
+            author = output.author;
+          }
         }
       }
       else {
@@ -466,11 +492,21 @@ async function startServer() {
             downloadUrl = data.audio_url || data.music || data.sd || data.hd;
             extension = data.audio_url || data.music ? 'mp4' : 'mp4';
           }
+          if (!downloadUrl) throw new Error('No url');
         } catch {
-          const aio = await fetchAllInOneData(url);
-          title = (aio.title || 'facebook_video').replace(/[^\w\s-]/gi, '').trim() || 'facebook_media';
-          downloadUrl = (mode === 'audio' ? (aio.audio || aio.url) : (aio.hd || aio.sd || aio.video || aio.url));
-          extension = 'mp4';
+          try {
+            const aio = await fetchAllInOneData(url);
+            title = (aio.title || 'facebook_video').replace(/[^\w\s-]/gi, '').trim() || 'facebook_media';
+            downloadUrl = (mode === 'audio' ? (aio.audio || aio.url) : (aio.hd || aio.sd || aio.video || aio.url));
+            extension = 'mp4';
+            if (!downloadUrl) throw new Error('No url');
+          } catch (err) {
+            console.warn('Facebook RapidAPI failed, trying youtdlp fallback...', err);
+            const fallbackData: any = await fetchYtdlpFallback(url, platform);
+            downloadUrl = fallbackData.downloadUrl;
+            extension = fallbackData.extension;
+            title = fallbackData.title;
+          }
         }
       }
       else if (platform === 'vimeo') {
@@ -507,7 +543,7 @@ async function startServer() {
             if (!downloadUrl) throw new Error('No url');
           } catch (err) {
             console.warn('Instagram RapidAPI failed, trying direct fallback...', err);
-            const fallbackData = await fetchInstagramDirectFallback(url);
+            const fallbackData = await fetchYtdlpFallback(url, platform);
             downloadUrl = fallbackData.downloadUrl;
             extension = fallbackData.extension;
             title = fallbackData.title;
