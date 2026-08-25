@@ -660,20 +660,36 @@ async function startServer() {
       const preset = videoQuality === 'high' ? 'slow' : videoQuality === 'low' ? 'ultrafast' : 'medium';
       const crf = videoQuality === 'high' ? '18' : videoQuality === 'low' ? '28' : '23';
 
+      const vFilters: string[] = [];
+      if (req.body.cropW && req.body.cropH) {
+        const cW = Math.max(2, Math.floor(Number(req.body.cropW) / 2) * 2);
+        const cH = Math.max(2, Math.floor(Number(req.body.cropH) / 2) * 2);
+        const cX = Math.max(0, Math.floor(Number(req.body.cropX) || 0));
+        const cY = Math.max(0, Math.floor(Number(req.body.cropY) || 0));
+        vFilters.push(`crop=${cW}:${cH}:${cX}:${cY}`);
+      }
+
       switch (format) {
         case 'webm':
+          if (vFilters.length > 0) args.push('-vf', vFilters.join(','));
           args.push('-c:v', 'libvpx-vp9', '-crf', crf, '-b:v', '0', '-c:a', 'libopus');
           break;
         case 'mp4':
         case 'mkv':
         case 'mov':
+          if (vFilters.length > 0) args.push('-vf', vFilters.join(','));
           args.push('-c:v', 'libx264', '-preset', preset, '-crf', crf, '-c:a', 'aac', '-b:a', '128k', '-pix_fmt', 'yuv420p');
           break;
         case 'avi':
+          if (vFilters.length > 0) args.push('-vf', vFilters.join(','));
           args.push('-c:v', 'mpeg4', '-q:v', '5', '-c:a', 'libmp3lame');
           break;
         default:
-          args.push('-c:v', 'copy', '-c:a', 'copy');
+          if (vFilters.length > 0) {
+            args.push('-vf', vFilters.join(','), '-c:v', 'libx264', '-preset', preset, '-c:a', 'copy');
+          } else {
+            args.push('-c:v', 'copy', '-c:a', 'copy');
+          }
       }
     } else {
       // Audio conversion
