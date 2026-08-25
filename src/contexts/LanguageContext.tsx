@@ -894,6 +894,20 @@ const dict: Translations = {
     RU: "Всего визитов:",
     HI: "कुल विजिट:",
     KO: "총 방문수:"
+  },
+  "cookie.banner.text": {
+    PT: "Utilizamos cookies para melhorar sua experiência e personalizar conteúdo. Ao continuar navegando, você concorda com nosso uso de cookies.",
+    EN: "We use cookies to improve your experience and personalize content. By continuing to browse, you agree to our use of cookies.",
+    RU: "Мы используем файлы cookie для улучшения вашего опыта и персонализации контента. Продолжая просматривать сайт, вы соглашаетесь на использование нами файлов cookie.",
+    HI: "हम आपके अनुभव को बेहतर बनाने और सामग्री को वैयक्तिकृत करने के लिए कुकीज़ का उपयोग करते हैं। ब्राउज़िंग जारी रखकर, आप हमारी कुकीज़ के उपयोग के लिए सहमत हैं।",
+    KO: "당사는 귀하의 경험을 향상시키고 콘텐츠를 개인화하기 위해 쿠키를 사용합니다. 브라우징을 계속함으로써 귀하는 당사의 쿠키 사용에 동의하게 됩니다."
+  },
+  "cookie.banner.button": {
+    PT: "Entendido",
+    EN: "Got it",
+    RU: "Понятно",
+    HI: "समझ गया",
+    KO: "알겠습니다"
   }
 };
 
