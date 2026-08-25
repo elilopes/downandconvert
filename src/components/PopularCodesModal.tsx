@@ -9,12 +9,12 @@ interface PopularCodesModalProps {
 }
 
 const POPULAR_CODES = [
-  { code: '*#06#', title: 'Consultar IMEI (Universal)', carrier: 'Universal', desc: 'Identificação global do aparelho' },
-  { code: '*544#', title: 'Saldo de Internet Claro', carrier: 'Claro', desc: 'Verifique megas e bônus' },
-  { code: '*8000', title: 'Consultar Saldo Vivo', carrier: 'Vivo', desc: 'Receba saldo por SMS' },
-  { code: '*222#', title: 'Consultar Saldo TIM', carrier: 'TIM', desc: 'Exibe créditos na tela' },
-  { code: '*#*#4636#*#*', title: 'Diagnóstico & Bateria', carrier: 'Android', desc: 'Estatísticas de uso e rede' },
-  { code: '*#0*#', title: 'Teste de Hardware Samsung', carrier: 'Samsung', desc: 'Testa display, touch e sensores' },
+  { code: '*#06#', titleKey: 'ussd.code.geral.06.title', carrier: 'Universal', descKey: 'ussd.code.geral.06.desc' },
+  { code: '*544#', titleKey: 'ussd.code.claro.544.title', carrier: 'Claro', descKey: 'ussd.code.claro.544.desc' },
+  { code: '*8000', titleKey: 'ussd.code.vivo.8000.title', carrier: 'Vivo', descKey: 'ussd.code.vivo.8000.desc' },
+  { code: '*222#', titleKey: 'ussd.code.tim.222.title', carrier: 'TIM', descKey: 'ussd.code.tim.222.desc' },
+  { code: '*#*#4636#*#*', titleKey: 'ussd.code.android.4636.title', carrier: 'Android', descKey: 'ussd.code.android.4636.desc' },
+  { code: '*#0*#', titleKey: 'ussd.code.samsung.0.title', carrier: 'Samsung', descKey: 'ussd.code.samsung.0.desc' },
 ];
 
 export const PopularCodesModal: React.FC<PopularCodesModalProps> = ({ isOpen, onClose, onNavigateToUssd }) => {
@@ -64,10 +64,10 @@ export const PopularCodesModal: React.FC<PopularCodesModalProps> = ({ isOpen, on
                     {item.carrier}
                   </span>
                   <h4 className="text-sm font-bold text-slate-200 group-hover:text-cyan-300 transition-colors">
-                    {item.title}
+                    {t(item.titleKey)}
                   </h4>
                 </div>
-                <p className="text-xs text-slate-400">{item.desc}</p>
+                <p className="text-xs text-slate-400">{t(item.descKey)}</p>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
