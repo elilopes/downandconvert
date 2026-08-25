@@ -908,6 +908,20 @@ const dict: Translations = {
     RU: "Понятно",
     HI: "समझ गया",
     KO: "알겠습니다"
+  },
+  "footer.popular": {
+    PT: "Códigos Populares",
+    EN: "Popular Codes",
+    RU: "Популярные коды",
+    HI: "लोकप्रिय कोड",
+    KO: "인기 코드"
+  },
+  "footer.howItWorks": {
+    PT: "Como funciona?",
+    EN: "How it works?",
+    RU: "Как это работает?",
+    HI: "यह कैसे काम करता है?",
+    KO: "작동 방식"
   }
 };
 
