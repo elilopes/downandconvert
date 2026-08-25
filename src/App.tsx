@@ -33,6 +33,7 @@ import { MouseFollower } from './components/MouseFollower';
 import { Footer } from './components/Footer';
 import { BottomAdBanner } from './components/BottomAdBanner';
 import { UssdTool } from './components/UssdTool';
+import { NotFound } from './components/NotFound';
 import { CookieBanner } from './components/CookieBanner';
 import {
   extractAudioBufferFromVideo,
@@ -60,6 +61,7 @@ export default function App() {
   const [isSampleModalOpen, setIsSampleModalOpen] = useState(false);
   const [isFAQOpen, setIsFAQOpen] = useState(false);
   const [legalModalType, setLegalModalType] = useState<'terms' | 'privacy' | 'contact' | null>(null);
+  const [isNotFound, setIsNotFound] = useState(false);
   const [isProcessingAny, setIsProcessingAny] = useState(false);
   const [isZipping, setIsZipping] = useState(false);
 
@@ -70,6 +72,11 @@ export default function App() {
   useEffect(() => {
     const parseUrlForModals = () => {
       const path = window.location.pathname.toLowerCase();
+      const validPaths = ['/', '/privacy', '/terms', '/contact'];
+      if (!validPaths.includes(path)) {
+        setIsNotFound(true);
+      }
+
       const searchParams = new URLSearchParams(window.location.search);
       const hash = window.location.hash.toLowerCase();
       const legalParam = (searchParams.get('legal') || searchParams.get('modal') || searchParams.get('page') || '').toLowerCase();
@@ -697,7 +704,9 @@ export default function App() {
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        {activeTab === 'ussd' ? (
+        {isNotFound ? (
+          <NotFound />
+        ) : activeTab === 'ussd' ? (
           <UssdTool />
         ) : (
           <>
