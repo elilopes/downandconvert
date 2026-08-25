@@ -35,6 +35,7 @@ import { BottomAdBanner } from './components/BottomAdBanner';
 import { UssdTool } from './components/UssdTool';
 import { NotFound } from './components/NotFound';
 import { CookieBanner } from './components/CookieBanner';
+import { PopularCodesModal } from './components/PopularCodesModal';
 import {
   extractAudioBufferFromVideo,
   extractVideoThumbnail,
@@ -61,6 +62,7 @@ export default function App() {
   const [isSampleModalOpen, setIsSampleModalOpen] = useState(false);
   const [isFAQOpen, setIsFAQOpen] = useState(false);
   const [legalModalType, setLegalModalType] = useState<'terms' | 'privacy' | 'contact' | null>(null);
+  const [isPopularCodesOpen, setIsPopularCodesOpen] = useState(false);
   const [isNotFound, setIsNotFound] = useState(false);
   const [isProcessingAny, setIsProcessingAny] = useState(false);
   const [isZipping, setIsZipping] = useState(false);
@@ -79,7 +81,13 @@ export default function App() {
 
       const searchParams = new URLSearchParams(window.location.search);
       const hash = window.location.hash.toLowerCase();
-      const legalParam = (searchParams.get('legal') || searchParams.get('modal') || searchParams.get('page') || '').toLowerCase();
+      const modalParam = searchParams.get('modal')?.toLowerCase();
+      const legalParam = (searchParams.get('legal') || searchParams.get('page') || '').toLowerCase();
+      const tabParam = searchParams.get('tab')?.toLowerCase();
+
+      if (tabParam === 'downloader' || tabParam === 'ussd') {
+        setActiveTab(tabParam);
+      }
 
       if (path.includes('privacy') || legalParam === 'privacy' || hash === '#privacy' || hash === '#privacidade') {
         setLegalModalType('privacy');
@@ -87,8 +95,10 @@ export default function App() {
         setLegalModalType('terms');
       } else if (path.includes('contact') || legalParam === 'contact' || hash === '#contact' || hash === '#contato') {
         setLegalModalType('contact');
-      } else if (path.includes('faq') || searchParams.get('modal') === 'faq' || hash === '#faq') {
+      } else if (path.includes('faq') || searchParams.get('modal') === 'faq' || hash === '#faq' || modalParam === 'faq') {
         setIsFAQOpen(true);
+      } else if (path.includes('popular') || modalParam === 'popular') {
+        setIsPopularCodesOpen(true);
       }
     };
 
@@ -860,6 +870,18 @@ export default function App() {
       {/* FAQ Modal */}
       {isFAQOpen && (
         <FAQModal onClose={() => setIsFAQOpen(false)} />
+      )}
+
+      {/* Popular Codes Modal */}
+      {isPopularCodesOpen && (
+        <PopularCodesModal
+          isOpen={isPopularCodesOpen}
+          onClose={() => setIsPopularCodesOpen(false)}
+          onNavigateToUssd={() => {
+            setActiveTab('ussd');
+            setIsPopularCodesOpen(false);
+          }}
+        />
       )}
 
       {/* Legal & Contact Modal */}
