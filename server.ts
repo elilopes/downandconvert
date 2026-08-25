@@ -154,13 +154,14 @@ async function fetchYoutubeDirectFallback(url: string, mode: string) {
 }
 
 
-async function fetchYtdlpFallback(url: string, platform: string): Promise<any> {
+async function fetchYtdlpFallback(url: string, platform: string, mode: string = 'video'): Promise<any> {
   console.log(`Using yt-dlp fallback for ${platform}...`);
   const ytOptions: any = {
     dumpJson: true,
     noWarnings: true,
     noCheckCertificate: true,
     preferFreeFormats: true,
+    format: mode === 'audio' ? 'bestaudio/best' : 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
   };
 
   // Se existir um arquivo cookies.txt ou variável COOKIES_FILE
@@ -318,11 +319,19 @@ async function startServer() {
       if (platform === 'youtube') {
         const videoId = extractVideoId(url);
         if (!videoId) return res.status(400).json({ error: 'INVALID_URL', message: 'URL do YouTube inválida.' });
-        const data = await fetchYoutubeData(videoId);
-        title = data.title || 'Vídeo do YouTube';
-        thumbnail = data.thumbnails?.[0]?.url || '';
-        author = data.channel?.name || 'YouTube';
-      } 
+        try {
+          const data = await fetchYoutubeData(videoId);
+          title = data.title || 'Vídeo do YouTube';
+          thumbnail = data.thumbnails?.[0]?.url || '';
+          author = data.channel?.name || 'YouTube';
+        } catch (err) {
+          console.warn('YouTube info RapidAPI failed, trying youtubedl fallback...', err);
+          const output: any = await fetchYtdlpFallback(url, platform, 'video');
+          title = output.title;
+          thumbnail = output.thumbnail;
+          author = output.author;
+        }
+      }
       else if (platform === 'tiktok') {
         try {
           const data = await fetchTikTokData(url);
@@ -350,7 +359,7 @@ async function startServer() {
             author = 'Facebook';
           } catch (err) {
             console.warn('Facebook info RapidAPI failed, trying youtubedl fallback...', err);
-            const output: any = await fetchYtdlpFallback(url, platform);
+            const output: any = await fetchYtdlpFallback(url, platform, 'video');
             title = output.title;
             thumbnail = output.thumbnail;
             author = output.author;
@@ -371,7 +380,7 @@ async function startServer() {
             author = data.owner_username || 'Instagram';
           } catch (err) {
             console.warn('Instagram info RapidAPI failed, trying youtubedl fallback...', err);
-            const output: any = await fetchYtdlpFallback(url, platform);
+            const output: any = await fetchYtdlpFallback(url, platform, 'video');
             title = output.title;
             thumbnail = output.thumbnail;
             author = output.author;
@@ -408,31 +417,9 @@ async function startServer() {
       if (platform === 'youtube') {
         const videoId = extractVideoId(url);
         if (!videoId) return res.status(400).json({ error: 'INVALID_URL', message: 'URL do YouTube inválida.' });
-        
         try {
-          // 1. Try direct ytdl-core first
-          const fallbackData = await fetchYoutubeDirectFallback(url, mode);
-          if (fallbackData.useYtdl) {
-            res.header('Content-Disposition', `attachment; filename="${encodeURIComponent(fallbackData.title)}.${fallbackData.extension}"`);
-            res.header('Content-Type', fallbackData.extension === 'mp4' ? 'video/mp4' : 'audio/mpeg');
-            const ytStream = ytdl.downloadFromInfo(fallbackData.info as any, {
-              quality: mode === 'video' ? 'highest' : 'highestaudio',
-              filter: mode === 'video' ? 'audioandvideo' : 'audioonly',
-              agent: fallbackData.agent
-            });
-            ytStream.pipe(res);
-            ytStream.on('error', (err) => {
-              console.error('ytdl stream error:', err);
-              if (!res.headersSent) res.status(502).json({ error: 'STREAM_ERROR', message: 'Erro na transmissão do YouTube.' });
-            });
-            return;
-          }
-        } catch (directErr) {
-          console.warn('YouTube direct fallback failed, trying RapidAPI...', directErr);
-          // 2. Fallback to RapidAPI
           const data = await fetchYoutubeData(videoId);
           title = (data.title || 'youtube_video').replace(/[^\w\s-]/gi, '').trim() || 'youtube_media';
-
           if (mode === 'video') {
             const videos = data.videos?.items || [];
             const videoWithAudio = videos.filter((v: any) => v.hasAudio === true).sort((a: any, b: any) => b.height - a.height);
@@ -451,6 +438,12 @@ async function startServer() {
             }
           }
           if (!downloadUrl) throw new Error('No url from RapidAPI');
+        } catch (err) {
+          console.warn('YouTube RapidAPI failed, trying yt-dlp fallback...', err);
+          const fallbackData: any = await fetchYtdlpFallback(url, platform, mode);
+          downloadUrl = fallbackData.downloadUrl;
+          extension = fallbackData.extension;
+          title = fallbackData.title;
         }
       }
       else if (platform === 'tiktok') {
@@ -502,7 +495,7 @@ async function startServer() {
             if (!downloadUrl) throw new Error('No url');
           } catch (err) {
             console.warn('Facebook RapidAPI failed, trying youtdlp fallback...', err);
-            const fallbackData: any = await fetchYtdlpFallback(url, platform);
+            const fallbackData: any = await fetchYtdlpFallback(url, platform, mode);
             downloadUrl = fallbackData.downloadUrl;
             extension = fallbackData.extension;
             title = fallbackData.title;
@@ -520,11 +513,21 @@ async function startServer() {
             downloadUrl = data.url;
           }
           extension = 'mp4';
+          if (!downloadUrl) throw new Error('No url from RapidAPI');
         } catch {
-          const aio = await fetchAllInOneData(url);
-          title = (aio.title || 'vimeo_video').replace(/[^\w\s-]/gi, '').trim() || 'vimeo_media';
-          downloadUrl = aio.video || aio.url || aio.medias?.[0]?.url;
-          extension = 'mp4';
+          try {
+            const aio = await fetchAllInOneData(url);
+            title = (aio.title || 'vimeo_video').replace(/[^\w\s-]/gi, '').trim() || 'vimeo_media';
+            downloadUrl = aio.video || aio.url || aio.medias?.[0]?.url;
+            extension = 'mp4';
+            if (!downloadUrl) throw new Error('No url from RapidAPI AllInOne');
+          } catch (err) {
+            console.warn('Vimeo API failed, trying yt-dlp fallback...', err);
+            const fallbackData: any = await fetchYtdlpFallback(url, platform, mode);
+            downloadUrl = fallbackData.downloadUrl;
+            extension = fallbackData.extension;
+            title = fallbackData.title;
+          }
         }
       }
       else if (platform === 'instagram') {
@@ -543,7 +546,7 @@ async function startServer() {
             if (!downloadUrl) throw new Error('No url');
           } catch (err) {
             console.warn('Instagram RapidAPI failed, trying direct fallback...', err);
-            const fallbackData = await fetchYtdlpFallback(url, platform);
+            const fallbackData = await fetchYtdlpFallback(url, platform, mode);
             downloadUrl = fallbackData.downloadUrl;
             extension = fallbackData.extension;
             title = fallbackData.title;
