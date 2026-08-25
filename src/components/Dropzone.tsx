@@ -364,7 +364,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
       <div className="mb-6 relative z-10 flex flex-col gap-2">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between px-1 gap-2 sm:gap-0">
           <div className="flex items-center gap-3">
-            <p className="text-xs text-slate-400 font-medium">Baixar por URL (YouTube, TikTok, Instagram, Facebook, Vimeo, etc.) ou Pesquisar (YouTube)</p>
+            <p className="text-xs text-slate-400 font-medium">{t('dropzone.urlHint')}</p>
             <div className="flex items-center gap-2">
               <div className="flex bg-slate-800 rounded-lg p-0.5 border border-slate-700 w-fit">
                 <button
