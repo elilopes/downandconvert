@@ -139,7 +139,7 @@ export default function App() {
         metadata: {
           title: cleanTitle,
           artist: '',
-          album: 'AudioMorph Conversões',
+          album: 'Down&Convert processing...',
           year: new Date().getFullYear().toString(),
           genre: 'Vários',
           includeCover: true,
