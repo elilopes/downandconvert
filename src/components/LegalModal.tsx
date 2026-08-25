@@ -276,6 +276,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose }) => {
                     >
                       liclopes@gmail.com
                     </a>
+                    <span className="text-xs text-cyan-400 font-medium block mt-0.5">by TechViva / Eli Lopes</span>
                   </div>
                 </div>
 
