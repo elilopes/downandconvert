@@ -28,11 +28,11 @@ const dict: Translations = {
     KO: "웹에서 미디어 다운로드 및 변환"
   },
   "hero.desc": {
-    PT: "Converta vídeos, baixe conteúdo do YouTube, grave sua tela ou câmera e salve tudo diretamente no seu Google Drive. Corte áudio, ajuste volume, adicione metadados e converta arquivos localmente no navegador com total privacidade.",
-    EN: "Convert videos, download YouTube content, record your screen or camera, and save everything directly to your Google Drive. Trim audio, adjust volume, add metadata, and convert files locally in the browser with total privacy.",
-    RU: "Конвертируйте видео, скачивайте контент с YouTube, записывайте экран или камеру и сохраняйте все прямо на свой Google Диск. Обрезайте аудио, настраивайте громкость, добавляйте метаданные и конвертируйте файлы локально в браузере с полной конфиденциальностью.",
-    HI: "वीडियो कनवर्ट करें, YouTube सामग्री डाउनलोड करें, अपनी स्क्रीन या कैमरा रिकॉर्ड करें, और सब कुछ सीधे अपने Google ड्राइव में सहेजें। ऑडियो ट्रिम करें, वॉल्यूम समायोजित करें, मेटाडेटा जोड़ें, और पूर्ण गोपनीयता के साथ ब्राउज़र में स्थानीय रूप से फ़ाइलों को कनवर्ट करें।",
-    KO: "동영상을 변환하고, YouTube 콘텐츠를 다운로드하고, 화면이나 카메라를 녹화하여 모든 것을 Google 드라이브에 직접 저장하세요. 완벽한 개인정보 보호와 함께 브라우저에서 로컬로 오디오를 다듬고 볼륨을 조절하며 메타데이터를 추가하고 변환할 수 있습니다."
+    PT: "Converta vídeos, baixe mídias das redes sociais, grave sua tela ou câmera e salve no seu Google Drive. Corte áudio, corte vídeo, adicione metadados, converta arquivos de mídia localmente no navegador com total privacidade e, pesquise códigos secretos USSD e MMI para celular.",
+    EN: "Convert videos, download social media media, record your screen or camera, and save to your Google Drive. Trim audio, trim video, add metadata, convert media files locally in the browser with total privacy, and search secret USSD and MMI mobile codes.",
+    RU: "Конвертируйте видео, скачивайте медиа из социальных сетей, записывайте экран или камеру и сохраняйте на свой Google Диск. Обрезайте аудио, обрезайте видео, добавляйте метаданные, конвертируйте медиафайлы локально в браузере с полной конфиденциальностью и ищите секретные коды USSD и MMI для мобильных устройств.",
+    HI: "वीडियो कनवर्ट करें, सोशल मीडिया मीडिया डाउनलोड करें, अपनी स्क्रीन या कैमरा रिकॉर्ड करें, और अपने Google ड्राइव में सहेजें। ऑडियो ट्रिम करें, वीडियो ट्रिम करें, मेटाडेटा जोड़ें, पूर्ण गोपनीयता के साथ ब्राउज़र में स्थानीय रूप से मीडिया फ़ाइलों को कनवर्ट करें, और गुप्त USSD और MMI मोबाइल कोड खोजें।",
+    KO: "동영상을 변환하고, 소셜 미디어 미디어를 다운로드하고, 화면이나 카메라를 녹화하여 Google 드라이브에 저장하세요. 오디오 다듬기, 비디오 다듬기, 메타데이터 추가, 브라우저에서 로컬로 미디어 파일 변환, 비밀 USSD 및 MMI 모바일 코드 검색을 완벽한 개인정보 보호와 함께 이용하세요."
   },
   "header.free": {
     PT: "Conversor Grátis & Ilimitado",
