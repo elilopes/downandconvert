@@ -6,4 +6,46 @@
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
+  <url>
+    <loc>https://ais-dev-b6nqzlqpjj5byf3df77mjn-18401513977.us-west1.run.app/?tab=downloader</loc>
+    <lastmod>2026-08-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ais-dev-b6nqzlqpjj5byf3df77mjn-18401513977.us-west1.run.app/?tab=ussd</loc>
+    <lastmod>2026-08-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ais-dev-b6nqzlqpjj5byf3df77mjn-18401513977.us-west1.run.app/?modal=popular</loc>
+    <lastmod>2026-08-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://ais-dev-b6nqzlqpjj5byf3df77mjn-18401513977.us-west1.run.app/?modal=faq</loc>
+    <lastmod>2026-08-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://ais-dev-b6nqzlqpjj5byf3df77mjn-18401513977.us-west1.run.app/privacy</loc>
+    <lastmod>2026-08-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://ais-dev-b6nqzlqpjj5byf3df77mjn-18401513977.us-west1.run.app/terms</loc>
+    <lastmod>2026-08-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://ais-dev-b6nqzlqpjj5byf3df77mjn-18401513977.us-west1.run.app/contact</loc>
+    <lastmod>2026-08-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
 </urlset>
