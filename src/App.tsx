@@ -663,7 +663,7 @@ export default function App() {
       </div>
 
       {/* Header Bar */}
-      <Header darkMode={true} setDarkMode={() => {}} onOpenFAQ={() => setIsFAQOpen(true)} />
+      <Header darkMode={true} setDarkMode={() => {}} onOpenFAQ={() => setIsFAQOpen(true)} onNavigateToUssd={() => setActiveTab('ussd')} />
 
       {/* Navigation Tabs Bar */}
       <div className="w-full bg-slate-900/90 border-b border-slate-800/80 sticky top-20 z-30 shadow-md">
