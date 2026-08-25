@@ -112,6 +112,18 @@ export async function encodeWithFFmpeg(
     const args: string[] = ['-i', inputName];
 
     if (isVideo) {
+      // Build video filter chain (crop + scale)
+      const vFilters: string[] = [];
+      if (options.crop && options.crop.enabled && options.crop.width > 0 && options.crop.height > 0) {
+        const cropW = Math.max(2, Math.floor(options.crop.width / 2) * 2);
+        const cropH = Math.max(2, Math.floor(options.crop.height / 2) * 2);
+        const cropX = Math.max(0, Math.floor(options.crop.x));
+        const cropY = Math.max(0, Math.floor(options.crop.y));
+        vFilters.push(`crop=${cropW}:${cropH}:${cropX}:${cropY}`);
+      }
+      vFilters.push("scale='min(1280,iw)':-2");
+      const vfString = vFilters.join(',');
+
       // Optimized parameters for browser WebAssembly memory safety
       const preset = options.videoQuality === 'high' ? 'fast' : options.videoQuality === 'low' ? 'ultrafast' : 'veryfast';
       const crf = options.videoQuality === 'high' ? '22' : options.videoQuality === 'low' ? '30' : '26';
@@ -119,19 +131,23 @@ export async function encodeWithFFmpeg(
       switch (options.format) {
         case 'webm':
           // Scale to max 720p to prevent WASM heap memory overflow
-          args.push('-vf', "scale='min(1280,iw)':-2", '-c:v', 'libvpx-vp9', '-crf', crf, '-b:v', '0', '-cpu-used', '4', '-c:a', 'libopus', '-threads', '1');
+          args.push('-vf', vfString, '-c:v', 'libvpx-vp9', '-crf', crf, '-b:v', '0', '-cpu-used', '4', '-c:a', 'libopus', '-threads', '1');
           break;
         case 'mp4':
         case 'mkv':
         case 'mov':
           // Scale to max 720p with ultrafast/veryfast for stability in browser
-          args.push('-vf', "scale='min(1280,iw)':-2", '-c:v', 'libx264', '-preset', preset, '-crf', crf, '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '128k', '-threads', '1');
+          args.push('-vf', vfString, '-c:v', 'libx264', '-preset', preset, '-crf', crf, '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '128k', '-threads', '1');
           break;
         case 'avi':
-          args.push('-vf', "scale='min(1280,iw)':-2", '-c:v', 'mpeg4', '-q:v', '6', '-c:a', 'libmp3lame', '-threads', '1');
+          args.push('-vf', vfString, '-c:v', 'mpeg4', '-q:v', '6', '-c:a', 'libmp3lame', '-threads', '1');
           break;
         default:
-          args.push('-c:v', 'copy', '-c:a', 'copy');
+          if (vFilters.length > 0) {
+            args.push('-vf', vfString, '-c:v', 'libx264', '-preset', preset, '-c:a', 'copy');
+          } else {
+            args.push('-c:v', 'copy', '-c:a', 'copy');
+          }
       }
     } else {
       // Audio metadata
