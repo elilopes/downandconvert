@@ -249,80 +249,104 @@ export const Dropzone: React.FC<DropzoneProps> = ({
     setIsDownloading(true);
     setSearchError('');
     setErrorDetails(null);
-    try {
-      const isHttp = url.startsWith('http://') || url.startsWith('https://');
 
-      const fetchUrl = isHttp
-        ? `/api/yt/download?url=${encodeURIComponent(url)}&mode=${downloadMode}&quality=${videoQuality}` 
-        : url;
+    const maxRetries = 2;
+    let lastError: any = null;
 
-      const response = await fetch(fetchUrl);
-      if (!response.ok) {
-        const errText = await response.text().catch(() => '');
-        let is429 = response.status === 429;
-        let detailedMsg = errText;
-        try {
-          const parsed = JSON.parse(errText);
-          if (parsed.code === 429 || parsed.error === 'RATE_LIMIT_429') {
-            is429 = true;
+    for (let attempt = 1; attempt <= maxRetries + 1; attempt++) {
+      try {
+        const isHttp = url.startsWith('http://') || url.startsWith('https://');
+
+        const fetchUrl = isHttp
+          ? `/api/yt/download?url=${encodeURIComponent(url)}&mode=${downloadMode}&quality=${videoQuality}` 
+          : url;
+
+        const response = await fetch(fetchUrl);
+        if (!response.ok) {
+          const errText = await response.text().catch(() => '');
+          let is429 = response.status === 429;
+          let detailedMsg = errText;
+          try {
+            const parsed = JSON.parse(errText);
+            if (parsed.code === 429 || parsed.error === 'RATE_LIMIT_429') {
+              is429 = true;
+            }
+            detailedMsg = parsed.message || detailedMsg;
+          } catch(e) {
+            if (errText.includes('429') || errText.includes('Too Many Requests') || errText.includes('Anti-Bot') || errText.includes('Sign in to confirm')) {
+              is429 = true;
+            }
           }
-          detailedMsg = parsed.message || detailedMsg;
-        } catch(e) {
-          if (errText.includes('429') || errText.includes('Too Many Requests') || errText.includes('Anti-Bot') || errText.includes('Sign in to confirm')) {
-            is429 = true;
+
+          if (is429) {
+            setErrorDetails({
+              is429: true,
+              code: 429,
+              message: 'O provedor bloqueou temporariamente a requisição no servidor em nuvem (Status 429: Proteção Anti-Bot / Too Many Requests).'
+            });
+            return;
           }
-        }
 
-        if (is429) {
-          setErrorDetails({
-            is429: true,
-            code: 429,
-            message: 'O provedor bloqueou temporariamente a requisição no servidor em nuvem (Status 429: Proteção Anti-Bot / Too Many Requests).'
-          });
-          return;
-        }
+          const isServerRetryable = response.status === 500 || response.status === 502 || response.status === 503 || response.status === 504;
+          if (attempt <= maxRetries && isServerRetryable) {
+            const delayMs = Math.pow(2, attempt - 1) * 1500; // 1.5s, 3.0s
+            console.warn(`[downloadUrl] Falha ${response.status} na tentativa ${attempt}/${maxRetries + 1}. Tentando novamente em ${delayMs}ms...`);
+            setSearchError(`Servidor ocupado (${response.status}). Tentando novamente em ${(delayMs / 1000).toFixed(1)}s (Tentativa ${attempt + 1}/${maxRetries + 1})...`);
+            await new Promise((r) => setTimeout(r, delayMs));
+            continue;
+          }
 
-        throw new Error(detailedMsg || `Erro ao baixar arquivo (status ${response.status}).`);
-      }
-      const blob = await response.blob();
-      
-      let filename = 'media.mp4';
-      if (isHttp) {
-        const contentDisposition = response.headers.get('content-disposition');
-        if (contentDisposition && contentDisposition.includes('filename="')) {
-          filename = decodeURIComponent(contentDisposition.split('filename="')[1].split('"')[0]);
+          throw new Error(detailedMsg || `Erro ao baixar arquivo (status ${response.status}).`);
+        }
+        const blob = await response.blob();
+        
+        let filename = 'media.mp4';
+        if (isHttp) {
+          const contentDisposition = response.headers.get('content-disposition');
+          if (contentDisposition && contentDisposition.includes('filename="')) {
+            filename = decodeURIComponent(contentDisposition.split('filename="')[1].split('"')[0]);
+          } else {
+            filename = title ? `${title}.${downloadMode === 'video' ? 'mp4' : 'm4a'}` : `media_${downloadMode}.${downloadMode === 'video' ? 'mp4' : 'm4a'}`;
+          }
         } else {
-          filename = title ? `${title}.${downloadMode === 'video' ? 'mp4' : 'm4a'}` : `media_${downloadMode}.${downloadMode === 'video' ? 'mp4' : 'm4a'}`;
+          filename = url.split('/').pop()?.split('?')[0] || 'media.mp4';
         }
-      } else {
-        filename = url.split('/').pop()?.split('?')[0] || 'media.mp4';
-      }
 
-      if (downloadMode === 'video') {
-        // Se for vídeo, baixa diretamente para o PC em vez de jogar na fila de conversão de áudio
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.href = URL.createObjectURL(blob);
-        downloadAnchor.download = filename;
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        document.body.removeChild(downloadAnchor);
-        // Clean up object URL after a short delay
-        setTimeout(() => URL.revokeObjectURL(downloadAnchor.href), 100);
-      } else {
-        // Modo áudio (adiciona ao Dropzone para converter/cortar)
-        const file = new File([blob], filename, { type: blob.type || 'audio/mp4' });
-        onFilesSelected([file]);
-      }
+        if (downloadMode === 'video') {
+          // Se for vídeo, baixa diretamente para o PC em vez de jogar na fila de conversão de áudio
+          const downloadAnchor = document.createElement('a');
+          downloadAnchor.href = URL.createObjectURL(blob);
+          downloadAnchor.download = filename;
+          document.body.appendChild(downloadAnchor);
+          downloadAnchor.click();
+          document.body.removeChild(downloadAnchor);
+          // Clean up object URL after a short delay
+          setTimeout(() => URL.revokeObjectURL(downloadAnchor.href), 100);
+        } else {
+          // Modo áudio (adiciona ao Dropzone para converter/cortar)
+          const file = new File([blob], filename, { type: blob.type || 'audio/mp4' });
+          onFilesSelected([file]);
+        }
 
-      setSearchInput('');
-      setVideoInfo(null);
-      setSearchResults([]);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Falha ao buscar URL.';
-      setSearchError(msg);
-    } finally {
-      setIsDownloading(false);
+        setSearchInput('');
+        setVideoInfo(null);
+        setSearchResults([]);
+        setSearchError('');
+        return; // Success, exit
+      } catch (err: unknown) {
+        lastError = err;
+        if (attempt <= maxRetries) {
+          const delayMs = Math.pow(2, attempt - 1) * 1500;
+          console.warn(`[downloadUrl] Erro na tentativa ${attempt}. Tentando novamente em ${delayMs}ms...`, err);
+          setSearchError(`Falha temporária de conexão. Tentando novamente em ${(delayMs / 1000).toFixed(1)}s (Tentativa ${attempt + 1}/${maxRetries + 1})...`);
+          await new Promise((r) => setTimeout(r, delayMs));
+        }
+      }
     }
+
+    const msg = lastError instanceof Error ? lastError.message : 'Falha ao buscar URL.';
+    setSearchError(msg);
+    setIsDownloading(false);
   };
 
   return (
