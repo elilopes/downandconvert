@@ -236,10 +236,21 @@ export const UssdTool: React.FC = () => {
       )}
 
       {/* Info Notice */}
-      <div className="mt-12 bg-slate-900/50 border border-cyan-900/30 rounded-2xl p-6 text-center max-w-3xl mx-auto">
+      <div className="mt-12 bg-slate-900/50 border border-cyan-900/30 rounded-2xl p-6 text-center max-w-3xl mx-auto space-y-3">
         <p className="text-xs text-slate-400 leading-relaxed">
           💡 <strong className="text-slate-300">Dica:</strong> Se você estiver acessando este site pelo celular, basta clicar no ícone do telefone verde para abrir o discador automático com o código USSD ou MMI pronto para ser executado.
         </p>
+        <div className="pt-2 border-t border-slate-800 flex items-center justify-center gap-2 text-xs">
+          <span className="text-slate-500">Saiba mais sobre a tecnologia:</span>
+          <a
+            href="https://pt.wikipedia.org/wiki/Dados_de_Servi%C3%A7os_Suplementares_N%C3%A3o_estruturados"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-cyan-400 hover:text-cyan-300 underline inline-flex items-center gap-1 font-medium"
+          >
+            Wikipedia (USSD) <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>
       </div>
     </div>
   );
