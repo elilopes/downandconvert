@@ -77,6 +77,7 @@ async function fetchYoutubeVideoMp3DownloaderApi(url: string, mode: string = 'vi
   }, 10000);
   if (!response.ok) throw new Error(`youtube-video-mp3-downloader-api returned status ${response.status}`);
   const json = await response.json();
+  if (json.success === false) throw new Error(json.message || 'youtube-video-mp3-downloader-api under upgrade');
   const data = json.data || json;
   if (!data) throw new Error('Invalid response from youtube-video-mp3-downloader-api');
 
@@ -115,6 +116,7 @@ async function fetchYoutubeMp32025(videoId: string, mode: string = 'video') {
 
   if (!response.ok) throw new Error(`youtube-mp3-2025 returned status ${response.status}`);
   const data = await response.json();
+  if (data.error || data.success === false) throw new Error(data.message || 'youtube-mp3-2025 error');
   const title = (data.title || 'youtube_media').replace(/[^\w\s-]/gi, '').trim() || 'youtube_media';
 
   const downloadUrl = data.linkDownload || data.linkStream || data.downloadUrl || data.url || (data.formats?.[0]?.url);
