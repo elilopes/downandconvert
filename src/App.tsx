@@ -17,12 +17,13 @@ import {
   Sliders,
   Layers,
 } from 'lucide-react';
-import { AudioFormat, VideoItem, ConversionOptions } from './types';
+import { AudioFormat, VideoItem, ConversionOptions, CropOptions } from './types';
 import { Header } from './components/Header';
 import { Dropzone } from './components/Dropzone';
 import { BatchControls } from './components/BatchControls';
 import { VideoItemCard } from './components/VideoItemCard';
 import { AudioTrimmerModal } from './components/AudioTrimmerModal';
+import { VideoCropModal } from './components/VideoCropModal';
 import { RecordModal } from './components/RecordModal';
 import { SampleModal } from './components/SampleModal';
 import { FAQModal } from './components/FAQModal';
@@ -49,12 +50,17 @@ export default function App() {
   const [globalBitrate, setGlobalBitrate] = useState<64 | 128 | 192 | 256 | 320>(320);
 
   const [trimmerItem, setTrimmerItem] = useState<VideoItem | null>(null);
+  const [cropItem, setCropItem] = useState<VideoItem | null>(null);
+  const [fileLimitWarning, setFileLimitWarning] = useState<string | null>(null);
   const [isRecorderOpen, setIsRecorderOpen] = useState(false);
   const [isSampleModalOpen, setIsSampleModalOpen] = useState(false);
   const [isFAQOpen, setIsFAQOpen] = useState(false);
   const [legalModalType, setLegalModalType] = useState<'terms' | 'privacy' | 'contact' | null>(null);
   const [isProcessingAny, setIsProcessingAny] = useState(false);
   const [isZipping, setIsZipping] = useState(false);
+
+  // Maximum allowed file size for performance & stability (250MB)
+  const MAX_FILE_SIZE_BYTES = 250 * 1024 * 1024;
 
   // Sync URL routes/parameters with modals (supports /privacy, /terms, ?legal=privacy, #privacy, etc.)
   useEffect(() => {
@@ -118,11 +124,17 @@ export default function App() {
     } catch (e) {}
   };
 
-  // Add files to list
+  // Add files to list with file size limit validation
   const handleFilesSelected = async (files: File[]) => {
     const newItems: VideoItem[] = [];
+    const oversizedFiles: string[] = [];
 
     for (const file of files) {
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        oversizedFiles.push(file.name);
+        continue;
+      }
+
       const id = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       const cleanTitle = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
 
@@ -162,31 +174,57 @@ export default function App() {
       newItems.push(item);
     }
 
-    setItems((prev) => [...prev, ...newItems]);
-
-    // Asynchronously extract thumbnails & metadata for each item
-    for (const item of newItems) {
-      extractVideoThumbnail(item.file, 1.5).then(({ thumbnailUrl, duration }) => {
-        setItems((prev) =>
-          prev.map((it) =>
-            it.id === item.id
-              ? {
-                  ...it,
-                  thumbnailUrl,
-                  duration: duration || it.duration,
-                  options: {
-                    ...it.options,
-                    trim: {
-                      ...it.options.trim,
-                      end: duration || it.options.trim.end,
-                    },
-                  },
-                }
-              : it
-          )
-        );
-      });
+    if (oversizedFiles.length > 0) {
+      setFileLimitWarning(
+        `O arquivo "${oversizedFiles.join(', ')}" excede o limite máximo permitido de 250MB para garantir estabilidade e velocidade. Por favor, envie vídeos menores.`
+      );
+    } else {
+      setFileLimitWarning(null);
     }
+
+    if (newItems.length > 0) {
+      setItems((prev) => [...prev, ...newItems]);
+
+      // Asynchronously extract thumbnails & metadata for each item
+      for (const item of newItems) {
+        extractVideoThumbnail(item.file, 1.5).then(({ thumbnailUrl, duration }) => {
+          setItems((prev) =>
+            prev.map((it) =>
+              it.id === item.id
+                ? {
+                    ...it,
+                    thumbnailUrl,
+                    duration: duration || it.duration,
+                    options: {
+                      ...it.options,
+                      trim: {
+                        ...it.options.trim,
+                        end: duration || it.options.trim.end,
+                      },
+                    },
+                  }
+                : it
+            )
+          );
+        });
+      }
+    }
+  };
+
+  const handleSaveCrop = (itemId: string, crop: CropOptions) => {
+    setItems((prev) =>
+      prev.map((it) =>
+        it.id === itemId
+          ? {
+              ...it,
+              options: {
+                ...it.options,
+                crop,
+              },
+            }
+          : it
+      )
+    );
   };
 
   // Convert a single item
@@ -639,6 +677,23 @@ export default function App() {
 
         {/* Dropzone Upload Area */}
         <div className="max-w-4xl mx-auto mb-8">
+          {fileLimitWarning && (
+            <div className="mb-4 p-4 rounded-2xl bg-amber-500/15 border border-amber-500/40 text-amber-200 text-sm flex items-start gap-3 shadow-lg">
+              <div className="w-2 h-2 rounded-full bg-amber-400 mt-1.5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <strong className="block text-amber-300 font-semibold mb-0.5">Limite de Tamanho Excedido (Máx 250MB)</strong>
+                <span>{fileLimitWarning}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFileLimitWarning(null)}
+                className="text-xs text-amber-400 hover:text-white underline ml-2 shrink-0"
+              >
+                Fechar
+              </button>
+            </div>
+          )}
+
           <Dropzone
             onFilesSelected={handleFilesSelected}
             onOpenRecorder={() => setIsRecorderOpen(true)}
@@ -674,6 +729,7 @@ export default function App() {
                   onDownload={handleDownloadItem}
                   onRemove={handleRemoveItem}
                   onOpenTrimmer={(it) => setTrimmerItem(it)}
+                  onOpenCrop={(it) => setCropItem(it)}
                   onUpdateOptions={handleUpdateItemOptions}
                   isProcessing={isProcessingAny}
                 />
@@ -689,6 +745,16 @@ export default function App() {
         onOpenPrivacy={() => openLegalModal('privacy')}
         onOpenContact={() => openLegalModal('contact')}
       />
+
+      {/* Video Crop Modal */}
+      {cropItem && (
+        <VideoCropModal
+          item={cropItem}
+          isOpen={!!cropItem}
+          onClose={() => setCropItem(null)}
+          onSaveCrop={handleSaveCrop}
+        />
+      )}
 
       {/* Audio Trimmer & EQ & Tags Modal */}
       {trimmerItem && (
