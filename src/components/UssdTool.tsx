@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Phone, Wrench, Smartphone, Copy, Check, Filter, ExternalLink, ShieldAlert, Sparkles, Zap } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { logUssdSearch } from '../lib/ussdTracking';
 
 interface UssdCode {
   code: string;
@@ -51,9 +52,10 @@ export const UssdTool: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('todos');
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
-  const handleCopy = (code: string) => {
-    navigator.clipboard.writeText(code);
-    setCopiedCode(code);
+  const handleCopy = (item: UssdCode) => {
+    navigator.clipboard.writeText(item.code);
+    setCopiedCode(item.code);
+    logUssdSearch(item.code, item.titleKey);
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
@@ -211,7 +213,7 @@ export const UssdTool: React.FC = () => {
                   </a>
 
                   <button
-                    onClick={() => handleCopy(item.code)}
+                    onClick={() => handleCopy(item)}
                     title="Copiar Código"
                     className={`p-2.5 rounded-xl transition-all flex items-center gap-1.5 text-xs font-semibold ${
                       copiedCode === item.code
