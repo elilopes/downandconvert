@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Sliders,
   Layers,
+  Smartphone,
 } from 'lucide-react';
 import { AudioFormat, VideoItem, ConversionOptions, CropOptions } from './types';
 import { Header } from './components/Header';
@@ -31,6 +32,7 @@ import { LegalModal } from './components/LegalModal';
 import { MouseFollower } from './components/MouseFollower';
 import { Footer } from './components/Footer';
 import { BottomAdBanner } from './components/BottomAdBanner';
+import { UssdTool } from './components/UssdTool';
 import {
   extractAudioBufferFromVideo,
   extractVideoThumbnail,
@@ -45,6 +47,7 @@ import { useLanguage } from './contexts/LanguageContext';
 
 export default function App() {
   const { t } = useLanguage();
+  const [activeTab, setActiveTab] = useState<'downloader' | 'ussd'>('downloader');
   const [items, setItems] = useState<VideoItem[]>([]);
   const [globalFormat, setGlobalFormat] = useState<AudioFormat>('mp3');
   const [globalBitrate, setGlobalBitrate] = useState<64 | 128 | 192 | 256 | 320>(320);
@@ -662,80 +665,115 @@ export default function App() {
       {/* Header Bar */}
       <Header darkMode={true} setDarkMode={() => {}} onOpenFAQ={() => setIsFAQOpen(true)} />
 
+      {/* Navigation Tabs Bar */}
+      <div className="w-full bg-slate-900/90 border-b border-slate-800/80 sticky top-20 z-30 shadow-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center gap-2 py-3">
+          <button
+            onClick={() => setActiveTab('downloader')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+              activeTab === 'downloader'
+                ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20'
+                : 'bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-700/50'
+            }`}
+          >
+            <Music className="w-4 h-4" />
+            <span>Downloader & Conversor</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('ussd')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+              activeTab === 'ussd'
+                ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20'
+                : 'bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-700/50'
+            }`}
+          >
+            <Smartphone className="w-4 h-4" />
+            <span>Códigos USSD & MMI / Operadoras</span>
+          </button>
+        </div>
+      </div>
+
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        {/* Hero Section */}
-        <div className="text-center max-w-3xl mx-auto mb-10">
-          <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight sm:leading-none mb-4">
-            {t('hero.title')}
-          </h1>
+        {activeTab === 'ussd' ? (
+          <UssdTool />
+        ) : (
+          <>
+            {/* Hero Section */}
+            <div className="text-center max-w-3xl mx-auto mb-10">
+              <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight sm:leading-none mb-4">
+                {t('hero.title')}
+              </h1>
 
-          <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            {t('hero.desc')}
-          </p>
-        </div>
-
-        {/* Dropzone Upload Area */}
-        <div className="max-w-4xl mx-auto mb-8">
-          {fileLimitWarning && (
-            <div className="mb-4 p-4 rounded-2xl bg-amber-500/15 border border-amber-500/40 text-amber-200 text-sm flex items-start gap-3 shadow-lg">
-              <div className="w-2 h-2 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <strong className="block text-amber-300 font-semibold mb-0.5">Limite de Tamanho Excedido (Máx 250MB)</strong>
-                <span>{fileLimitWarning}</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setFileLimitWarning(null)}
-                className="text-xs text-amber-400 hover:text-white underline ml-2 shrink-0"
-              >
-                Fechar
-              </button>
+              <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
+                {t('hero.desc')}
+              </p>
             </div>
-          )}
 
-          <Dropzone
-            onFilesSelected={handleFilesSelected}
-            onOpenRecorder={() => setIsRecorderOpen(true)}
-            onOpenSampleModal={() => setIsSampleModalOpen(true)}
-            isProcessing={isProcessingAny}
-          />
-        </div>
+            {/* Dropzone Upload Area */}
+            <div className="max-w-4xl mx-auto mb-8">
+              {fileLimitWarning && (
+                <div className="mb-4 p-4 rounded-2xl bg-amber-500/15 border border-amber-500/40 text-amber-200 text-sm flex items-start gap-3 shadow-lg">
+                  <div className="w-2 h-2 rounded-full bg-amber-400 mt-1.5 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <strong className="block text-amber-300 font-semibold mb-0.5">Limite de Tamanho Excedido (Máx 250MB)</strong>
+                    <span>{fileLimitWarning}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFileLimitWarning(null)}
+                    className="text-xs text-amber-400 hover:text-white underline ml-2 shrink-0"
+                  >
+                    Fechar
+                  </button>
+                </div>
+              )}
 
-        {/* Video List & Batch Operations */}
-        {items.length > 0 && (
-          <div className="max-w-4xl mx-auto space-y-4 mb-14">
-            {/* Batch Controls Bar */}
-            <BatchControls
-              items={items}
-              globalFormat={globalFormat}
-              setGlobalFormat={handleGlobalFormatChange}
-              globalBitrate={globalBitrate}
-              setGlobalBitrate={handleGlobalBitrateChange}
-              onConvertAll={handleConvertAll}
-              onDownloadAllZip={handleDownloadAllZip}
-              onClearAll={handleClearAll}
-              isProcessingAny={isProcessingAny}
-              isZipping={isZipping}
-            />
+              <Dropzone
+                onFilesSelected={handleFilesSelected}
+                onOpenRecorder={() => setIsRecorderOpen(true)}
+                onOpenSampleModal={() => setIsSampleModalOpen(true)}
+                isProcessing={isProcessingAny}
+              />
+            </div>
 
-            {/* Individual Video Cards */}
-            <div className="space-y-3">
-              {items.map((item) => (
-                <VideoItemCard
-                  key={item.id}
-                  item={item}
-                  onConvert={handleConvertItem}
-                  onDownload={handleDownloadItem}
-                  onRemove={handleRemoveItem}
-                  onOpenTrimmer={(it) => setTrimmerItem(it)}
-                  onOpenCrop={(it) => setCropItem(it)}
-                  onUpdateOptions={handleUpdateItemOptions}
-                  isProcessing={isProcessingAny}
+            {/* Video List & Batch Operations */}
+            {items.length > 0 && (
+              <div className="max-w-4xl mx-auto space-y-4 mb-14">
+                {/* Batch Controls Bar */}
+                <BatchControls
+                  items={items}
+                  globalFormat={globalFormat}
+                  setGlobalFormat={handleGlobalFormatChange}
+                  globalBitrate={globalBitrate}
+                  setGlobalBitrate={handleGlobalBitrateChange}
+                  onConvertAll={handleConvertAll}
+                  onDownloadAllZip={handleDownloadAllZip}
+                  onClearAll={handleClearAll}
+                  isProcessingAny={isProcessingAny}
+                  isZipping={isZipping}
                 />
-              ))}
-            </div>
-          </div>
+
+                {/* Individual Video Cards */}
+                <div className="space-y-3">
+                  {items.map((item) => (
+                    <VideoItemCard
+                      key={item.id}
+                      item={item}
+                      onConvert={handleConvertItem}
+                      onDownload={handleDownloadItem}
+                      onRemove={handleRemoveItem}
+                      onOpenTrimmer={(it) => setTrimmerItem(it)}
+                      onOpenCrop={(it) => setCropItem(it)}
+                      onUpdateOptions={handleUpdateItemOptions}
+                      isProcessing={isProcessingAny}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </main>
 
