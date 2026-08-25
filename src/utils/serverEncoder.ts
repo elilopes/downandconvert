@@ -20,6 +20,12 @@ async function singleEncodeAttempt(
       formData.append('videoQuality', options.videoQuality);
     }
     formData.append('bitrate', String(options.bitrate || 192));
+    if (options.crop && options.crop.enabled && options.crop.width > 0 && options.crop.height > 0) {
+      formData.append('cropX', String(options.crop.x));
+      formData.append('cropY', String(options.crop.y));
+      formData.append('cropW', String(options.crop.width));
+      formData.append('cropH', String(options.crop.height));
+    }
     if (options.metadata) {
       if (options.metadata.title) formData.append('title', options.metadata.title);
       if (options.metadata.artist) formData.append('artist', options.metadata.artist);
