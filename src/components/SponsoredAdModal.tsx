@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, ExternalLink, Sparkles, Clock, CheckCircle2, Volume2, Video as VideoIcon } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export interface SponsoredAdConfig {
   adType?: 'card' | 'youtube' | 'image' | 'custom_html';
@@ -24,7 +25,7 @@ export const SponsoredAdModal: React.FC<SponsoredAdModalProps> = ({
   onClose,
   onProceed,
   adType = 'card',
-  title = 'Aguarde um instante para iniciar sua conversão / download',
+  title,
   adTitle = '🚀 Hospedagem & Ferramentas Digitais de Alta Performance',
   adDescription = 'Aproveite até 75% OFF em servidores ultra-rápidos e recursos para criadores.',
   adLink = 'https://google.com',
@@ -32,8 +33,11 @@ export const SponsoredAdModal: React.FC<SponsoredAdModalProps> = ({
   youtubeId = '',
   countdownSeconds = 5,
 }) => {
+  const { t } = useLanguage();
   const [timeLeft, setTimeLeft] = useState(countdownSeconds);
   const [canSkip, setCanSkip] = useState(false);
+
+  const displayTitle = title || t('ad.modal.title');
 
   useEffect(() => {
     if (!isOpen) {
@@ -62,6 +66,7 @@ export const SponsoredAdModal: React.FC<SponsoredAdModalProps> = ({
   if (!isOpen) return null;
 
   const handleSkipOrProceed = () => {
+    if (timeLeft > 0) return; // Prevent clicking if timer is running
     onProceed();
     onClose();
   };
@@ -80,7 +85,7 @@ export const SponsoredAdModal: React.FC<SponsoredAdModalProps> = ({
               Patrocinado
             </span>
             <span className="text-xs text-slate-400 font-medium truncate max-w-[240px] sm:max-w-none">
-              {title}
+              {displayTitle}
             </span>
           </div>
 
@@ -176,14 +181,15 @@ export const SponsoredAdModal: React.FC<SponsoredAdModalProps> = ({
           <button
             type="button"
             onClick={handleSkipOrProceed}
+            disabled={timeLeft > 0}
             className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
-              canSkip || timeLeft === 0
+              timeLeft === 0
                 ? 'bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 hover:from-emerald-400 hover:to-teal-300 shadow-lg shadow-emerald-500/20 cursor-pointer scale-105'
-                : 'bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer'
+                : 'bg-slate-800 text-slate-400 cursor-not-allowed opacity-60 pointer-events-none'
             }`}
           >
             <span>
-              {timeLeft > 0 ? `Espere ${timeLeft}s p/ baixar` : 'Continuar Download Agora ➔'}
+              {timeLeft > 0 ? t('ad.modal.wait').replace('{seconds}', String(timeLeft)) : t('ad.modal.continue')}
             </span>
           </button>
         </div>
