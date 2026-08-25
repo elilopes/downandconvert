@@ -23,6 +23,7 @@ import { VideoItem } from '../types';
 import { formatBytes, formatTime } from '../utils/audioEncoder';
 import { getAccessToken, googleSignIn } from '../lib/auth';
 import { uploadFileToGoogleDrive } from '../lib/googleDrive';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface VideoItemCardProps {
   item: VideoItem;
@@ -45,6 +46,7 @@ export const VideoItemCard: React.FC<VideoItemCardProps> = ({
   onUpdateOptions,
   isProcessing,
 }) => {
+  const { t } = useLanguage();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [audioDuration, setAudioDuration] = useState(item.duration || 0);
@@ -290,16 +292,16 @@ export const VideoItemCard: React.FC<VideoItemCardProps> = ({
                     className="bg-slate-900 border border-slate-700 text-slate-300 text-xs rounded-md px-1.5 py-0.5 focus:outline-none focus:border-emerald-500 cursor-pointer"
                     title="Selecione a qualidade do vídeo"
                   >
-                    <option value="high">Alta (Lento)</option>
-                    <option value="medium">Média (Padrão)</option>
-                    <option value="low">Baixa (Rápido)</option>
+                    <option value="high">{t('quality.video.high')}</option>
+                    <option value="medium">{t('quality.video.medium')}</option>
+                    <option value="low">{t('quality.video.low')}</option>
                   </select>
                 )}
                 {(item.options.format === 'mp3' || item.options.format === 'aac' || item.options.format === 'm4a' || item.options.format === 'ogg' || item.options.format === 'wma') && (item.status === 'completed' || isConvertingThis) && (
                   <span>({item.options.bitrate} kbps)</span>
                 )}
                 {['mp4', 'webm', 'mkv', 'avi', 'mov'].includes(item.options.format) && (item.status === 'completed' || isConvertingThis) && (
-                  <span>(Qualidade {item.options.videoQuality === 'high' ? 'Alta' : item.options.videoQuality === 'low' ? 'Baixa' : 'Média'})</span>
+                  <span>({item.options.videoQuality === 'high' ? t('quality.video.high') : item.options.videoQuality === 'low' ? t('quality.video.low') : t('quality.video.medium')})</span>
                 )}
 
                 {item.outputSize ? (
