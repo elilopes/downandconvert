@@ -17,6 +17,7 @@ import {
   RefreshCw,
   CloudUpload,
   ExternalLink,
+  Crop,
 } from 'lucide-react';
 import { VideoItem } from '../types';
 import { formatBytes, formatTime } from '../utils/audioEncoder';
@@ -29,6 +30,7 @@ interface VideoItemCardProps {
   onDownload: (item: VideoItem) => void;
   onRemove: (id: string) => void;
   onOpenTrimmer: (item: VideoItem) => void;
+  onOpenCrop?: (item: VideoItem) => void;
   onUpdateOptions: (id: string, newOptions: any) => void;
   isProcessing: boolean;
 }
@@ -39,6 +41,7 @@ export const VideoItemCard: React.FC<VideoItemCardProps> = ({
   onDownload,
   onRemove,
   onOpenTrimmer,
+  onOpenCrop,
   onUpdateOptions,
   isProcessing,
 }) => {
@@ -212,6 +215,12 @@ export const VideoItemCard: React.FC<VideoItemCardProps> = ({
                     Cortado
                   </span>
                 )}
+                {item.options.crop && item.options.crop.enabled && (
+                  <span className="shrink-0 px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center gap-1">
+                    <Crop className="w-2.5 h-2.5" />
+                    Crop: {item.options.crop.width}×{item.options.crop.height}
+                  </span>
+                )}
                 {item.options.equalizer !== 'flat' && (
                   <span className="shrink-0 px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
                     EQ: {item.options.equalizer}
@@ -321,6 +330,24 @@ export const VideoItemCard: React.FC<VideoItemCardProps> = ({
 
           {/* Right: Actions & Status */}
           <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end shrink-0">
+            {/* Video Crop Button (for video outputs/files) */}
+            {onOpenCrop && (
+              <button
+                type="button"
+                onClick={() => onOpenCrop(item)}
+                disabled={isConvertingThis}
+                className={`px-3 py-2 text-xs font-semibold rounded-xl border transition-all flex items-center gap-1.5 disabled:opacity-50 ${
+                  item.options.crop && item.options.crop.enabled
+                    ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400/60 hover:bg-cyan-500/30 shadow-md shadow-cyan-500/10'
+                    : 'bg-slate-800/80 hover:bg-slate-750 text-slate-300 hover:text-white border-slate-700/70 hover:border-slate-600'
+                }`}
+                title="Recortar enquadramento do vídeo (Stories, Reels, TikTok, 1:1, etc.)"
+              >
+                <Crop className="w-3.5 h-3.5 text-cyan-400" />
+                <span>{item.options.crop && item.options.crop.enabled ? 'Recorte Ativo' : 'Recortar (Crop)'}</span>
+              </button>
+            )}
+
             {/* Edit / Trim / Split / EQ Options button */}
             <button
               type="button"
