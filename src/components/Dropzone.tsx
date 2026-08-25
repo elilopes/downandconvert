@@ -371,13 +371,13 @@ export const Dropzone: React.FC<DropzoneProps> = ({
                   onClick={() => setDownloadMode('audio')}
                   className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-colors ${downloadMode === 'audio' ? 'bg-emerald-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
                 >
-                  Extrair Áudio
+                  {t('dropzone.extractAudio')}
                 </button>
                 <button
                   onClick={() => setDownloadMode('video')}
                   className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-colors ${downloadMode === 'video' ? 'bg-emerald-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
                 >
-                  Baixar Vídeo
+                  {t('dropzone.downloadVideo')}
                 </button>
               </div>
               
@@ -387,9 +387,9 @@ export const Dropzone: React.FC<DropzoneProps> = ({
                   onChange={(e) => setVideoQuality(e.target.value as any)}
                   className="bg-slate-800 text-[11px] text-slate-300 border border-slate-700 rounded-lg px-2 py-1.5 outline-none hover:border-slate-600 transition-colors focus:border-emerald-500 cursor-pointer"
                 >
-                  <option value="highest">Alta (Até 720p)</option>
-                  <option value="360p">Média (360p)</option>
-                  <option value="lowest">Baixa Qualidade</option>
+                  <option value="highest">{t('quality.highest')}</option>
+                  <option value="360p">{t('quality.medium')}</option>
+                  <option value="lowest">{t('quality.lowest')}</option>
                 </select>
               )}
             </div>
