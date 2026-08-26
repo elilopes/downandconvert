@@ -151,8 +151,8 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
         setCropBox({
           x: Math.max(0, Math.min(100 - pctW, pctX)),
           y: Math.max(0, Math.min(100 - pctH, pctY)),
-          width: Math.max(5, Math.min(100, pctW)),
-          height: Math.max(5, Math.min(100, pctH)),
+          width: Math.max(1, Math.min(100, pctW)),
+          height: Math.max(1, Math.min(100, pctH)),
         });
       } else {
         // Default to 9:16 centered
@@ -195,8 +195,8 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
       targetHeightPct = (targetPixelHeight / videoH) * 100;
     }
 
-    targetWidthPct = Math.min(100, Math.max(5, targetWidthPct));
-    targetHeightPct = Math.min(100, Math.max(5, targetHeightPct));
+    targetWidthPct = Math.min(100, Math.max(1, targetWidthPct));
+    targetHeightPct = Math.min(100, Math.max(1, targetHeightPct));
 
     const newX = (100 - targetWidthPct) / 2;
     const newY = (100 - targetHeightPct) / 2;
@@ -261,8 +261,55 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   };
 
+  const handleContainerPointerDown = (e: React.PointerEvent) => {
+    if (e.target === containerRef.current || e.target === videoRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(true);
+      setDragHandle('draw');
+      setSelectedPresetId('free');
+      
+      const rect = containerRef.current!.getBoundingClientRect();
+      const xPct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+      const yPct = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
+
+      const initial = { x: xPct, y: yPct, width: 0, height: 0 };
+      dragStartPos.current = {
+        clientX: e.clientX,
+        clientY: e.clientY,
+        initialCrop: initial,
+      };
+      setCropBox(initial);
+      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    }
+  };
+
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!isDragging || !dragHandle || containerDisplaySize.width <= 0) return;
+
+    if (dragHandle === 'draw') {
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      
+      const currentXPct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+      const currentYPct = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
+
+      const startX = dragStartPos.current.initialCrop.x;
+      const startY = dragStartPos.current.initialCrop.y;
+
+      const newX = Math.min(startX, currentXPct);
+      const newY = Math.min(startY, currentYPct);
+      const newW = Math.abs(currentXPct - startX);
+      const newH = Math.abs(currentYPct - startY);
+
+      setCropBox({
+        x: newX,
+        y: newY,
+        width: Math.max(1, newW),
+        height: Math.max(1, newH),
+      });
+      return;
+    }
 
     const deltaXPixels = e.clientX - dragStartPos.current.clientX;
     const deltaYPixels = e.clientY - dragStartPos.current.clientY;
@@ -292,18 +339,18 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
       const videoAspect = videoNaturalSize.width / videoNaturalSize.height;
 
       if (dragHandle.includes('e')) {
-        newW = Math.max(10, Math.min(100 - initial.x, initial.width + deltaXPct));
+        newW = Math.max(1, Math.min(100 - initial.x, initial.width + deltaXPct));
       }
       if (dragHandle.includes('w')) {
-        const potentialX = Math.max(0, Math.min(initial.x + initial.width - 10, initial.x + deltaXPct));
+        const potentialX = Math.max(0, Math.min(initial.x + initial.width - 1, initial.x + deltaXPct));
         newW = initial.width + (initial.x - potentialX);
         newX = potentialX;
       }
       if (dragHandle.includes('s')) {
-        newH = Math.max(10, Math.min(100 - initial.y, initial.height + deltaYPct));
+        newH = Math.max(1, Math.min(100 - initial.y, initial.height + deltaYPct));
       }
       if (dragHandle.includes('n')) {
-        const potentialY = Math.max(0, Math.min(initial.y + initial.height - 10, initial.y + deltaYPct));
+        const potentialY = Math.max(0, Math.min(initial.y + initial.height - 1, initial.y + deltaYPct));
         newH = initial.height + (initial.y - potentialY);
         newY = potentialY;
       }
@@ -334,8 +381,8 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
       setCropBox({
         x: Math.max(0, Math.min(100 - newW, newX)),
         y: Math.max(0, Math.min(100 - newH, newY)),
-        width: Math.max(5, Math.min(100, newW)),
-        height: Math.max(5, Math.min(100, newH)),
+        width: Math.max(1, Math.min(100, newW)),
+        height: Math.max(1, Math.min(100, newH)),
       });
     }
   };
@@ -447,6 +494,7 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
             <div
               ref={containerRef}
               className="relative inline-block select-none max-w-full overflow-hidden rounded-xl shadow-2xl"
+              onPointerDown={handleContainerPointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
             >
