@@ -100,6 +100,13 @@ export const Footer: React.FC<FooterProps> = ({
             >
               USSD/MMI
             </button>
+            <span className="hidden md:inline">•</span>
+            <button
+              onClick={() => window.location.href = '/sitemap.html'}
+              className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors"
+            >
+              Sitemap
+            </button>
           </div>
 
           <div className="text-xs text-slate-500 flex items-center gap-1">
