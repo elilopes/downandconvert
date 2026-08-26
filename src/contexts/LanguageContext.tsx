@@ -922,6 +922,41 @@ const dict: Translations = {
     RU: "Как это работает?",
     HI: "यह कैसे काम करता है?",
     KO: "작동 방식"
+  },
+  "tabs.converter": {
+    PT: "Conversor",
+    EN: "Converter",
+    RU: "Конвертер",
+    HI: "कनवर्टर",
+    KO: "변환기"
+  },
+  "tabs.downloader": {
+    PT: "Downloader",
+    EN: "Downloader",
+    RU: "Загрузчик",
+    HI: "डाउनलोडर",
+    KO: "다운로더"
+  },
+  "tabs.ussd": {
+    PT: "Códigos USSD/MMI",
+    EN: "USSD/MMI Codes",
+    RU: "Коды USSD/MMI",
+    HI: "USSD/MMI कोड",
+    KO: "USSD/MMI 코드"
+  },
+  "hero.converter.title": {
+    PT: "Converta vídeos e extraia áudio no navegador",
+    EN: "Convert videos and extract audio in browser",
+    RU: "Конвертируйте видео и извлекайте аудио в браузере",
+    HI: "ब्राउज़र में वीडियो कनवर्ट करें और ऑडियो निकालें",
+    KO: "브라우저에서 비디오 변환 및 오디오 추출"
+  },
+  "hero.converter.desc": {
+    PT: "Processamento 100% privado e ultrarrápido direto no seu dispositivo. Corte áudio, ajuste bitrate, converta em lote e baixe em MP3, WAV, AAC, FLAC e outros formatos sem enviar nada para servidores externos.",
+    EN: "100% private and ultra-fast processing directly on your device. Trim audio, adjust bitrate, batch convert, and download in MP3, WAV, AAC, FLAC, and other formats without uploading anything to external servers.",
+    RU: "100% приватная и сверхбыстрая обработка прямо на вашем устройстве. Обрезайте аудио, настраивайте битрейт, пакетно конвертируйте и скачивайте в MP3, WAV, AAC, FLAC и других форматах без отправки на внешние серверы.",
+    HI: "आपके डिवाइस पर सीधे 100% निजी और अल्ट्रा-फास्ट प्रोसेसिंग। ऑडियो ट्रिम करें, बिटरेट समायोजित करें, बैच कनवर्ट करें, और बाहरी सर्वर पर कुछ भी अपलोड किए बिना MP3, WAV, AAC, FLAC और अन्य प्रारूपों में डाउनलोड करें।",
+    KO: "기기에서 직접 처리되는 100% 비공개 초고속 미디어 변환. 외부 서버로 파일을 업로드하지 않고 오디오 자르기, 비트레이트 조절, 일괄 변환 및 MP3, WAV, AAC, FLAC 형식으로 다운로드하세요."
   }
 };
 
