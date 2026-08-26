@@ -28,7 +28,13 @@ export const AdPlayerModal: React.FC<AdPlayerModalProps> = ({
   const [adError, setAdError] = useState(false);
 
   useEffect(() => {
-    if (!isOpen || !videoNode.current || !window.videojs) return;
+    if (!isOpen || !videoNode.current) return;
+
+    if (!window.videojs) {
+      console.warn('VideoJS is not loaded. Skipping ad...');
+      onComplete();
+      return;
+    }
 
     setAdFinished(false);
     setAdError(false);
