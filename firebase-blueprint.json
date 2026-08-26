@@ -1,0 +1,36 @@
+{
+  "entities": {
+    "VisitorStats": {
+      "title": "Visitor Stats",
+      "description": "Global statistics for visitors.",
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "number"
+        }
+      },
+      "required": ["count"]
+    },
+    "OnlineUser": {
+      "title": "Online User",
+      "description": "Tracks active user sessions.",
+      "type": "object",
+      "properties": {
+        "lastSeen": {
+          "type": "timestamp"
+        }
+      },
+      "required": ["lastSeen"]
+    }
+  },
+  "firestore": {
+    "/stats/visitors": {
+      "schema": { "$ref": "#/entities/VisitorStats" },
+      "description": "The main global visitor counter"
+    },
+    "/online_users/{sessionId}": {
+      "schema": { "$ref": "#/entities/OnlineUser" },
+      "description": "Heartbeat documents for online users"
+    }
+  }
+}
