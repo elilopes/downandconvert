@@ -279,24 +279,18 @@ export const VideoDownloader: React.FC<VideoDownloaderProps> = ({
           filename = url.split('/').pop()?.split('?')[0] || 'media.mp4';
         }
 
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.href = URL.createObjectURL(blob);
+        downloadAnchor.download = filename;
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        document.body.removeChild(downloadAnchor);
+        setTimeout(() => URL.revokeObjectURL(downloadAnchor.href), 100);
+        
         if (downloadMode === 'video') {
-          // Se for vídeo, baixa diretamente para o PC
-          const downloadAnchor = document.createElement('a');
-          downloadAnchor.href = URL.createObjectURL(blob);
-          downloadAnchor.download = filename;
-          document.body.appendChild(downloadAnchor);
-          downloadAnchor.click();
-          document.body.removeChild(downloadAnchor);
-          setTimeout(() => URL.revokeObjectURL(downloadAnchor.href), 100);
           setDownloadSuccess(`Vídeo "${filename}" baixado com sucesso!`);
         } else {
-          // Modo áudio (adiciona ao Conversor para corte/conversão)
-          const file = new File([blob], filename, { type: blob.type || 'audio/mp4' });
-          onFilesSelected([file]);
-          setDownloadSuccess(`Áudio "${filename}" extraído e enviado para o Conversor!`);
-          if (onNavigateToConverter) {
-            onNavigateToConverter();
-          }
+          setDownloadSuccess(`Áudio "${filename}" baixado com sucesso!`);
         }
 
         setSearchInput('');
