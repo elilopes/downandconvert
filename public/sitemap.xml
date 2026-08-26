@@ -7,7 +7,19 @@
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://downandconvert.onrender.com/?tab=converter</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://downandconvert.onrender.com/?tab=downloader</loc>
+    <lastmod>2026-08-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://downandconvert.onrender.com/?tab=ussd</loc>
     <lastmod>2026-08-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
