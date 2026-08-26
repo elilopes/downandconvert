@@ -17,6 +17,24 @@ import NodeCache from 'node-cache';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Cache configurado para 5 minutos (300 segundos), adcash
+const adcashCache = new NodeCache({ stdTTL: 300 });
+
+// Função para buscar a biblioteca periodicamente, adcash
+async function getAdcashLibrary() {
+  const cachedLib = adcashCache.get('adcashLib');
+  if (cachedLib) return cachedLib;
+
+  try {
+    const response = await axios.get('https://adbpage.com/adblock?v=3');
+    adcashCache.set('adcashLib', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao buscar biblioteca Adcash:', error);
+    return ''; // Retorna vazio se falhar, para não quebrar o site
+  }
+}
+
 function extractVideoId(url: string) {
   const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([^&?]+)/);
   return match ? match[1] : null;
@@ -125,6 +143,17 @@ async function fetchYoutubeMp32025(videoId: string, mode: string = 'video') {
   if (!downloadUrl) throw new Error('No download URL returned from youtube-mp3-2025');
 
   return { downloadUrl, extension: mode === 'audio' ? 'mp3' : 'mp4', title };
+}
+
+async function fetchLoaderToInfoFallback(url: string) {
+  const initialRes = await fetchWithTimeout(`https://loader.to/ajax/download.php?format=720&url=${encodeURIComponent(url)}`, {}, 10000);
+  const data = await initialRes.json();
+  if (!data || !data.id) throw new Error('No loader.to info');
+  return {
+    title: data.title || data.info?.title || 'youtube_media',
+    thumbnail: data.thumbnail_url || data.info?.image || '',
+    author: 'YouTube'
+  };
 }
 
 // 1.3. YouTube Quick Video Downloader API (youtube-quick-video-downloader)
@@ -355,6 +384,56 @@ async function fetchYoutubeDirectFallback(url: string, mode: string) {
 }
 
 
+async function fetchLoaderToFallback(url: string, mode: string = 'video') {
+  console.log('Using loader.to API fallback for YouTube...');
+  
+  let format = '720';
+  if (mode === 'audio') {
+    format = 'm4a'; // mp3 or m4a
+  }
+
+  const initialRes = await fetchWithTimeout(`https://loader.to/ajax/download.php?format=${format}&url=${encodeURIComponent(url)}`, {}, 15000);
+  const data = await initialRes.json();
+  
+  if (!data || !data.id) {
+    throw new Error('Failed to initialize loader.to API download');
+  }
+
+  let downloadUrl = '';
+  let title = data.title || 'youtube_media';
+  let thumbnail = data.info?.image || '';
+  
+  // Poll for progress up to 25 times (50 seconds)
+  for (let i = 0; i < 25; i++) {
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      const pRes = await fetchWithTimeout(`https://lto2.affadaffa.com/api/progress?id=${data.id}`, {}, 10000);
+      const pData = await pRes.json();
+      
+      if (pData.success === 1 && pData.download_url) {
+        downloadUrl = pData.download_url;
+        break;
+      } else if (pData.success === 0 && pData.text && pData.text.toLowerCase().includes('error')) {
+        throw new Error(`loader.to polling error: ${pData.text}`);
+      }
+    } catch (e) {
+      console.warn('Polling error, retrying...', e);
+    }
+  }
+
+  if (!downloadUrl) {
+    throw new Error('Timeout waiting for loader.to API to process the video');
+  }
+
+  return { 
+    downloadUrl, 
+    extension: mode === 'audio' ? format : 'mp4', 
+    title, 
+    thumbnail, 
+    author: 'YouTube' 
+  };
+}
+
 async function fetchYtdlpFallback(url: string, platform: string, mode: string = 'video'): Promise<any> {
   console.log(`Using yt-dlp fallback for ${platform}...`);
   const ytOptions: any = {
@@ -421,24 +500,6 @@ async function fetchTikTokDirectFallback(url: string) {
   const videoUrl = match[1].replace(/\\u002F/g, '/');
   
   return { downloadUrl: videoUrl, extension: 'mp4', title: 'tiktok_media_fallback' };
-}
-
-// Cache configurado para 5 minutos (300 segundos)
-const adcashCache = new NodeCache({ stdTTL: 300 });
-
-// Função para buscar a biblioteca periodicamente
-async function getAdcashLibrary() {
-  const cachedLib = adcashCache.get('adcashLib');
-  if (cachedLib) return cachedLib;
-
-  try {
-    const response = await axios.get('https://adbpage.com/adblock?v=3');
-    adcashCache.set('adcashLib', response.data);
-    return response.data;
-  } catch (error) {
-    console.error('Erro ao buscar biblioteca Adcash:', error);
-    return ''; // Retorna vazio se falhar, para não quebrar o site
-  }
 }
 
 async function startServer() {
@@ -541,16 +602,29 @@ async function startServer() {
         
         let infoSuccess = false;
 
-        // 1. Try youtube-video-mp3-downloader-api
+        // 0. Try loader.to API
         try {
-          const ytApiData = await fetchYoutubeVideoMp3DownloaderApi(url, 'video');
-          if (ytApiData.title) {
-            title = ytApiData.title;
-            thumbnail = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-            author = 'YouTube';
+          const loaderInfo = await fetchLoaderToInfoFallback(url);
+          if (loaderInfo.title) {
+            title = loaderInfo.title;
+            thumbnail = loaderInfo.thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+            author = loaderInfo.author;
             infoSuccess = true;
           }
         } catch (e) {}
+
+        // 1. Try youtube-video-mp3-downloader-api
+        if (!infoSuccess) {
+          try {
+            const ytApiData = await fetchYoutubeVideoMp3DownloaderApi(url, 'video');
+            if (ytApiData.title) {
+              title = ytApiData.title;
+              thumbnail = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+              author = 'YouTube';
+              infoSuccess = true;
+            }
+          } catch (e) {}
+        }
 
         // 2. Try youtube-media-downloader
         if (!infoSuccess) {
@@ -701,17 +775,32 @@ async function startServer() {
 
         let ytSuccess = false;
 
-        // Tier 1: YouTube Video & MP3 Downloader API (youtube-video-mp3-downloader-api)
+        // Tier 0: loader.to API (Open Unauthenticated High-Quality Mirror)
         try {
-          const res1 = await fetchYoutubeVideoMp3DownloaderApi(url, mode);
-          if (res1.downloadUrl) {
-            downloadUrl = res1.downloadUrl;
-            extension = res1.extension;
-            title = res1.title;
+          const res0 = await fetchLoaderToFallback(url, mode);
+          if (res0.downloadUrl) {
+            downloadUrl = res0.downloadUrl;
+            extension = res0.extension;
+            title = res0.title;
             ytSuccess = true;
           }
         } catch (e) {
-          console.warn('YouTube Tier 1 (youtube-video-mp3-downloader-api) failed, trying Tier 2...');
+          console.warn('YouTube Tier 0 (loader.to) failed, trying Tier 1...', e);
+        }
+
+        // Tier 1: YouTube Video & MP3 Downloader API (youtube-video-mp3-downloader-api)
+        if (!ytSuccess) {
+          try {
+            const res1 = await fetchYoutubeVideoMp3DownloaderApi(url, mode);
+            if (res1.downloadUrl) {
+              downloadUrl = res1.downloadUrl;
+              extension = res1.extension;
+              title = res1.title;
+              ytSuccess = true;
+            }
+          } catch (e) {
+            console.warn('YouTube Tier 1 (youtube-video-mp3-downloader-api) failed, trying Tier 2...');
+          }
         }
 
         // Tier 2: YouTube to MP3 2025 API (youtube-mp3-2025)
@@ -744,7 +833,23 @@ async function startServer() {
           }
         }
 
-        // Tier 4: YouTube Audio Video Download (youtube-audio-video-download)
+        // Tier 4 (Plano E): Local yt-dlp binary with Cookies and Anti-Bot bypass
+        if (!ytSuccess) {
+          try {
+            console.log('Tentando Plano E: yt-dlp local com cookies.txt...');
+            const fallbackData: any = await fetchYtdlpFallback(url, platform, mode);
+            if (fallbackData.downloadUrl) {
+              downloadUrl = fallbackData.downloadUrl;
+              extension = fallbackData.extension;
+              title = fallbackData.title;
+              ytSuccess = true;
+            }
+          } catch (e) {
+            console.warn('YouTube Tier 4 (yt-dlp with cookies) failed, trying Tier 5...');
+          }
+        }
+
+        // Tier 5: YouTube Audio Video Download (youtube-audio-video-download)
         if (!ytSuccess) {
           try {
             const res4 = await fetchYoutubeAudioVideoDownload(url, mode);
@@ -755,7 +860,7 @@ async function startServer() {
               ytSuccess = true;
             }
           } catch (e) {
-            console.warn('YouTube Tier 4 (youtube-audio-video-download) failed, trying Tier 5...');
+            console.warn('YouTube Tier 5 (youtube-audio-video-download) failed, trying Tier 6...');
           }
         }
 
