@@ -27,6 +27,7 @@ import {
 import { initAuth, googleSignIn, getAccessToken, logout } from '../lib/auth';
 import type { User } from 'firebase/auth';
 import { SponsoredAdModal } from './SponsoredAdModal';
+import { AdPlayerModal } from './AdPlayerModal';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface VideoDownloaderProps {
@@ -73,6 +74,10 @@ export const VideoDownloader: React.FC<VideoDownloaderProps> = ({
   const [user, setUser] = useState<User | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [token, setToken] = useState<string | null>(null);
+
+  // VAST Ad State
+  const [showVastAd, setShowVastAd] = useState(false);
+  const [pendingVastAction, setPendingVastAction] = useState<(() => void) | null>(null);
 
   useEffect(() => {
     const val = searchInput.toLowerCase();
@@ -146,15 +151,15 @@ export const VideoDownloader: React.FC<VideoDownloaderProps> = ({
     const query = searchInput.trim();
     const isHttp = query.startsWith('http://') || query.startsWith('https://');
 
-    // Trigger sponsored modal first, then proceed with the search/download
-    setPendingAction(() => () => {
+    // Trigger VAST Video Ad modal first, then proceed with the search/download
+    setPendingVastAction(() => () => {
       if (isHttp) {
         downloadUrl(query);
       } else {
         performSearch(query);
       }
     });
-    setIsAdOpen(true);
+    setShowVastAd(true);
   };
 
   const performSearch = async (query: string) => {
@@ -586,7 +591,10 @@ export const VideoDownloader: React.FC<VideoDownloaderProps> = ({
                 <div 
                   key={vid.id} 
                   className="flex items-center gap-3 p-2.5 hover:bg-slate-800/80 rounded-xl transition-colors group cursor-pointer border border-transparent hover:border-slate-700" 
-                  onClick={() => downloadUrl(vid.url, vid.title)}
+                  onClick={() => {
+                    setPendingVastAction(() => () => downloadUrl(vid.url, vid.title));
+                    setShowVastAd(true);
+                  }}
                 >
                   <div className="relative w-24 h-16 shrink-0 rounded-lg overflow-hidden border border-slate-700 bg-black">
                     <img src={vid.thumbnail} alt={vid.title} className="w-full h-full object-cover" />
@@ -645,6 +653,23 @@ export const VideoDownloader: React.FC<VideoDownloaderProps> = ({
           if (pendingAction) {
             pendingAction();
             setPendingAction(null);
+          }
+        }}
+      />
+
+      {/* VAST Video Ad Modal */}
+      <AdPlayerModal
+        isOpen={showVastAd}
+        adTagUrl="https://youradexchange.com/video/select.php?r=12052110"
+        onClose={() => {
+          setShowVastAd(false);
+          setPendingVastAction(null);
+        }}
+        onComplete={() => {
+          setShowVastAd(false);
+          if (pendingVastAction) {
+            pendingVastAction();
+            setPendingVastAction(null);
           }
         }}
       />
