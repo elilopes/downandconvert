@@ -81,17 +81,24 @@ export const Footer: React.FC<FooterProps> = ({
             </button>
             <span className="hidden md:inline">•</span>
             <button
+              onClick={() => window.location.href = '/?tab=converter'}
+              className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors"
+            >
+              {t('tabs.converter')}
+            </button>
+            <span className="hidden md:inline">•</span>
+            <button
               onClick={() => window.location.href = '/?tab=downloader'}
               className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors"
             >
-              Downloader
+              {t('tabs.downloader')}
             </button>
             <span className="hidden md:inline">•</span>
             <button
               onClick={() => window.location.href = '/?tab=ussd'}
               className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors"
             >
-              USSD
+              USSD/MMI
             </button>
           </div>
 
