@@ -65,6 +65,7 @@ export const VideoDownloader: React.FC<VideoDownloaderProps> = ({
   // Download mode & quality
   const [downloadMode, setDownloadMode] = useState<'audio' | 'video'>('video');
   const [videoQuality, setVideoQuality] = useState<'highest' | '360p' | 'lowest'>('highest');
+  const [audioBitrate, setAudioBitrate] = useState<64 | 128 | 192 | 256 | 320>(320);
 
   // Sponsored Ad state
   const [isAdOpen, setIsAdOpen] = useState(false);
@@ -224,7 +225,7 @@ export const VideoDownloader: React.FC<VideoDownloaderProps> = ({
         const isHttp = url.startsWith('http://') || url.startsWith('https://');
 
         const fetchUrl = isHttp
-          ? `/api/yt/download?url=${encodeURIComponent(url)}&mode=${downloadMode}&quality=${videoQuality}` 
+          ? `/api/yt/download?url=${encodeURIComponent(url)}&mode=${downloadMode}&quality=${downloadMode === 'video' ? videoQuality : audioBitrate}&bitrate=${audioBitrate}` 
           : url;
 
         const response = await fetch(fetchUrl);
@@ -370,11 +371,28 @@ export const VideoDownloader: React.FC<VideoDownloaderProps> = ({
                   <select
                     value={videoQuality}
                     onChange={(e) => setVideoQuality(e.target.value as any)}
-                    className="bg-slate-800 text-xs text-slate-300 border border-slate-700 rounded-lg px-2.5 py-1.5 outline-none hover:border-slate-600 transition-colors focus:border-emerald-500 cursor-pointer font-medium"
+                    className="bg-slate-800 text-xs text-slate-300 border border-slate-700 rounded-lg px-2.5 py-1.5 outline-none hover:border-slate-600 transition-colors focus:border-cyan-500 cursor-pointer font-medium"
                   >
                     <option value="highest">{t('downloader.quality.highest')}</option>
                     <option value="360p">{t('downloader.quality.medium')}</option>
                     <option value="lowest">{t('downloader.quality.lowest')}</option>
+                  </select>
+                </div>
+              )}
+
+              {downloadMode === 'audio' && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-slate-500">{t('downloader.quality')}</span>
+                  <select
+                    value={audioBitrate}
+                    onChange={(e) => setAudioBitrate(Number(e.target.value) as 64 | 128 | 192 | 256 | 320)}
+                    className="bg-slate-800 text-xs text-emerald-400 border border-slate-700 rounded-lg px-2.5 py-1.5 outline-none hover:border-slate-600 transition-colors focus:border-emerald-500 cursor-pointer font-medium"
+                  >
+                    <option value={320}>{t('downloader.audioQuality.320')}</option>
+                    <option value={256}>{t('downloader.audioQuality.256')}</option>
+                    <option value={192}>{t('downloader.audioQuality.192')}</option>
+                    <option value={128}>{t('downloader.audioQuality.128')}</option>
+                    <option value={64}>{t('downloader.audioQuality.64')}</option>
                   </select>
                 </div>
               )}
@@ -626,7 +644,7 @@ export const VideoDownloader: React.FC<VideoDownloaderProps> = ({
                     <p className="text-xs text-slate-400 truncate mt-0.5">{vid.author}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-[10px] text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/60 font-medium">
-                        {downloadMode === 'video' ? t('downloader.videoOption') : t('downloader.audioOption')}
+                        {downloadMode === 'video' ? t('downloader.videoOption') : `${t('downloader.audioOption')} (${audioBitrate} kbps)`}
                       </span>
                     </div>
                   </div>
