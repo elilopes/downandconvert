@@ -17,10 +17,13 @@ import {
   Sliders,
   Layers,
   Smartphone,
+  Download,
+  RefreshCw,
 } from 'lucide-react';
 import { AudioFormat, VideoItem, ConversionOptions, CropOptions } from './types';
 import { Header } from './components/Header';
 import { Dropzone } from './components/Dropzone';
+import { VideoDownloader } from './components/VideoDownloader';
 import { BatchControls } from './components/BatchControls';
 import { VideoItemCard } from './components/VideoItemCard';
 import { AudioTrimmerModal } from './components/AudioTrimmerModal';
@@ -50,7 +53,7 @@ import { useLanguage } from './contexts/LanguageContext';
 
 export default function App() {
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'downloader' | 'ussd'>('downloader');
+  const [activeTab, setActiveTab] = useState<'converter' | 'downloader' | 'ussd'>('converter');
   const [items, setItems] = useState<VideoItem[]>([]);
   const [globalFormat, setGlobalFormat] = useState<AudioFormat>('mp3');
   const [globalBitrate, setGlobalBitrate] = useState<64 | 128 | 192 | 256 | 320>(320);
@@ -85,7 +88,7 @@ export default function App() {
       const legalParam = (searchParams.get('legal') || searchParams.get('page') || '').toLowerCase();
       const tabParam = searchParams.get('tab')?.toLowerCase();
 
-      if (tabParam === 'downloader' || tabParam === 'ussd') {
+      if (tabParam === 'converter' || tabParam === 'downloader' || tabParam === 'ussd') {
         setActiveTab(tabParam);
       }
 
@@ -685,29 +688,44 @@ export default function App() {
 
       {/* Navigation Tabs Bar */}
       <div className="w-full bg-slate-900/90 border-b border-slate-800/80 sticky top-20 z-30 shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center gap-2 py-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center gap-2 sm:gap-3 py-3 overflow-x-auto">
+          {/* Tab 1: Conversor */}
+          <button
+            onClick={() => setActiveTab('converter')}
+            className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
+              activeTab === 'converter'
+                ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20'
+                : 'bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-700/50'
+            }`}
+          >
+            <RefreshCw className="w-4 h-4" />
+            <span>{t('tabs.converter')}</span>
+          </button>
+
+          {/* Tab 2: Downloader */}
           <button
             onClick={() => setActiveTab('downloader')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+            className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'downloader'
                 ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20'
                 : 'bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-700/50'
             }`}
           >
-            <Music className="w-4 h-4" />
-            <span>Downloader & Conversor</span>
+            <Download className="w-4 h-4" />
+            <span>{t('tabs.downloader')}</span>
           </button>
 
+          {/* Tab 3: Códigos USSD/MMI */}
           <button
             onClick={() => setActiveTab('ussd')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+            className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'ussd'
                 ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20'
                 : 'bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-700/50'
             }`}
           >
             <Smartphone className="w-4 h-4" />
-            <span>Códigos USSD & MMI / Operadoras</span>
+            <span>Códigos USSD/MMI</span>
           </button>
         </div>
       </div>
@@ -718,16 +736,27 @@ export default function App() {
           <NotFound />
         ) : activeTab === 'ussd' ? (
           <UssdTool />
+        ) : activeTab === 'downloader' ? (
+          <VideoDownloader
+            onFilesSelected={(files) => {
+              handleFilesSelected(files);
+              setActiveTab('converter');
+            }}
+            onOpenRecorder={() => setIsRecorderOpen(true)}
+            onOpenSampleModal={() => setIsSampleModalOpen(true)}
+            onNavigateToConverter={() => setActiveTab('converter')}
+            isProcessing={isProcessingAny}
+          />
         ) : (
           <>
-            {/* Hero Section */}
+            {/* Hero Section for Converter */}
             <div className="text-center max-w-3xl mx-auto mb-10">
               <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight sm:leading-none mb-4">
-                {t('hero.title')}
+                {t('hero.converter.title')}
               </h1>
 
               <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
-                {t('hero.desc')}
+                {t('hero.converter.desc')}
               </p>
             </div>
 
@@ -743,7 +772,7 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => setFileLimitWarning(null)}
-                    className="text-xs text-amber-400 hover:text-white underline ml-2 shrink-0"
+                    className="text-xs text-amber-400 hover:text-white underline ml-2 shrink-0 cursor-pointer"
                   >
                     Fechar
                   </button>
