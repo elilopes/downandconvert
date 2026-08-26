@@ -55,7 +55,7 @@ export const VisitorCounter: React.FC = () => {
           setCount(currentSnap.data().count);
         }
       } catch (err) {
-        console.error('Error fetching visitor stats:', err);
+        console.warn('Visitor stats unavailable (offline)');
       }
     };
 
@@ -65,7 +65,7 @@ export const VisitorCounter: React.FC = () => {
         const presenceRef = doc(db, 'online_users', sessionId);
         await setDoc(presenceRef, { lastSeen: serverTimestamp() }).catch(() => {});
       } catch (err) {
-        console.error('Error updating presence:', err);
+        console.warn('Presence update unavailable (offline)');
       }
     };
 
@@ -78,7 +78,7 @@ export const VisitorCounter: React.FC = () => {
           setOnlineCount(Math.max(1, querySnapshot.size));
         }
       } catch (err) {
-        console.error('Error fetching online users:', err);
+        console.warn('Online users unavailable (offline)');
       }
     };
 
