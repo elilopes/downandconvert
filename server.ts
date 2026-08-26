@@ -11,6 +11,8 @@ import os from 'os';
 import fs from 'fs';
 import { spawn } from 'child_process';
 import youtubedl from 'youtube-dl-exec';
+import axios from 'axios';
+import NodeCache from 'node-cache';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -419,6 +421,24 @@ async function fetchTikTokDirectFallback(url: string) {
   const videoUrl = match[1].replace(/\\u002F/g, '/');
   
   return { downloadUrl: videoUrl, extension: 'mp4', title: 'tiktok_media_fallback' };
+}
+
+// Cache configurado para 5 minutos (300 segundos)
+const adcashCache = new NodeCache({ stdTTL: 300 });
+
+// Função para buscar a biblioteca periodicamente
+async function getAdcashLibrary() {
+  const cachedLib = adcashCache.get('adcashLib');
+  if (cachedLib) return cachedLib;
+
+  try {
+    const response = await axios.get('https://adbpage.com/adblock?v=3');
+    adcashCache.set('adcashLib', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao buscar biblioteca Adcash:', error);
+    return ''; // Retorna vazio se falhar, para não quebrar o site
+  }
 }
 
 async function startServer() {
@@ -1203,9 +1223,32 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     app.use(express.static('dist'));
-    app.use('*', (req, res) => res.sendFile(path.resolve(__dirname, 'dist', 'index.html')));
-  }
+    
+    // Rota que captura todas as requisições para injetar o Adcash
+    app.use('*', async (req, res) => {
+      const distPath = path.resolve(__dirname, 'dist');
+      const indexPath = path.join(distPath, 'index.html');
+      let html = fs.readFileSync(indexPath, 'utf8');
 
+      // Busca o código da biblioteca com cache
+      const libCode = await getAdcashLibrary();
+
+      // 1. Injeta a biblioteca no <head>
+      html = html.replace('</head>', `${libCode}</head>`);
+      
+      // 2. Injeta o script de execução do ad format antes do </body>
+      const runScript = `
+        <script type="text/javascript">
+          aclib.runAutoTag({
+            zoneId: '5njba8kjlq',
+          });
+        </script>
+      `;
+      html = html.replace('</body>', `${runScript}</body>`);
+
+      res.send(html);
+    });
+  }
   const port = process.env.PORT || 3000;
   app.listen(port, () => {
     console.log(`🚀 Server started at http://localhost:${port}`);
