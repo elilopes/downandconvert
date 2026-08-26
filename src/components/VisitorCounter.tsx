@@ -1,43 +1,111 @@
 import React, { useEffect, useState } from 'react';
-import { Users, Eye, Sparkles } from 'lucide-react';
+import { Eye } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { 
+  doc, 
+  getDoc, 
+  setDoc, 
+  updateDoc, 
+  increment, 
+  collection, 
+  query, 
+  where, 
+  getDocs, 
+  serverTimestamp,
+  Timestamp 
+} from 'firebase/firestore';
+import { db } from '../lib/firebase';
+
+const generateSessionId = () => {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+};
 
 export const VisitorCounter: React.FC = () => {
   const { t, lang } = useLanguage();
-  const [count, setCount] = useState<number>(1);
-  const [onlineCount, setOnlineCount] = useState<number>(18);
+  const [count, setCount] = useState<number>(0);
+  const [onlineCount, setOnlineCount] = useState<number>(1);
 
   useEffect(() => {
-    const visited = sessionStorage.getItem('downandconvert_visited_fresh');
-    let currentCount = 1;
-    
-    try {
-      const saved = localStorage.getItem('downandconvert_total_visits_fresh');
-      if (saved) {
-        currentCount = parseInt(saved, 10) || 1;
-      }
-      
-      if (!visited) {
-        currentCount += 1;
-        localStorage.setItem('downandconvert_total_visits_fresh', currentCount.toString());
-        sessionStorage.setItem('downandconvert_visited_fresh', 'true');
-      }
-    } catch (e) {
-      // fallback
+    let isMounted = true;
+    let sessionId = sessionStorage.getItem('downandconvert_session_id');
+    if (!sessionId) {
+      sessionId = generateSessionId();
+      sessionStorage.setItem('downandconvert_session_id', sessionId);
     }
-    
-    setCount(currentCount);
 
-    // Randomize online users slightly for realism (starting small from zero/recent activity)
-    const interval = setInterval(() => {
-      setOnlineCount(prev => {
-        const delta = Math.floor(Math.random() * 3) - 1;
-        const next = prev + delta;
-        return next > 5 && next < 80 ? next : 18;
-      });
-    }, 15000);
+    const initCounter = async () => {
+      try {
+        const statsRef = doc(db, 'stats', 'visitors');
+        
+        // Track unique visit
+        const visited = sessionStorage.getItem('downandconvert_visited_firebase');
+        if (!visited) {
+          const docSnap = await getDoc(statsRef);
+          if (!docSnap.exists()) {
+            await setDoc(statsRef, { count: 1 }).catch(() => {});
+          } else {
+            await updateDoc(statsRef, { count: increment(1) }).catch(() => {});
+          }
+          sessionStorage.setItem('downandconvert_visited_firebase', 'true');
+        }
 
-    return () => clearInterval(interval);
+        // Fetch current count
+        const currentSnap = await getDoc(statsRef);
+        if (currentSnap.exists() && isMounted) {
+          setCount(currentSnap.data().count);
+        }
+      } catch (err) {
+        console.error('Error fetching visitor stats:', err);
+      }
+    };
+
+    const updatePresence = async () => {
+      try {
+        if (!sessionId) return;
+        const presenceRef = doc(db, 'online_users', sessionId);
+        await setDoc(presenceRef, { lastSeen: serverTimestamp() }).catch(() => {});
+      } catch (err) {
+        console.error('Error updating presence:', err);
+      }
+    };
+
+    const fetchOnlineUsers = async () => {
+      try {
+        const oneMinuteAgo = Timestamp.fromMillis(Date.now() - 60000);
+        const q = query(collection(db, 'online_users'), where('lastSeen', '>=', oneMinuteAgo));
+        const querySnapshot = await getDocs(q);
+        if (isMounted) {
+          setOnlineCount(Math.max(1, querySnapshot.size));
+        }
+      } catch (err) {
+        console.error('Error fetching online users:', err);
+      }
+    };
+
+    // Initial calls
+    initCounter();
+    updatePresence();
+    fetchOnlineUsers();
+
+    // Set up intervals
+    const presenceInterval = setInterval(updatePresence, 30000); // update every 30s
+    const onlineCheckInterval = setInterval(fetchOnlineUsers, 30000); // check every 30s
+    const statsCheckInterval = setInterval(async () => {
+      try {
+        const statsRef = doc(db, 'stats', 'visitors');
+        const snap = await getDoc(statsRef);
+        if (snap.exists() && isMounted) {
+          setCount(snap.data().count);
+        }
+      } catch (e) {}
+    }, 60000); // Refresh total count every minute
+
+    return () => {
+      isMounted = false;
+      clearInterval(presenceInterval);
+      clearInterval(onlineCheckInterval);
+      clearInterval(statsCheckInterval);
+    };
   }, []);
 
   const localeMap: Record<string, string> = {
@@ -72,3 +140,4 @@ export const VisitorCounter: React.FC = () => {
     </div>
   );
 };
+
