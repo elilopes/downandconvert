@@ -1069,6 +1069,41 @@ const dict: Translations = {
     RU: "Результаты поиска (Нажмите для скачивания)",
     HI: "खोज परिणाम (डाउनलोड करने के लिए क्लिक करें)",
     KO: "검색 결과 (다운로드하려면 클릭)"
+  },
+  "downloader.audioQuality.320": {
+    PT: "320 kbps (Qualidade Máxima Studio)",
+    EN: "320 kbps (Maximum Studio Quality)",
+    RU: "320 kbps (Максимальное качество Studio)",
+    HI: "320 kbps (अधिकतम स्टूडियो गुणवत्ता)",
+    KO: "320 kbps (최고 스튜디오 음질)"
+  },
+  "downloader.audioQuality.256": {
+    PT: "256 kbps (Muito Alta)",
+    EN: "256 kbps (Very High)",
+    RU: "256 kbps (Очень высокое)",
+    HI: "256 kbps (बहुत उच्च)",
+    KO: "256 kbps (매우 높음)"
+  },
+  "downloader.audioQuality.192": {
+    PT: "192 kbps (Padrão Podcast / Música)",
+    EN: "192 kbps (Standard Podcast / Music)",
+    RU: "192 kbps (Стандарт для музыки/подкастов)",
+    HI: "192 kbps (मानक पॉडकास्ट / संगीत)",
+    KO: "192 kbps (표준 팟캐스트 / 음악)"
+  },
+  "downloader.audioQuality.128": {
+    PT: "128 kbps (Compacto)",
+    EN: "128 kbps (Compact)",
+    RU: "128 kbps (Компактное)",
+    HI: "128 kbps (कॉम्पैक्ट)",
+    KO: "128 kbps (압축)"
+  },
+  "downloader.audioQuality.64": {
+    PT: "64 kbps (Voz Leve)",
+    EN: "64 kbps (Light Voice)",
+    RU: "64 kbps (Голос / легкое)",
+    HI: "64 kbps (हल्की आवाज)",
+    KO: "64 kbps (가벼운 음성)"
   }
 };
 
