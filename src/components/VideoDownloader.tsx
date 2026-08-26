@@ -250,6 +250,7 @@ export const VideoDownloader: React.FC<VideoDownloaderProps> = ({
               code: 429,
               message: detailedMsg || 'O provedor bloqueou temporariamente a requisição no servidor em nuvem (Status 429: Proteção Anti-Bot / Too Many Requests).'
             });
+            setIsDownloading(false);
             return;
           }
 
@@ -297,6 +298,7 @@ export const VideoDownloader: React.FC<VideoDownloaderProps> = ({
         setVideoInfo(null);
         setSearchResults([]);
         setSearchError('');
+        setIsDownloading(false);
         return;
       } catch (err: unknown) {
         lastError = err;
@@ -320,13 +322,13 @@ export const VideoDownloader: React.FC<VideoDownloaderProps> = ({
       <div className="text-center max-w-3xl mx-auto mb-8">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-semibold mb-3">
           <Globe className="w-3.5 h-3.5" />
-          <span>Downloader de Mídias Web & Redes Sociais</span>
+          <span>{t('downloader.hero.badge')}</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight mb-3">
-          Baixe Vídeos & Mídias da Web
+          {t('downloader.hero.title')}
         </h1>
         <p className="text-sm text-slate-400 max-w-xl mx-auto">
-          Cole links diretos de TikTok, Instagram Reels, Facebook Vídeos, Twitter/X, Vimeo e YouTube para baixar em alta qualidade ou extrair áudio direto.
+          {t('downloader.hero.desc')}
         </p>
       </div>
 
@@ -336,7 +338,7 @@ export const VideoDownloader: React.FC<VideoDownloaderProps> = ({
           {/* Controls Bar: Mode Switch, Quality, Auth */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-800/80">
             <div className="flex flex-wrap items-center gap-2.5">
-              <span className="text-xs text-slate-400 font-semibold">Modo de Download:</span>
+              <span className="text-xs text-slate-400 font-semibold">{t('downloader.mode')}</span>
               <div className="flex bg-slate-800 rounded-xl p-1 border border-slate-700 w-fit">
                 <button
                   onClick={() => setDownloadMode('video')}
@@ -347,7 +349,7 @@ export const VideoDownloader: React.FC<VideoDownloaderProps> = ({
                   }`}
                 >
                   <Video className="w-3.5 h-3.5" />
-                  <span>Baixar Vídeo (MP4)</span>
+                  <span>{t('downloader.videoOption')}</span>
                 </button>
                 <button
                   onClick={() => setDownloadMode('audio')}
@@ -358,21 +360,21 @@ export const VideoDownloader: React.FC<VideoDownloaderProps> = ({
                   }`}
                 >
                   <Music className="w-3.5 h-3.5" />
-                  <span>Extrair Áudio</span>
+                  <span>{t('downloader.audioOption')}</span>
                 </button>
               </div>
 
               {downloadMode === 'video' && (
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-slate-500">Qualidade:</span>
+                  <span className="text-xs text-slate-500">{t('downloader.quality')}</span>
                   <select
                     value={videoQuality}
                     onChange={(e) => setVideoQuality(e.target.value as any)}
                     className="bg-slate-800 text-xs text-slate-300 border border-slate-700 rounded-lg px-2.5 py-1.5 outline-none hover:border-slate-600 transition-colors focus:border-emerald-500 cursor-pointer font-medium"
                   >
-                    <option value="highest">Máxima (1080p / 720p)</option>
-                    <option value="360p">Média (360p)</option>
-                    <option value="lowest">Mais Leve (240p)</option>
+                    <option value="highest">{t('downloader.quality.highest')}</option>
+                    <option value="360p">{t('downloader.quality.medium')}</option>
+                    <option value="lowest">{t('downloader.quality.lowest')}</option>
                   </select>
                 </div>
               )}
@@ -440,16 +442,38 @@ export const VideoDownloader: React.FC<VideoDownloaderProps> = ({
             <button
               onClick={handleSearchClick}
               disabled={isSearching || isDownloading}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 disabled:opacity-50 text-slate-950 text-xs font-bold transition-all shadow-md cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 disabled:opacity-80 text-slate-950 text-xs font-bold transition-all shadow-md cursor-pointer shrink-0"
             >
-              <Search className="w-3.5 h-3.5" />
-              <span>{isDownloading ? 'Baixando...' : isSearching ? 'Buscando...' : 'Baixar Mídia'}</span>
+              {isDownloading || isSearching ? (
+                <RefreshCw className="w-3.5 h-3.5 animate-spin shrink-0" />
+              ) : (
+                <Search className="w-3.5 h-3.5 shrink-0" />
+              )}
+              <span>
+                {isDownloading 
+                  ? (downloadMode === 'audio' ? t('downloader.preparingAudio') : t('downloader.preparingVideo')) 
+                  : isSearching 
+                    ? t('downloader.searching') 
+                    : t('downloader.downloadMedia')}
+              </span>
             </button>
           </div>
 
           <p className="text-[11px] text-slate-400 px-1">
             {t('dropzone.urlHint')}
           </p>
+
+          {/* Downloading / Preparing Alert */}
+          {isDownloading && (
+            <div className="mt-1 p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/40 text-cyan-300 text-xs flex items-center gap-2.5 animate-in fade-in shadow-inner">
+              <RefreshCw className="w-4 h-4 text-cyan-400 animate-spin shrink-0" />
+              <span className="font-semibold tracking-wide">
+                {downloadMode === 'audio' 
+                  ? t('downloader.preparingAudio') 
+                  : t('downloader.preparingVideo')}
+              </span>
+            </div>
+          )}
 
           {/* Success Banner */}
           {downloadSuccess && (
@@ -579,7 +603,7 @@ export const VideoDownloader: React.FC<VideoDownloaderProps> = ({
           {searchResults.length > 0 && !isSearching && !videoInfo && (
             <div className="mt-4 bg-slate-950 border border-slate-700/80 rounded-2xl p-3 shadow-xl max-h-96 overflow-y-auto space-y-2">
               <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-2 pt-1">
-                Resultados da Busca (Clique para Baixar)
+                {t('downloader.searchResults')}
               </h4>
               {searchResults.map((vid) => (
                 <div 
@@ -602,7 +626,7 @@ export const VideoDownloader: React.FC<VideoDownloaderProps> = ({
                     <p className="text-xs text-slate-400 truncate mt-0.5">{vid.author}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-[10px] text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/60 font-medium">
-                        {downloadMode === 'video' ? 'Baixar MP4' : 'Extrair Áudio'}
+                        {downloadMode === 'video' ? t('downloader.videoOption') : t('downloader.audioOption')}
                       </span>
                     </div>
                   </div>
