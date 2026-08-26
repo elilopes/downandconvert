@@ -957,6 +957,118 @@ const dict: Translations = {
     RU: "100% приватная и сверхбыстрая обработка прямо на вашем устройстве. Обрезайте аудио, настраивайте битрейт, пакетно конвертируйте и скачивайте в MP3, WAV, AAC, FLAC и других форматах без отправки на внешние серверы.",
     HI: "आपके डिवाइस पर सीधे 100% निजी और अल्ट्रा-फास्ट प्रोसेसिंग। ऑडियो ट्रिम करें, बिटरेट समायोजित करें, बैच कनवर्ट करें, और बाहरी सर्वर पर कुछ भी अपलोड किए बिना MP3, WAV, AAC, FLAC और अन्य प्रारूपों में डाउनलोड करें।",
     KO: "기기에서 직접 처리되는 100% 비공개 초고속 미디어 변환. 외부 서버로 파일을 업로드하지 않고 오디오 자르기, 비트레이트 조절, 일괄 변환 및 MP3, WAV, AAC, FLAC 형식으로 다운로드하세요."
+  },
+  "downloader.preparingVideo": {
+    PT: "Preparando para baixar o vídeo...",
+    EN: "Preparing to download video...",
+    RU: "Подготовка к скачиванию видео...",
+    HI: "वीडियो डाउनलोड करने की तैयारी की जा रही है...",
+    KO: "비디오 다운로드 준비 중..."
+  },
+  "downloader.preparingAudio": {
+    PT: "Preparando para baixar o áudio...",
+    EN: "Preparing to download audio...",
+    RU: "Подготовка к скачиванию аудио...",
+    HI: "ऑडियो डाउनलोड करने की तैयारी की जा रही है...",
+    KO: "오디오 다운로드 준비 중..."
+  },
+  "downloader.preparingMedia": {
+    PT: "Preparando para baixar a mídia...",
+    EN: "Preparing to download media...",
+    RU: "Подготовка к скачиванию медиа...",
+    HI: "मीडिया डाउनलोड करने की तैयारी की जा रही है...",
+    KO: "미디어 다운로드 준비 중..."
+  },
+  "downloader.downloadMedia": {
+    PT: "Baixar Mídia",
+    EN: "Download Media",
+    RU: "Скачать медиа",
+    HI: "मीडिया डाउनलोड करें",
+    KO: "미디어 다운로드"
+  },
+  "downloader.searching": {
+    PT: "Buscando...",
+    EN: "Searching...",
+    RU: "Поиск...",
+    HI: "खोज रहे हैं...",
+    KO: "검색 중..."
+  },
+  "downloader.mode": {
+    PT: "Modo de Download:",
+    EN: "Download Mode:",
+    RU: "Режим загрузки:",
+    HI: "डाउनलोड मोड:",
+    KO: "다운로드 모드:"
+  },
+  "downloader.videoOption": {
+    PT: "Baixar Vídeo (MP4)",
+    EN: "Download Video (MP4)",
+    RU: "Скачать видео (MP4)",
+    HI: "वीडियो डाउनलोड करें (MP4)",
+    KO: "비디오 다운로드 (MP4)"
+  },
+  "downloader.audioOption": {
+    PT: "Extrair Áudio",
+    EN: "Extract Audio",
+    RU: "Извлечь аудио",
+    HI: "ऑडियो निकालें",
+    KO: "오디오 추출"
+  },
+  "downloader.quality": {
+    PT: "Qualidade:",
+    EN: "Quality:",
+    RU: "Качество:",
+    HI: "गुणवत्ता:",
+    KO: "화질:"
+  },
+  "downloader.quality.highest": {
+    PT: "Máxima (1080p / 720p)",
+    EN: "Maximum (1080p / 720p)",
+    RU: "Максимальное (1080p / 720p)",
+    HI: "अधिकतम (1080p / 720p)",
+    KO: "최고 (1080p / 720p)"
+  },
+  "downloader.quality.medium": {
+    PT: "Média (360p)",
+    EN: "Medium (360p)",
+    RU: "Среднее (360p)",
+    HI: "मध्यम (360p)",
+    KO: "중간 (360p)"
+  },
+  "downloader.quality.lowest": {
+    PT: "Mais Leve (240p)",
+    EN: "Lightest (240p)",
+    RU: "Легкое (240p)",
+    HI: "सबसे हल्का (240p)",
+    KO: "최저 (240p)"
+  },
+  "downloader.hero.title": {
+    PT: "Baixe Vídeos & Mídias da Web",
+    EN: "Download Videos & Web Media",
+    RU: "Скачивайте видео и медиа из сети",
+    HI: "वेब से वीडियो और मीडिया डाउनलोड करें",
+    KO: "동영상 및 웹 미디어 다운로드"
+  },
+  "downloader.hero.badge": {
+    PT: "Downloader de Mídias Web & Redes Sociais",
+    EN: "Web & Social Media Downloader",
+    RU: "Загрузчик медиа и соцсетей",
+    HI: "वेब और सोशल मीडिया डाउनलोडर",
+    KO: "웹 및 소셜 미디어 다운로더"
+  },
+  "downloader.hero.desc": {
+    PT: "Cole links diretos de TikTok, Instagram Reels, Facebook Vídeos, Twitter/X, Vimeo e YouTube para baixar em alta qualidade ou extrair áudio direto.",
+    EN: "Paste direct links from TikTok, Instagram Reels, Facebook Videos, Twitter/X, Vimeo, and YouTube to download in high quality or extract audio directly.",
+    RU: "Вставляйте прямые ссылки из TikTok, Instagram Reels, Facebook, Twitter/X, Vimeo и YouTube для загрузки в высоком качестве или прямого извлечения аудио.",
+    HI: "उच्च गुणवत्ता में डाउनलोड करने या सीधे ऑडियो निकालने के लिए TikTok, Instagram Reels, Facebook Videos, Twitter/X, Vimeo और YouTube से सीधे लिंक पेस्ट करें।",
+    KO: "TikTok, Instagram Reels, Facebook 동영상, Twitter/X, Vimeo 및 YouTube의 직접 링크를 붙여넣어 고화질로 다운로드하거나 오디오를 직접 추출하세요."
+  },
+  "downloader.searchResults": {
+    PT: "Resultados da Busca (Clique para Baixar)",
+    EN: "Search Results (Click to Download)",
+    RU: "Результаты поиска (Нажмите для скачивания)",
+    HI: "खोज परिणाम (डाउनलोड करने के लिए क्लिक करें)",
+    KO: "검색 결과 (다운로드하려면 클릭)"
   }
 };
 
