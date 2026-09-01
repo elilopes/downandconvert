@@ -774,6 +774,21 @@ export const SmartphoneSpecs: React.FC = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col gap-6">
+        {/* Header Title */}
+        <div className="flex items-center gap-3 bg-slate-900/60 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg backdrop-blur-md">
+          <div className="p-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 shrink-0">
+            <Smartphone className="w-6 h-6" />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+              {t('smartphones.title')}
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
+              {t('smartphones.subtitle')}
+            </p>
+          </div>
+        </div>
+
         {/* Search Bar & Share Link */}
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
           <div className="relative flex-1">
