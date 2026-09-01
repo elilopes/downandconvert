@@ -63,11 +63,11 @@ const dict: Translations = {
     KO: "이용 방법"
   },
   "dropzone.urlHint": {
-    PT: "Baixar a mídia usando a URL (tiktok, instagram, facebook, vimeo) - o youtube está em manutenção.",
-    EN: "Download media using URL (tiktok, instagram, facebook, vimeo) - YouTube is under maintenance.",
-    RU: "Скачайте медиа по URL (tiktok, instagram, facebook, vimeo) - YouTube находится на обслуживании.",
-    HI: "URL का उपयोग करके मीडिया डाउनलोड करें (tiktok, instagram, facebook, vimeo) - YouTube रखरखाव के अधीन है।",
-    KO: "URL을 사용하여 미디어 다운로드 (tiktok, instagram, facebook, vimeo) - YouTube는 유지 관리 중입니다."
+    PT: "Baixar a mídia usando a URL (tiktok, instagram, facebook, vimeo e youtube)",
+    EN: "Download media using URL (tiktok, instagram, facebook, vimeo and youtube)",
+    RU: "Скачайте медиа по URL (tiktok, instagram, facebook, vimeo и youtube)",
+    HI: "URL का उपयोग करके मीडिया डाउनलोड करें (tiktok, instagram, facebook, vimeo और youtube)",
+    KO: "URL을 사용하여 미디어 다운로드 (tiktok, instagram, facebook, vimeo 및 youtube)"
   },
   "ussd.wikipedia": {
     PT: "Saiba mais sobre esta tecnologia na wikipedia (USSD)",
@@ -1043,11 +1043,11 @@ const dict: Translations = {
     KO: "최저 (240p)"
   },
   "downloader.hero.title": {
-    PT: "Baixe Vídeos & Mídias da Web",
-    EN: "Download Videos & Web Media",
-    RU: "Скачивайте видео и медиа из сети",
-    HI: "वेब से वीडियो और मीडिया डाउनलोड करें",
-    KO: "동영상 및 웹 미디어 다운로드"
+    PT: "Baixe free vídeo e áudio da web",
+    EN: "Download free video and audio from the web",
+    RU: "Скачивайте бесплатное видео и аудио из сети",
+    HI: "वेब से मुफ्त वीडियो और ऑडियो डाउनलोड करें",
+    KO: "웹에서 무료 동영상 및 오디오 다운로드"
   },
   "downloader.hero.badge": {
     PT: "Downloader de Mídias Web & Redes Sociais",
@@ -1104,6 +1104,270 @@ const dict: Translations = {
     RU: "64 kbps (Голос / легкое)",
     HI: "64 kbps (हल्की आवाज)",
     KO: "64 kbps (가벼운 음성)"
+  },
+  "tabs.smartphones": {
+    PT: "Especificações de celular",
+    EN: "Phone Specifications",
+    RU: "Характеристики телефонов",
+    HI: "स्मार्टफोन विनिर्देश",
+    KO: "스마트폰 사양"
+  },
+  "smartphones.filters": {
+    PT: "Filtros e Categorias",
+    EN: "Filters & Categories",
+    RU: "Фильтры и категории",
+    HI: "फिल्टर और श्रेणियां",
+    KO: "필터 및 카테고리"
+  },
+  "smartphones.brand": {
+    PT: "Fabricante",
+    EN: "Brand",
+    RU: "Бренд",
+    HI: "ब्रांड",
+    KO: "상표"
+  },
+  "smartphones.os": {
+    PT: "Sistema Operacional",
+    EN: "Operating System",
+    RU: "Операционная система",
+    HI: "ऑपरेटिंग सिस्टम",
+    KO: "운영 체제"
+  },
+  "smartphones.minRam": {
+    PT: "Memória RAM",
+    EN: "RAM Memory",
+    RU: "Оперативная память",
+    HI: "राम मेमोरी",
+    KO: "램 메모리"
+  },
+  "smartphones.minStorage": {
+    PT: "Armazenamento",
+    EN: "Storage",
+    RU: "Хранилище",
+    HI: "भंडारण",
+    KO: "저장 공간"
+  },
+  "smartphones.minStorage_old": {
+    PT: "Armazenamento",
+    EN: "Storage",
+    RU: "Место хранения",
+    HI: "भंडारण",
+    KO: "저장 용량"
+  },
+  "smartphones.any": {
+    PT: "Qualquer",
+    EN: "Any",
+    RU: "Любой",
+    HI: "कोई भी",
+    KO: "모두"
+  },
+  "smartphones.searchPlaceholder": {
+    PT: "Buscar modelo ou marca...",
+    EN: "Search model or brand...",
+    RU: "Поиск модели или бренда...",
+    HI: "मॉडल या ब्रांड खोजें...",
+    KO: "모델 또는 브랜드 검색..."
+  },
+  "smartphones.noResults": {
+    PT: "Nenhum celular encontrado",
+    EN: "No smartphones found",
+    RU: "Смартфоны не найдены",
+    HI: "कोई स्मार्टफोन नहीं मिला",
+    KO: "스마트폰을 찾을 수 없음"
+  },
+  "smartphones.tryDifferentFilters": {
+    PT: "Tente remover alguns filtros ou buscar outro termo.",
+    EN: "Try removing some filters or searching for another term.",
+    RU: "Попробуйте удалить некоторые фильтры или поискать другой термин.",
+    HI: "कुछ फ़िल्टर हटाने या कोई अन्य शब्द खोजने का प्रयास करें।",
+    KO: "일부 필터를 제거하거나 다른 용어를 검색해 보세요."
+  },
+  "smartphones.minCores": { PT: "Núcleos", EN: "Cores", RU: "Ядра", HI: "कोर", KO: "코어" },
+  "smartphones.architecture": { PT: "Arquitetura", EN: "Architecture", RU: "Архитектура", HI: "आर्किटेक्चर", KO: "아키텍처" },
+  "smartphones.simCards": { PT: "Qtd. de SIM Cards", EN: "SIM Cards Count", RU: "Количество SIM", HI: "सिम कार्ड की संख्या", KO: "SIM 카드 수" },
+  "smartphones.digitalTv": { PT: "TV Digital", EN: "Digital TV", RU: "Цифровое ТВ", HI: "डिजिटल टीवी", KO: "디지털 TV" },
+  "smartphones.physicalKeyboard": { PT: "Teclado Físico", EN: "Physical Keyboard", RU: "Физическая клавиатура", HI: "भौतिक कीबोर्ड", KO: "물리적 키보드" },
+  "smartphones.foldable": { PT: "Tela Dobrável", EN: "Foldable Screen", RU: "Складной экран", HI: "फोल्डेबल स्क्रीन", KO: "폴더블 화면" },
+  "smartphones.network": { PT: "Rede", EN: "Network", RU: "Сеть", HI: "नेटवर्क", KO: "네트워크" },
+  "smartphones.expandableMemory": { PT: "Memória Expansível", EN: "Expandable Memory", RU: "Расширяемая память", HI: "विस्तार योग्य मेमोरी", KO: "확장 가능한 메모리" },
+  "smartphones.minScreenSize": { PT: "Tamanho da Tela", EN: "Screen Size", RU: "Размер экрана", HI: "स्क्रीन का आकार", KO: "화면 크기" },
+  "smartphones.minFrontCamera": { PT: "Câmera Selfie", EN: "Selfie Cam", RU: "Селфи камера", HI: "सेल्फी कैमरा", KO: "셀피 카메라" },
+  "smartphones.opticalZoom": { PT: "Zoom Ótico (x)", EN: "Optical Zoom (x)", RU: "Оптический зум (x)", HI: "ऑप्टिकल जूम (x)", KO: "광학 줌 (x)" },
+  "smartphones.stabilization": { PT: "OIS (Estabilização)", EN: "OIS (Stabilization)", RU: "OIS (Стабилизация)", HI: "OIS (स्टैबिलाइजेशन)", KO: "OIS(광학식 손떨림 보정)" },
+  "smartphones.faceDetection": { PT: "Detecção Facial", EN: "Face Detection", RU: "Распознавание лиц", HI: "चेहरा पहचान", KO: "얼굴 인식" },
+  "smartphones.fingerprint": { PT: "Leitor de Digital", EN: "Fingerprint Reader", RU: "Сканер отпечатков", HI: "फिंगरप्रिंट रीडर", KO: "지문 인식기" },
+  "smartphones.recordingResolution": { PT: "Resolução de Gravação", EN: "Recording Resolution", RU: "Разрешение записи", HI: "रिकॉर्डिंग रिज़ॉल्यूशन", KO: "녹화 해상도" },
+  "smartphones.cpuBrand": { PT: "Marca da CPU", EN: "CPU Brand", RU: "Бренд CPU", HI: "सीपीयू ब्रांड", KO: "CPU 브랜드" },
+  "smartphones.gpuBrand": { PT: "Marca da GPU", EN: "GPU Brand", RU: "Бренд GPU", HI: "जीपीयू ब्रांड", KO: "GPU 브랜드" },
+  
+  "smartphones.minBattery": { PT: "Tamanho da Bateria", EN: "Battery Size", RU: "Размер батареи", HI: "बैटरी का आकार", KO: "배터리 크기" },
+  "smartphones.simType": { PT: "Tipo de SIM Card", EN: "SIM Card Type", RU: "Тип SIM-карты", HI: "सिम कार्ड का प्रकार", KO: "SIM 카드 유형" },
+  "smartphones.chargingType": { PT: "Tipo de Carregamento", EN: "Charging Type", RU: "Тип зарядки", HI: "चार्जिंग का प्रकार", KO: "충전 유형" },
+  "smartphones.biometric": { PT: "Sensor Biométrico (Dedo)", EN: "Biometric Sensor", RU: "Биометрический датчик", HI: "बायोमेट्रिक सेंसर", KO: "생체 인식 센서" },
+  "smartphones.nfc": { PT: "NFC", EN: "NFC", RU: "NFC", HI: "एनएफसी", KO: "NFC" },
+  "smartphones.compass": { PT: "Bússola", EN: "Compass", RU: "Компас", HI: "कम्पास", KO: "나침반" },
+  "smartphones.usbOtg": { PT: "USB OTG", EN: "USB OTG", RU: "USB OTG", HI: "यूएसबी ओटीजी", KO: "USB OTG" },
+  "smartphones.cameraFeatures": { PT: "Recursos da Câmera", EN: "Camera Features", RU: "Функции камеры", HI: "कैमरा विशेषताएं", KO: "카메라 기능" },
+  "smartphones.slowMotion": { PT: "Slow Motion", EN: "Slow Motion", RU: "Замедленная съемка", HI: "धीमी गति", KO: "슬로우 모션" },
+  "smartphones.performance": { PT: "Performance", EN: "Performance", RU: "Производительность", HI: "प्रदर्शन", KO: "성능" },
+  "smartphones.touchFocus": { PT: "Foco por toque", EN: "Touch Focus", RU: "Сенсорная фокусировка", HI: "टच फोकस", KO: "터치 포커스" },
+  "smartphones.maxFocusAngle": { PT: "Ângulo máximo de foco", EN: "Max Focus Angle", RU: "Макс. угол фокусировки", HI: "अधिकतम फोकस कोण", KO: "최대 초점 각도" },
+  "smartphones.antutu": { PT: "AnTuTu", EN: "AnTuTu", RU: "AnTuTu", HI: "AnTuTu", KO: "AnTuTu" },
+  "smartphones.geekbench": { PT: "GeekBench", EN: "GeekBench", RU: "GeekBench", HI: "GeekBench", KO: "GeekBench" },
+  "smartphones.3dmark": { PT: "3DMark", EN: "3DMark", RU: "3DMark", HI: "3DMark", KO: "3DMark" },
+
+  "smartphones.yes": { PT: "Sim", EN: "Yes", RU: "Да", HI: "हाँ", KO: "네" },
+  "smartphones.no": { PT: "Não", EN: "No", RU: "Нет", HI: "नहीं", KO: "아니요" },
+  "smartphones.supportsWhatsApp": { PT: "Suporte ao WhatsApp", EN: "WhatsApp Support", RU: "Поддержка WhatsApp", HI: "व्हाट्सएप सपोर्ट", KO: "WhatsApp 지원" },
+  "smartphones.whatsAppCompatible": { PT: "Compatível com WhatsApp", EN: "WhatsApp Compatible", RU: "Совместимо с WhatsApp", HI: "व्हाट्सएप संगत", KO: "WhatsApp 호환" },
+  "smartphones.whatsAppIncompatible": { PT: "Sem Suporte ao WhatsApp", EN: "No WhatsApp Support", RU: "Без поддержки WhatsApp", HI: "व्हाट्सएप समर्थन नहीं", KO: "WhatsApp 미지원" },
+  "smartphones.features": { PT: "Recursos Especiais", EN: "Special Features", RU: "Специальные возможности", HI: "विशेष सुविधाएँ", KO: "특수 기능" },
+  "tabs.news": {
+    PT: "Notícias & Gadgets",
+    EN: "News & Gadgets",
+    RU: "Новости и Гаджеты",
+    HI: "समाचार और गैजेट्स",
+    KO: "뉴스 및 가젯"
+  },
+  "news.loading": {
+    PT: "Buscando as últimas notícias...",
+    EN: "Fetching the latest news...",
+    RU: "Получение последних новостей...",
+    HI: "नवीनतम समाचार ला रहा है...",
+    KO: "최신 뉴스 가져오는 중..."
+  },
+  "news.error": {
+    PT: "Falha ao carregar as notícias.",
+    EN: "Failed to load news.",
+    RU: "Не удалось загрузить новости.",
+    HI: "समाचार लोड करने में विफल।",
+    KO: "뉴스를 로드하지 못했습니다."
+  },
+  "news.readMore": {
+    PT: "Ler artigo original",
+    EN: "Read original article",
+    RU: "Читать оригинальную статью",
+    HI: "मूल लेख पढ़ें",
+    KO: "원문 기사 읽기"
+  },
+  "news.latest": {
+    PT: "Gadgets, Invenções & Descobertas Científicas",
+    EN: "Gadgets, Inventions & Scientific Discoveries",
+    RU: "Гаджеты, Изобретения и Научные Открытия",
+    HI: "गैजेट्स, आविष्कार और वैज्ञानिक खोजें",
+    KO: "가젯, 발명 및 과학적 발견"
+  },
+  "news.description": {
+    PT: "Acompanhe as últimas novidades sobre lançamentos de gadgets, invenções tecnológicas e descobertas científicas de ponta.",
+    EN: "Follow the latest news on gadget releases, technological inventions, and cutting-edge scientific discoveries.",
+    RU: "Следите за последними новостями о выпуске гаджетов, технологических изобретениях и передовых научных открытиях.",
+    HI: "गैजेट रिलीज़, तकनीकी आविष्कारों और अत्याधुनिक वैज्ञानिक खोजों पर नवीनतम समाचारों का पालन करें।",
+    KO: "가젯 출시, 기술 발명 및 최첨단 과학 발견에 대한 최신 뉴스를 확인하세요."
+  },
+  "news.filterAll": {
+    PT: "Todas",
+    EN: "All",
+    RU: "Все",
+    HI: "सभी",
+    KO: "전체"
+  },
+  "news.filterGadgets": {
+    PT: "Gadgets",
+    EN: "Gadgets",
+    RU: "Гаджеты",
+    HI: "गैजेट्स",
+    KO: "가젯"
+  },
+  "news.filterInventions": {
+    PT: "Invenções Científicas",
+    EN: "Scientific Inventions",
+    RU: "Научные Изобретения",
+    HI: "वैज्ञानिक आविष्कार",
+    KO: "과학 발명"
+  },
+  "news.filterDiscoveries": {
+    PT: "Descobertas Científicas",
+    EN: "Scientific Discoveries",
+    RU: "Научные Открытия",
+    HI: "वैज्ञानिक खोजें",
+    KO: "과학적 발견"
+  },
+  "news.source": {
+    PT: "Fonte",
+    EN: "Source",
+    RU: "Источник",
+    HI: "स्रोत",
+    KO: "출처"
+  },
+  "news.shareNews": {
+    PT: "Compartilhar Notícia",
+    EN: "Share News",
+    RU: "Поделиться новостью",
+    HI: "समाचार साझा करें",
+    KO: "뉴스 공유"
+  },
+  "news.copiedNotification": {
+    PT: "Link da notícia copiado!",
+    EN: "News link copied!",
+    RU: "Ссылка скопирована!",
+    HI: "समाचार लिंक कॉपी किया गया!",
+    KO: "뉴스 링크 복사됨!"
+  },
+  "news.autoUpdateTitle": {
+    PT: "Ciclo de Atualização",
+    EN: "Update Cycle",
+    RU: "Цикл обновления",
+    HI: "अद्यतन चक्र",
+    KO: "업데이트 주기"
+  },
+  "news.autoUpdate48h": {
+    PT: "Atualizado automaticamente a cada 48h",
+    EN: "Automatically updated every 48h",
+    RU: "Автоматическое обновление каждые 48ч",
+    HI: "हर 48 घंटे में स्वचालित रूप से अपडेट",
+    KO: "48시간마다 자동 업데이트"
+  },
+  "news.lastSync": {
+    PT: "Última sincronização",
+    EN: "Last sync",
+    RU: "Последняя синхронизация",
+    HI: "अंतिम समन्वय",
+    KO: "마지막 동기화"
+  },
+  "news.nextSyncIn": {
+    PT: "Próxima atualização em",
+    EN: "Next update in",
+    RU: "Следующее обновление через",
+    HI: "अगला अपडेट में",
+    KO: "다음 업데이트까지"
+  },
+  "news.syncNow": {
+    PT: "Verificar Atualizações",
+    EN: "Check for Updates",
+    RU: "Проверить обновления",
+    HI: "अपडेट की जाँच करें",
+    KO: "업데이트 확인"
+  },
+  "news.syncing": {
+    PT: "Verificando...",
+    EN: "Checking...",
+    RU: "Проверка...",
+    HI: "जाँच हो रही है...",
+    KO: "확인 중..."
+  },
+  "smartphones.sharePhone": {
+    PT: "Compartilhar Ficha",
+    EN: "Share Specs",
+    RU: "Поделиться характеристиками",
+    HI: "विनिर्देश साझा करें",
+    KO: "사양 공유"
+  },
+  "smartphones.shareSuccess": {
+    PT: "Ficha técnica copiada!",
+    EN: "Specs copied to clipboard!",
+    RU: "Характеристики скопированы в буфер обмена!",
+    HI: "विनिर्देश क्लिपबोर्ड पर कॉपी किए गए!",
+    KO: "사양이 클립보드에 복사되었습니다!"
   }
 };
 
