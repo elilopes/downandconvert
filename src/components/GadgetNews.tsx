@@ -1,35 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Sparkles, ExternalLink, Filter, Calendar, Building2, Search, Share2, CheckCheck, RefreshCw, Clock, MessageSquareShare } from 'lucide-react';
+import { ExternalLink, Filter, Calendar, Building2, Search, MessageSquareShare, Share2, CheckCheck } from 'lucide-react';
 import { mockedGadgetNews, LocalizedString, NewsCategory, GadgetNewsItem } from '../data/gadgetNews';
 
 export const GadgetNews: React.FC = () => {
   const { t, lang } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<NewsCategory | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [copiedLink, setCopiedLink] = useState(false);
   const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [lastSyncTime, setLastSyncTime] = useState<Date>(() => {
-    const saved = localStorage.getItem('gadget_news_last_sync');
-    if (saved) {
-      try { return new Date(saved); } catch (e) { /* ignore */ }
-    }
-    return new Date();
-  });
-
-  const handleCopyLink = () => {
-    try {
-      const url = new URL(window.location.origin + window.location.pathname);
-      url.searchParams.set('tab', 'news');
-      navigator.clipboard.writeText(url.toString());
-      setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2500);
-    } catch (e) {
-      setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2500);
-    }
-  };
 
   const handleShareNewsItem = async (item: GadgetNewsItem) => {
     const title = getLocalizedText(item.title);
@@ -71,23 +49,6 @@ export const GadgetNews: React.FC = () => {
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
   };
 
-  const handleSyncNews = () => {
-    setIsSyncing(true);
-    setTimeout(() => {
-      const now = new Date();
-      setLastSyncTime(now);
-      localStorage.setItem('gadget_news_last_sync', now.toISOString());
-      setIsSyncing(false);
-    }, 900);
-  };
-
-  const nextSyncFormatted = useMemo(() => {
-    const syncIntervalMs = 48 * 60 * 60 * 1000;
-    const nextSync = new Date(lastSyncTime.getTime() + syncIntervalMs);
-    const diffHours = Math.max(1, Math.round((nextSync.getTime() - Date.now()) / (1000 * 60 * 60)));
-    return `${diffHours}h`;
-  }, [lastSyncTime]);
-
   const getLocalizedText = (localizedString?: LocalizedString): string => {
     if (!localizedString) return '';
     return localizedString[lang] || localizedString.PT || localizedString.EN || '';
@@ -126,60 +87,12 @@ export const GadgetNews: React.FC = () => {
     <div className="w-full max-w-7xl mx-auto py-8 px-4 animate-in fade-in duration-300">
       {/* Header Banner */}
       <div className="mb-8 flex flex-col items-center justify-center text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-semibold mb-3">
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>{t('news.latest')}</span>
-        </div>
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight">
           {t('news.latest')}
         </h2>
         <p className="text-slate-400 mt-2 max-w-2xl text-sm sm:text-base">
           {t('news.description')}
         </p>
-
-        {/* 48h Sync Indicator & Action Bar */}
-        <div className="mt-5 flex flex-wrap items-center justify-center gap-3 w-full max-w-2xl">
-          <div className="inline-flex items-center gap-2.5 px-3.5 py-2 bg-slate-900/90 border border-slate-700/80 rounded-xl text-xs text-slate-300 shadow-inner">
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span className="font-semibold text-emerald-400">{t('news.autoUpdate48h')}</span>
-            <span className="text-slate-600 hidden sm:inline">•</span>
-            <span className="text-slate-400 hidden sm:inline flex items-center gap-1">
-              <Clock className="w-3 h-3 text-slate-500" />
-              {t('news.nextSyncIn')} <strong>{nextSyncFormatted}</strong>
-            </span>
-          </div>
-
-          <button
-            onClick={handleSyncNews}
-            disabled={isSyncing}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/80 rounded-xl text-xs font-semibold transition-all cursor-pointer disabled:opacity-50 shadow-sm"
-            title={t('news.syncNow')}
-          >
-            <RefreshCw className={`w-3.5 h-3.5 text-cyan-400 ${isSyncing ? 'animate-spin' : ''}`} />
-            <span>{isSyncing ? t('news.syncing') : t('news.syncNow')}</span>
-          </button>
-
-          <button
-            onClick={handleCopyLink}
-            className="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-900/80 hover:bg-slate-800 text-cyan-300 hover:text-white border border-slate-700/80 rounded-xl transition-all font-semibold text-xs whitespace-nowrap cursor-pointer shadow-sm"
-            title="Copiar link direto para esta aba"
-          >
-            {copiedLink ? (
-              <>
-                <CheckCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="text-emerald-400 font-bold">Link Copiado!</span>
-              </>
-            ) : (
-              <>
-                <Share2 className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Copiar Link da Aba</span>
-              </>
-            )}
-          </button>
-        </div>
       </div>
 
       {/* Filter and Search Bar */}
