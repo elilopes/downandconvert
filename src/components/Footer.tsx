@@ -7,14 +7,25 @@ interface FooterProps {
   onOpenTerms: () => void;
   onOpenPrivacy: () => void;
   onOpenContact: () => void;
+  onNavigateTab?: (tab: 'converter' | 'downloader' | 'ussd' | 'smartphones' | 'news') => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
   onOpenTerms,
   onOpenPrivacy,
   onOpenContact,
+  onNavigateTab,
 }) => {
   const { t } = useLanguage();
+
+  const handleTabClick = (tab: 'converter' | 'downloader' | 'ussd' | 'smartphones' | 'news') => {
+    if (onNavigateTab) {
+      onNavigateTab(tab);
+    } else {
+      window.location.href = `/?tab=${tab}`;
+    }
+  };
+
   return (
     <footer className="w-full border-t border-slate-800/80 bg-slate-950/90 py-10 mt-16 text-slate-400">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -56,24 +67,38 @@ export const Footer: React.FC<FooterProps> = ({
             </button>
             <span className="hidden md:inline">•</span>
             <button
-              onClick={() => window.location.href = '/?tab=converter'}
+              onClick={() => handleTabClick('converter')}
               className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors"
             >
               {t('tabs.converter')}
             </button>
             <span className="hidden md:inline">•</span>
             <button
-              onClick={() => window.location.href = '/?tab=downloader'}
+              onClick={() => handleTabClick('downloader')}
               className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors"
             >
               {t('tabs.downloader')}
             </button>
             <span className="hidden md:inline">•</span>
             <button
-              onClick={() => window.location.href = '/?tab=ussd'}
+              onClick={() => handleTabClick('ussd')}
               className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors"
             >
               USSD/MMI
+            </button>
+            <span className="hidden md:inline">•</span>
+            <button
+              onClick={() => handleTabClick('smartphones')}
+              className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors font-medium"
+            >
+              {t('tabs.smartphones')}
+            </button>
+            <span className="hidden md:inline">•</span>
+            <button
+              onClick={() => handleTabClick('news')}
+              className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors font-medium"
+            >
+              {t('tabs.news')}
             </button>
             <span className="hidden md:inline">•</span>
             <button
