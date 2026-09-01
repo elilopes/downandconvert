@@ -1106,11 +1106,25 @@ const dict: Translations = {
     KO: "64 kbps (가벼운 음성)"
   },
   "tabs.smartphones": {
-    PT: "Especificações de celular",
-    EN: "Phone Specifications",
-    RU: "Характеристики телефонов",
+    PT: "Especificações de celulares",
+    EN: "Smartphone Specifications",
+    RU: "Характеристики смартфонов",
     HI: "स्मार्टफोन विनिर्देश",
     KO: "스마트폰 사양"
+  },
+  "smartphones.title": {
+    PT: "Sistema de busca de especificações de smartphones",
+    EN: "Smartphone Specifications Search System",
+    RU: "Система поиска характеристик смартфонов",
+    HI: "स्मार्टफोन विनिर्देश खोज प्रणाली",
+    KO: "스마트폰 사양 검색 시스템"
+  },
+  "smartphones.subtitle": {
+    PT: "Consulte, compare e filtre fichas técnicas completas de celulares e smartphones",
+    EN: "Search, compare, and filter complete technical specifications of smartphones and mobile devices",
+    RU: "Поиск, сравнение и фильтрация полных технических характеристик смартфонов",
+    HI: "स्मार्टफोन और मोबाइल उपकरणों के पूर्ण तकनीकी विनिर्देश खोजें और तुलना करें",
+    KO: "스마트폰 및 모바일 기기의 상세 기술 사양을 검색, 비교 및 필터링하세요"
   },
   "smartphones.filters": {
     PT: "Filtros e Categorias",
