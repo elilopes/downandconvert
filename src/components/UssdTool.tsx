@@ -74,10 +74,6 @@ export const UssdTool: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fadeIn">
       {/* Header section */}
       <div className="text-center max-w-3xl mx-auto mb-10">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-800/60 text-cyan-400 text-xs font-semibold mb-4 shadow-sm">
-          <Smartphone className="w-3.5 h-3.5" />
-          <span>{t('ussd.badge')}</span>
-        </div>
         <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight mb-3">
           {t('ussd.title')}
         </h1>
