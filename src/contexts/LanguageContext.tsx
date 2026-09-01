@@ -1356,18 +1356,81 @@ const dict: Translations = {
     KO: "다음 업데이트까지"
   },
   "news.syncNow": {
-    PT: "Verificar Atualizações",
-    EN: "Check for Updates",
-    RU: "Проверить обновления",
-    HI: "अपडेट की जाँच करें",
-    KO: "업데이트 확인"
+    PT: "Sincronizar Feeds",
+    EN: "Sync Feeds",
+    RU: "Синхронизировать ленты",
+    HI: "फ़ीड सिंक करें",
+    KO: "피드 동기화"
   },
   "news.syncing": {
-    PT: "Verificando...",
-    EN: "Checking...",
-    RU: "Проверка...",
-    HI: "जाँच हो रही है...",
-    KO: "확인 중..."
+    PT: "Verificando 404 & Sincronizando...",
+    EN: "Checking 404 & Syncing...",
+    RU: "Проверка 404 и синхронизация...",
+    HI: "404 की जाँच और समन्वय...",
+    KO: "404 확인 및 동기화 중..."
+  },
+  "news.importerTitle": {
+    PT: "Importador de RSS & Feeds",
+    EN: "RSS & Feed Importer",
+    RU: "Импортер RSS и лент",
+    HI: "आरएसएस और फ़ीड आयातक",
+    KO: "RSS 및 피드 가져오기"
+  },
+  "news.importerDesc": {
+    PT: "Importação ao vivo com verificação automática de status HTTP 200 OK e descarte de links 404",
+    EN: "Live feed import with automatic HTTP 200 OK verification and 404 broken links rejection",
+    RU: "Импорт лент с автоматической проверкой HTTP 200 OK и отсеиванием битых ссылок 404",
+    HI: "स्वचालित HTTP 200 OK सत्यापन और 404 टूटे लिंक अस्वीकृति के साथ लाइव फ़ीड आयात",
+    KO: "HTTP 200 OK 자동 검증 및 404 손상 링크 자동 차단을 지원하는 라이브 피드 가져오기"
+  },
+  "news.verifier404Active": {
+    PT: "Verificador 404 Automático Ativo",
+    EN: "Automatic 404 Verifier Active",
+    RU: "Автоматический детектор 404 активен",
+    HI: "स्वचालित 404 सत्यापनकर्ता सक्रिय",
+    KO: "자동 404 검증기 활성화됨"
+  },
+  "news.verifiedStatus": {
+    PT: "Link Verificado (HTTP 200 OK)",
+    EN: "Verified Link (HTTP 200 OK)",
+    RU: "Ссылка проверена (HTTP 200 OK)",
+    HI: "सत्यापित लिंक (HTTP 200 OK)",
+    KO: "검증된 링크 (HTTP 200 OK)"
+  },
+  "news.customFeedPlaceholder": {
+    PT: "Cole uma URL de Feed RSS personalizada (ex: https://site.com/feed)...",
+    EN: "Paste custom RSS Feed URL (e.g. https://site.com/feed)...",
+    RU: "Вставьте URL-адрес RSS-ленты...",
+    HI: "कस्टम आरएसएस फ़ीड URL पेस्ट करें...",
+    KO: "사용자 지정 RSS 피드 URL 입력..."
+  },
+  "news.importButton": {
+    PT: "Importar Feed",
+    EN: "Import Feed",
+    RU: "Импортировать",
+    HI: "फ़ीड आयात करें",
+    KO: "피드 가져오기"
+  },
+  "news.checkAllLinks": {
+    PT: "Verificar Links Atuais (Anti-404)",
+    EN: "Scan Current Links (Anti-404)",
+    RU: "Проверить ссылки (Анти-404)",
+    HI: "वर्तमान लिंक स्कैन करें (Anti-404)",
+    KO: "현재 링크 전체 점검 (404 방지)"
+  },
+  "news.allLinksValid": {
+    PT: "Todos os links testados estão 100% ativos e saudáveis!",
+    EN: "All tested links are 100% active and healthy!",
+    RU: "Все проверенные ссылки на 100% активны!",
+    HI: "सभी परीक्षण किए गए लिंक 100% सक्रिय हैं!",
+    KO: "테스트된 모든 링크가 100% 정상 작동합니다!"
+  },
+  "news.deadLinksFound": {
+    PT: "links com erro 404 foram detectados e bloqueados automaticamente.",
+    EN: "links with 404 error were detected and blocked automatically.",
+    RU: "ссылок с ошибкой 404 обнаружено и автоматически заблокировано.",
+    HI: "404 त्रुटि वाले लिंक का पता लगाया गया और स्वचालित रूप से अवरुद्ध कर दिया गया।",
+    KO: "개의 404 에러 링크가 감지되어 자동으로 차단/제외되었습니다."
   },
   "smartphones.sharePhone": {
     PT: "Compartilhar Ficha",
