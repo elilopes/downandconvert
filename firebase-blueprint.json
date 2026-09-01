@@ -21,6 +21,26 @@
         }
       },
       "required": ["lastSeen"]
+    },
+    "UssdSearch": {
+      "title": "USSD Search",
+      "description": "Tracks popularity count of searched USSD codes.",
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "titleKey": {
+          "type": "string"
+        },
+        "count": {
+          "type": "number"
+        },
+        "lastSearched": {
+          "type": "string"
+        }
+      },
+      "required": ["code", "count"]
     }
   },
   "firestore": {
@@ -31,6 +51,10 @@
     "/online_users/{sessionId}": {
       "schema": { "$ref": "#/entities/OnlineUser" },
       "description": "Heartbeat documents for online users"
+    },
+    "/ussd_searches/{code}": {
+      "schema": { "$ref": "#/entities/UssdSearch" },
+      "description": "Aggregated search frequency for USSD codes"
     }
   }
 }
