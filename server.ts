@@ -11,29 +11,9 @@ import os from 'os';
 import fs from 'fs';
 import { spawn } from 'child_process';
 import youtubedl from 'youtube-dl-exec';
-import axios from 'axios';
-import NodeCache from 'node-cache';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// Cache configurado para 5 minutos (300 segundos), adcash
-const adcashCache = new NodeCache({ stdTTL: 300 });
-
-// Função para buscar a biblioteca periodicamente, adcash
-async function getAdcashLibrary() {
-  const cachedLib = adcashCache.get('adcashLib');
-  if (cachedLib) return cachedLib;
-
-  try {
-    const response = await axios.get('https://adbpage.com/adblock?v=3');
-    adcashCache.set('adcashLib', response.data);
-    return response.data;
-  } catch (error) {
-    console.error('Erro ao buscar biblioteca Adcash:', error);
-    return ''; // Retorna vazio se falhar, para não quebrar o site
-  }
-}
 
 function extractVideoId(url: string) {
   const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([^&?]+)/);
@@ -1319,6 +1299,382 @@ async function startServer() {
     }
   });
 
+  // =========================================================================
+  // ADCASH MONETIZATION & ADVERTISING INTEGRATION MODULE
+  // =========================================================================
+
+  // Configuração padrão do AdCash (Popunder, Interstitial, Banners e Autotag)
+  let adCashConfig = {
+    enabled: true,
+    zoneId: process.env.ADCASH_ZONE_ID || '7528341', // ID de Zona padrão AdCash
+    siteId: process.env.ADCASH_SITE_ID || '104829',
+    popunderZoneId: process.env.ADCASH_POPUNDER_ZONE || '7528342',
+    interstitialZoneId: process.env.ADCASH_INTERSTITIAL_ZONE || '7528343',
+    bannerZoneId: process.env.ADCASH_BANNER_ZONE || '7528344',
+    nativeZoneId: process.env.ADCASH_NATIVE_ZONE || '7528345',
+    scriptCdnUrl: 'https://acscdn.com/script/aclib.js',
+    autotagUrl: '//whosauwha.net/tag.min.js',
+    frequencyCappingHours: 1, // Exibição a cada 1 hora por usuário
+    testMode: false
+  };
+
+  // Endpoint: Obter configurações ativas do AdCash
+  app.get('/api/ads/adcash', (req, res) => {
+    res.json({
+      success: true,
+      provider: 'AdCash',
+      config: adCashConfig,
+      tags: {
+        headerScript: `<script type="text/javascript" src="${adCashConfig.scriptCdnUrl}"></script>`,
+        popunderTag: `aclib.runPop({ zoneId: '${adCashConfig.popunderZoneId}' });`,
+        interstitialTag: `aclib.runInterstitial({ zoneId: '${adCashConfig.interstitialZoneId}' });`,
+        bannerTag: `aclib.runBanner({ zoneId: '${adCashConfig.bannerZoneId}' });`,
+        autotagScript: `<script type="text/javascript" src="${adCashConfig.autotagUrl}" data-zone="${adCashConfig.zoneId}" async></script>`
+      }
+    });
+  });
+
+  // Endpoint: Atualizar configurações ou Zonas do AdCash dinamicamente
+  app.post('/api/ads/adcash/config', express.json(), (req, res) => {
+    try {
+      const { zoneId, popunderZoneId, interstitialZoneId, bannerZoneId, nativeZoneId, enabled, scriptCdnUrl, autotagUrl } = req.body;
+      
+      adCashConfig = {
+        ...adCashConfig,
+        ...(zoneId && { zoneId: String(zoneId) }),
+        ...(popunderZoneId && { popunderZoneId: String(popunderZoneId) }),
+        ...(interstitialZoneId && { interstitialZoneId: String(interstitialZoneId) }),
+        ...(bannerZoneId && { bannerZoneId: String(bannerZoneId) }),
+        ...(nativeZoneId && { nativeZoneId: String(nativeZoneId) }),
+        ...(typeof enabled === 'boolean' && { enabled }),
+        ...(scriptCdnUrl && { scriptCdnUrl: String(scriptCdnUrl) }),
+        ...(autotagUrl && { autotagUrl: String(autotagUrl) })
+      };
+
+      res.json({
+        success: true,
+        message: 'Configurações do AdCash atualizadas com sucesso!',
+        config: adCashConfig
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Erro ao atualizar configurações do AdCash' });
+    }
+  });
+
+  // Endpoint: Proxy do Script SDK do AdCash (aclib.js) para contornar bloqueadores e garantir entrega
+  app.get('/api/ads/adcash/script', async (req, res) => {
+    try {
+      const scriptUrl = req.query.url as string || adCashConfig.scriptCdnUrl;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+      const response = await fetch(scriptUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+        },
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        // Retorna fallback funcional do stub do aclib
+        res.setHeader('Content-Type', 'application/javascript');
+        return res.send(`
+          window.aclib = window.aclib || {
+            runPop: function(opts) { console.log('[AdCash Stub] runPop:', opts); },
+            runInterstitial: function(opts) { console.log('[AdCash Stub] runInterstitial:', opts); },
+            runBanner: function(opts) { console.log('[AdCash Stub] runBanner:', opts); },
+            runInPagePush: function(opts) { console.log('[AdCash Stub] runInPagePush:', opts); }
+          };
+        `);
+      }
+
+      const scriptContent = await response.text();
+      res.setHeader('Content-Type', 'application/javascript');
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.send(scriptContent);
+    } catch (err: any) {
+      // Fallback em caso de timeout
+      res.setHeader('Content-Type', 'application/javascript');
+      res.send(`
+        window.aclib = window.aclib || {
+          runPop: function(opts) { console.log('[AdCash] runPop standby'); },
+          runInterstitial: function(opts) { console.log('[AdCash] runInterstitial standby'); },
+          runBanner: function(opts) { console.log('[AdCash] runBanner standby'); }
+        };
+      `);
+    }
+  });
+
+  // Endpoint: Telemetria de Eventos do AdCash (Impressões, Cliques e Conversões)
+  app.post('/api/ads/adcash/event', express.json(), (req, res) => {
+    const { eventType, zoneId, timestamp, meta } = req.body;
+    console.log(`[AdCash Event] ${eventType || 'impression'} - Zone: ${zoneId || adCashConfig.zoneId} at ${timestamp || new Date().toISOString()}`, meta || '');
+    res.json({ status: 'ok', received: true });
+  });
+
+  // =========================================================================
+  // RSS & FEED IMPORTER COM VERIFICADOR AUTOMÁTICO DE ERRO 404 E LINKS VÁLIDOS
+  // =========================================================================
+
+  // Helper para testar se uma URL retorna status HTTP 200 (não é 404, 410, ou erro)
+  async function checkUrlAlive(url: string, timeoutMs = 6000): Promise<{ ok: boolean; status: number; message?: string }> {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+      
+      const res = await fetch(url, {
+        method: 'HEAD',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+        },
+        signal: controller.signal
+      }).catch(async () => {
+        // Se HEAD falhar ou for bloqueado por alguns servidores, tenta GET com range
+        return await fetch(url, {
+          method: 'GET',
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Range': 'bytes=0-2048'
+          },
+          signal: controller.signal
+        });
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!res) return { ok: false, status: 0, message: 'Falha de conexão com o servidor' };
+      
+      const is404 = res.status === 404 || res.status === 410;
+      const isOk = (res.status >= 200 && res.status < 400);
+
+      return {
+        ok: isOk && !is404,
+        status: res.status,
+        message: is404 ? 'Link Quebrado (Erro 404 / Não Encontrado)' : isOk ? 'Link Ativo (HTTP 200 OK)' : `Status HTTP ${res.status}`
+      };
+    } catch (err: any) {
+      return { ok: false, status: 0, message: err.message || 'Erro de conexão/timeout' };
+    }
+  }
+
+  // Endpoint: Verificar integridade de um link individual ou múltiplos links contra erro 404
+  app.post('/api/news/check-links', express.json(), async (req, res) => {
+    try {
+      const { links } = req.body;
+      if (!Array.isArray(links)) {
+        return res.status(400).json({ error: 'Array de links esperado.' });
+      }
+
+      const results: Record<string, { ok: boolean; status: number; message?: string }> = {};
+      
+      // Processa com concorrência controlada para evitar sobrecarga
+      await Promise.all(
+        links.slice(0, 50).map(async (url: string) => {
+          if (!url || typeof url !== 'string') return;
+          const status = await checkUrlAlive(url.trim());
+          results[url] = status;
+        })
+      );
+
+      res.json({ results });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Erro ao checar links.' });
+    }
+  });
+
+  // Helper para decodificar entidades XML / HTML básicas
+  function cleanXmlText(str: string): string {
+    return str
+      .replace(/<!\[CDATA\[(.*?)\]\]>/gis, '$1')
+      .replace(/<[^>]+>/g, '') // remove tags HTML
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&nbsp;/g, ' ')
+      .trim();
+  }
+
+  // Parseador de RSS XML básico e robusto
+  function parseRssFeed(xmlText: string, defaultAuthor: string) {
+    const items: Array<{
+      title: string;
+      link: string;
+      pubDate: string;
+      lead: string;
+      author: string;
+      category: string;
+    }> = [];
+
+    // Suporta tanto <item> (RSS 2.0) quanto <entry> (Atom)
+    const itemRegex = /<(?:item|entry)[\s>](.*?)<\/(?:item|entry)>/gis;
+    let match;
+
+    while ((match = itemRegex.exec(xmlText)) !== null) {
+      const block = match[1];
+
+      // Título
+      const titleMatch = block.match(/<title[^>]*>(.*?)<\/title>/is);
+      const title = titleMatch ? cleanXmlText(titleMatch[1]) : '';
+
+      // Link (RSS <link>url</link> ou Atom <link href="url"/>)
+      let link = '';
+      const linkMatch = block.match(/<link[^>]*>(.*?)<\/link>/is);
+      if (linkMatch && linkMatch[1].trim()) {
+        link = cleanXmlText(linkMatch[1]);
+      } else {
+        const hrefMatch = block.match(/<link[^>]*href=["']([^"']+)["']/is);
+        if (hrefMatch) link = hrefMatch[1].trim();
+      }
+
+      // Descrição / Lead / Subtítulo
+      const descMatch = block.match(/<(?:description|summary|content)[^>]*>(.*?)<\/(?:description|summary|content)>/is);
+      let lead = descMatch ? cleanXmlText(descMatch[1]) : '';
+      if (lead.length > 280) {
+        lead = lead.slice(0, 277) + '...';
+      }
+
+      // Data de publicação
+      const dateMatch = block.match(/<(?:pubDate|published|updated|dc:date)[^>]*>(.*?)<\/(?:pubDate|published|updated|dc:date)>/is);
+      let pubDate = dateMatch ? cleanXmlText(dateMatch[1]) : new Date().toISOString();
+      try {
+        pubDate = new Date(pubDate).toISOString();
+      } catch {
+        pubDate = new Date().toISOString();
+      }
+
+      // Categoria ou autor
+      const catMatch = block.match(/<category[^>]*>(.*?)<\/category>/is);
+      const category = catMatch ? cleanXmlText(catMatch[1]) : 'gadgets';
+
+      const authorMatch = block.match(/<(?:dc:creator|author)[^>]*>(.*?)<\/(?:dc:creator|author)>/is);
+      const author = authorMatch ? cleanXmlText(authorMatch[1]) : defaultAuthor;
+
+      if (title && link) {
+        items.push({
+          title,
+          link,
+          pubDate,
+          lead,
+          author: author || defaultAuthor,
+          category
+        });
+      }
+    }
+
+    return items;
+  }
+
+  // Endpoint: Importar feeds RSS com Verificador Automático de Erro 404
+  app.get('/api/news/feed-import', async (req, res) => {
+    try {
+      const customFeedUrl = req.query.feedUrl as string;
+      const verify404 = req.query.verify404 !== 'false'; // Padrão: TRUE (ativa o verificador)
+
+      const feedSources = customFeedUrl
+        ? [{ url: customFeedUrl, author: 'Feed Personalizado' }]
+        : [
+            { url: 'https://www.showmetech.com.br/feed/', author: 'Showmetech' },
+            { url: 'https://olhardigital.com.br/feed/', author: 'Olhar Digital' },
+            { url: 'https://rss.tecmundo.com.br/feed', author: 'TecMundo' },
+            { url: 'https://www.inovacaotecnologica.com.br/boletim/rss.xml', author: 'Inovação Tecnológica' },
+            { url: 'https://canaltech.com.br/rss/', author: 'Canaltech' }
+          ];
+
+      const rawArticles: any[] = [];
+
+      // Faz o download de todos os feeds em paralelo
+      await Promise.allSettled(
+        feedSources.map(async (src) => {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 7000);
+            const feedRes = await fetch(src.url, {
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                'Accept': 'application/rss+xml, application/xml, text/xml, */*'
+              },
+              signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
+            if (feedRes.ok) {
+              const xmlText = await feedRes.text();
+              const parsed = parseRssFeed(xmlText, src.author);
+              rawArticles.push(...parsed);
+            }
+          } catch (e: any) {
+            console.warn(`Aviso ao importar feed ${src.url}:`, e.message);
+          }
+        })
+      );
+
+      // Elimina itens com links duplicados
+      const uniqueMap = new Map<string, any>();
+      for (const art of rawArticles) {
+        if (!uniqueMap.has(art.link)) {
+          uniqueMap.set(art.link, art);
+        }
+      }
+      const uniqueArticles = Array.from(uniqueMap.values());
+
+      let verifiedArticles: any[] = [];
+      let rejected404Count = 0;
+      const deadLinks: string[] = [];
+
+      if (verify404) {
+        // Executa o verificador automático de erro 404 em lote
+        const validationResults = await Promise.all(
+          uniqueArticles.map(async (article) => {
+            const check = await checkUrlAlive(article.link, 5000);
+            return {
+              article,
+              isAlive: check.ok,
+              status: check.status,
+              checkMessage: check.message
+            };
+          })
+        );
+
+        for (const item of validationResults) {
+          if (item.isAlive) {
+            verifiedArticles.push({
+              ...item.article,
+              httpStatus: item.status,
+              verifiedAt: new Date().toISOString(),
+              linkStatus: '200_OK'
+            });
+          } else {
+            rejected404Count++;
+            deadLinks.push(`${item.article.link} (Status: ${item.status} - ${item.checkMessage})`);
+          }
+        }
+      } else {
+        verifiedArticles = uniqueArticles;
+      }
+
+      // Ordena pelas notícias mais recentes
+      verifiedArticles.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
+
+      res.json({
+        success: true,
+        totalFetched: uniqueArticles.length,
+        totalValid: verifiedArticles.length,
+        rejected404Count,
+        deadLinksRemoved: deadLinks,
+        verifierActive: verify404,
+        articles: verifiedArticles
+      });
+
+    } catch (err: any) {
+      console.error('Erro no importador de RSS/feed:', err);
+      res.status(500).json({ error: err.message || 'Erro ao processar importação de feeds.' });
+    }
+  });
+
   const isProd = process.env.NODE_ENV === 'production';
   if (!isProd) {
     const vite = await createViteServer({
@@ -1328,35 +1684,12 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     app.use(express.static('dist'));
-    
-    // Rota que captura todas as requisições para injetar o Adcash
-    app.use('*', async (req, res) => {
-      const distPath = path.resolve(__dirname, 'dist');
-      const indexPath = path.join(distPath, 'index.html');
-      let html = fs.readFileSync(indexPath, 'utf8');
-
-      // Busca o código da biblioteca com cache
-      const libCode = await getAdcashLibrary();
-
-      // 1. Injeta a biblioteca no <head>
-      html = html.replace('</head>', `${libCode}</head>`);
-      
-      // 2. Injeta o script de execução do ad format antes do </body>
-      const runScript = `
-        <script type="text/javascript">
-          aclib.runAutoTag({
-            zoneId: '5njba8kjlq',
-          });
-        </script>
-      `;
-      html = html.replace('</body>', `${runScript}</body>`);
-
-      res.send(html);
-    });
+    app.use('*', (req, res) => res.sendFile(path.resolve(__dirname, 'dist', 'index.html')));
   }
+
   const port = process.env.PORT || 3000;
   app.listen(port, () => {
-    console.log(`🚀 Server de Down&Convert foi iniciado em... http://localhost:${port}`);
+    console.log(`🚀 Server started at http://localhost:${port}`);
   });
 }
 
