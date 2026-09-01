@@ -321,10 +321,6 @@ export const VideoDownloader: React.FC<VideoDownloaderProps> = ({
     <div className="max-w-4xl mx-auto w-full">
       {/* Downloader Hero */}
       <div className="text-center max-w-3xl mx-auto mb-8">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-semibold mb-3">
-          <Globe className="w-3.5 h-3.5" />
-          <span>{t('downloader.hero.badge')}</span>
-        </div>
         <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight mb-3">
           {t('downloader.hero.title')}
         </h1>
@@ -666,7 +662,7 @@ export const VideoDownloader: React.FC<VideoDownloaderProps> = ({
           { name: 'Facebook', tag: 'Watch & Posts', color: 'border-blue-500/30 text-blue-400 bg-blue-500/5' },
           { name: 'Twitter / X', tag: 'Vídeos & GIFs', color: 'border-slate-500/30 text-slate-300 bg-slate-500/5' },
           { name: 'Vimeo', tag: 'HD & 4K', color: 'border-cyan-500/30 text-cyan-400 bg-cyan-500/5' },
-          { name: 'YouTube', tag: 'Manutenção', color: 'border-amber-500/30 text-amber-400 bg-amber-500/5' },
+          { name: 'YouTube', tag: 'YouTube áudio & vídeo', color: 'border-rose-500/30 text-rose-400 bg-rose-500/5' },
         ].map((plat) => (
           <div
             key={plat.name}
