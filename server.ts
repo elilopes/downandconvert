@@ -1554,6 +1554,11 @@ async function startServer() {
       const author = authorMatch ? cleanXmlText(authorMatch[1]) : defaultAuthor;
 
       if (title && link) {
+        // Excluir notícias que possuem trailer ou filme no título
+        if (/trailer|filme/i.test(title)) {
+          continue;
+        }
+
         items.push({
           title,
           link,
@@ -1612,9 +1617,11 @@ async function startServer() {
         })
       );
 
-      // Elimina itens com links duplicados
+      // Elimina itens duplicados e exclui notícias com trailer/filme no título ou links inválidos
       const uniqueMap = new Map<string, any>();
       for (const art of rawArticles) {
+        if (/trailer|filme/i.test(art.title)) continue;
+        if (art.link.includes('anuncios-do-gamescom') || art.link === 'https://canaltech.com.br/rss/' || art.link === 'https://canaltech.com.br/rss') continue;
         if (!uniqueMap.has(art.link)) {
           uniqueMap.set(art.link, art);
         }
@@ -1782,14 +1789,14 @@ async function startServer() {
     const suggestions = [
       {
         id: 'sug-1',
-        title: 'Óculos de Realidade Aumentada Leves com Display Holográfico Micro-LED',
-        lead: 'Nova geração de smart glasses pesa apenas 48g e projeta interfaces transparentes com brilho de até 4000 nits sob luz solar direta.',
-        category: 'gadgets',
-        categoryLabel: 'Periféricos & Gadgets',
+        title: 'Intel detalha Core Série 3 Wildcat Lake, CPU para trazer IA a notebooks baratos',
+        lead: 'Nova arquitetura foca em eficiência energética e aceleração neural integrada para democratizar recursos de IA generativa em PCs portáteis.',
+        category: 'inventions',
+        categoryLabel: 'Processadores & IA',
         author: 'Showmetech',
-        link: 'https://www.showmetech.com.br/anuncios-do-gamescom-opening-night-live-2026/',
+        link: 'https://www.showmetech.com.br/intel-detalha-core-serie-3-wildcat-lake/',
         pubDate: new Date(Date.now() - 3600000 * 2).toISOString(),
-        trendingTag: '🔥 Em Alta Hoje'
+        trendingTag: '🔥 Processadores & IA'
       },
       {
         id: 'sug-2',
@@ -1804,36 +1811,36 @@ async function startServer() {
       },
       {
         id: 'sug-3',
-        title: 'Smartphones Dobráveis Tri-Fold chegam com telas OLED de 10 polegadas e bateria de anodo de silício',
-        lead: 'Dispositivos híbridos transformam celulares de bolso em tablets completos de trabalho com espessura de apenas 3,6mm quando abertos.',
+        title: 'Xiaomi 18 Fold tem imagens oficiais reveladas antes do lançamento',
+        lead: 'Novo dobrável topo de linha exibe corpo ultrafino com dobradiça de fibra de carbono, câmeras Leica e bateria de silício-carbono.',
         category: 'gadgets',
-        categoryLabel: 'Smartphones & Telas',
-        author: 'Olhar Digital',
-        link: 'https://olhardigital.com.br/feed/',
+        categoryLabel: 'Smartphones & Dobráveis',
+        author: 'TecMundo',
+        link: 'https://www.tecmundo.com.br/produto/415736-xiaomi-18-fold-tem-imagens-oficiais-reveladas-antes-do-lancamento.htm',
         pubDate: new Date(Date.now() - 3600000 * 7).toISOString(),
         trendingTag: '📱 Mobile Tech'
       },
       {
         id: 'sug-4',
-        title: 'Processadores Fotônicos Integrados realizam cálculos de IA na velocidade da luz com 90% menos calor',
-        lead: 'Substituição de trilhas de cobre por guias de onda ópticas em escala de nanômetro abre nova fronteira para aceleradores neurais generativos.',
-        category: 'discoveries',
-        categoryLabel: 'Ciência & Computação',
+        title: 'Chinesa lança fone com ANC para desafiar Sony por apenas R$ 220',
+        lead: 'Novo fone sem fio traz cancelamento ativo de ruído híbrido de 45 dB, drivers de titânio e autonomia de até 60 horas com estojo de recarga rápida.',
+        category: 'gadgets',
+        categoryLabel: 'Áudio & Gadgets',
         author: 'Canaltech',
-        link: 'https://canaltech.com.br/rss/',
+        link: 'https://canaltech.com.br/fone-de-ouvido/chinesa-lanca-fone-com-anc-para-desafiar-sony-por-apenas-r-220/',
         pubDate: new Date(Date.now() - 3600000 * 12).toISOString(),
-        trendingTag: '💡 Computação Óptica'
+        trendingTag: '🎧 Áudio & Gadgets'
       },
       {
         id: 'sug-5',
-        title: 'Robôs Domésticos com Sensores Hápticos e Visão Espacial 3D auxiliam em tarefas de cozinha e organização',
-        lead: 'Novos algoritmos de navegação neural por SLAM permitem que assistentes humanoides manipulem objetos frágeis com sensibilidade milimétrica.',
-        category: 'inventions',
-        categoryLabel: 'Robótica & IA',
+        title: 'Novos relógios Huawei GT 7 e GT 7 Pro são lançados com até 21 dias de bateria',
+        lead: 'Smartwatches chegam com sensores ópticos aprimorados, medição de ECG de nível médico e resistência militar contra água e impactos.',
+        category: 'gadgets',
+        categoryLabel: 'Smartwatches & Gadgets',
         author: 'TecMundo',
-        link: 'https://rss.tecmundo.com.br/feed',
+        link: 'https://www.tecmundo.com.br/produto/415733-novos-relogios-huawei-gt-7-e-gt-7-pro-sao-lancados-com-ate-21-dias-de-bateria.htm',
         pubDate: new Date(Date.now() - 3600000 * 16).toISOString(),
-        trendingTag: '🤖 Robótica Avançada'
+        trendingTag: '⌚ Bateria Estendida'
       }
     ];
 
