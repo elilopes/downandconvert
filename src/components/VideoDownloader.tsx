@@ -163,47 +163,43 @@ export const VideoDownloader: React.FC<VideoDownloaderProps> = ({
     setShowVastAd(true);
   };
 
-  const performSearch = async (query: string) => {
+    const performSearch = async (query: string) => {
     setIsSearching(true);
     setSearchError('');
     setErrorDetails(null);
     try {
-      const res = await fetch(`/api/yt/search?q=${encodeURIComponent(query)}`);
+      // Changed to PHP endpoint for extraction
+      const res = await fetch(`api/extract.php`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ url: query, mode: downloadMode, quality: downloadMode === 'video' ? videoQuality : audioBitrate })
+      });
 
       if (!res.ok) {
         const errorText = await res.text().catch(() => '');
-        let is429 = res.status === 429;
-        let msg = errorText;
-        try {
-          const parsed = JSON.parse(errorText);
-          if (parsed.code === 429 || parsed.error === 'RATE_LIMIT_429') is429 = true;
-          msg = parsed.message || msg;
-        } catch (e) {
-          if (errorText.includes('429') || errorText.includes('Too Many Requests') || errorText.includes('Anti-Bot')) {
-            is429 = true;
-          }
-        }
-        if (is429) {
-          setErrorDetails({
-            is429: true,
-            code: 429,
-            message: 'O YouTube bloqueou temporariamente as requisições do servidor em nuvem (Status 429: Too Many Requests / Proteção Anti-Bot).'
-          });
-          return;
-        }
-        throw new Error(msg || 'Falha ao buscar vídeos no YouTube');
+        throw new Error(errorText || 'Falha ao processar URL pelo PHP');
       }
 
       const data = await res.json();
-      if (!Array.isArray(data) || data.length === 0) {
-        setSearchError('Nenhum resultado encontrado. Tente outros termos ou cole o link direto.');
+      if (!data || !data.success) {
+        setSearchError('Nenhum resultado encontrado ou erro na extração. Tente outros termos ou cole o link direto.');
       } else {
-        setSearchResults(data);
+        // Mocking a search result list with the single extracted item
+        setSearchResults([{
+          id: '1',
+          title: data.title || 'Mídia Extraída (PHP)',
+          author: 'Down&Convert Serverless',
+          url: data.url,
+          thumbnail: data.thumbnail || '',
+          duration: data.duration || '0:00'
+        }]);
       }
     } catch (err: any) {
       console.error('Search error:', err);
       setSearchError(
-        err.message || 'Erro ao pesquisar vídeos. Tente colar o link direto do vídeo.'
+        err.message || 'Erro ao pesquisar vídeos via PHP.'
       );
     } finally {
       setIsSearching(false);
@@ -224,9 +220,8 @@ export const VideoDownloader: React.FC<VideoDownloaderProps> = ({
       try {
         const isHttp = url.startsWith('http://') || url.startsWith('https://');
 
-        const fetchUrl = isHttp
-          ? `/api/yt/download?url=${encodeURIComponent(url)}&mode=${downloadMode}&quality=${downloadMode === 'video' ? videoQuality : audioBitrate}&bitrate=${audioBitrate}` 
-          : url;
+        // Proxy the final download URL through PHP to avoid CORS issues
+        const fetchUrl = isHttp ? `api/proxy.php?url=${encodeURIComponent(url)}` : url;
 
         const response = await fetch(fetchUrl);
         if (!response.ok) {
@@ -321,6 +316,10 @@ export const VideoDownloader: React.FC<VideoDownloaderProps> = ({
     <div className="max-w-4xl mx-auto w-full">
       {/* Downloader Hero */}
       <div className="text-center max-w-3xl mx-auto mb-8">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-semibold mb-3">
+          <Globe className="w-3.5 h-3.5" />
+          <span>{t('downloader.hero.badge')}</span>
+        </div>
         <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight mb-3">
           {t('downloader.hero.title')}
         </h1>
