@@ -1,709 +1,280 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Search, 
-  Youtube, 
-  Play, 
-  Plus, 
-  RefreshCw, 
-  LogIn, 
-  User as UserIcon,
-  AlertCircle,
-  Info,
-  ShieldAlert,
-  X,
-  Clipboard,
-  Sparkles,
-  FileUp,
-  Radio,
-  Download,
-  Check,
-  Video,
-  Music,
-  ExternalLink,
-  ShieldCheck,
-  Zap,
-  Globe
-} from 'lucide-react';
-import { initAuth, googleSignIn, getAccessToken, logout } from '../lib/auth';
-import type { User } from 'firebase/auth';
-import { SponsoredAdModal } from './SponsoredAdModal';
-import { AdPlayerModal } from './AdPlayerModal';
+import React, { useState } from 'react';
+import { Search, Phone, Wrench, Smartphone, Copy, Check, Filter, ExternalLink, ShieldAlert, Sparkles, Zap } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { logUssdSearch } from '../lib/ussdTracking';
 
-interface VideoDownloaderProps {
-  onFilesSelected: (files: File[]) => void;
-  onOpenRecorder: () => void;
-  onOpenSampleModal: () => void;
-  onNavigateToConverter?: () => void;
-  isProcessing?: boolean;
+interface UssdCode {
+  code: string;
+  titleKey: string;
+  descKey: string;
+  carrier: 'vivo' | 'claro' | 'tim' | 'oi' | 'geral' | 'android' | 'samsung' | 'xiaomi' | 'motorola';
+  category: 'saldo' | 'recarga' | 'numero' | 'internet' | 'teste' | 'sistema' | 'limpeza';
 }
 
-export const VideoDownloader: React.FC<VideoDownloaderProps> = ({
-  onFilesSelected,
-  onOpenRecorder,
-  onOpenSampleModal,
-  onNavigateToConverter,
-  isProcessing = false,
-}) => {
+const USSD_DATABASE: UssdCode[] = [
+  // Vivo
+  { code: '*8000', titleKey: 'ussd.code.vivo.8000.title', descKey: 'ussd.code.vivo.8000.desc', carrier: 'vivo', category: 'saldo' },
+  { code: '*800', titleKey: 'ussd.code.vivo.800.title', descKey: 'ussd.code.vivo.800.desc', carrier: 'vivo', category: 'saldo' },
+  { code: '*8486', titleKey: 'ussd.code.vivo.8486.title', descKey: 'ussd.code.vivo.8486.desc', carrier: 'vivo', category: 'saldo' },
+  { code: '*7000', titleKey: 'ussd.code.vivo.7000.title', descKey: 'ussd.code.vivo.7000.desc', carrier: 'vivo', category: 'recarga' },
+
+  // Claro
+  { code: '*544#', titleKey: 'ussd.code.claro.544.title', descKey: 'ussd.code.claro.544.desc', carrier: 'claro', category: 'internet' },
+  { code: '*546#', titleKey: 'ussd.code.claro.546.title', descKey: 'ussd.code.claro.546.desc', carrier: 'claro', category: 'saldo' },
+  { code: '*555#', titleKey: 'ussd.code.claro.555.title', descKey: 'ussd.code.claro.555.desc', carrier: 'claro', category: 'recarga' },
+  { code: '*510#', titleKey: 'ussd.code.claro.510.title', descKey: 'ussd.code.claro.510.desc', carrier: 'claro', category: 'numero' },
+
+  // TIM
+  { code: '*222#', titleKey: 'ussd.code.tim.222.title', descKey: 'ussd.code.tim.222.desc', carrier: 'tim', category: 'saldo' },
+  { code: '*144#', titleKey: 'ussd.code.tim.144.title', descKey: 'ussd.code.tim.144.desc', carrier: 'tim', category: 'saldo' },
+  { code: '*271#', titleKey: 'ussd.code.tim.271.title', descKey: 'ussd.code.tim.271.desc', carrier: 'tim', category: 'numero' },
+  { code: '*244#', titleKey: 'ussd.code.tim.244.title', descKey: 'ussd.code.tim.244.desc', carrier: 'tim', category: 'recarga' },
+
+  // Oi
+  { code: '*880#', titleKey: 'ussd.code.oi.880.title', descKey: 'ussd.code.oi.880.desc', carrier: 'oi', category: 'saldo' },
+  { code: '*800', titleKey: 'ussd.code.oi.800.title', descKey: 'ussd.code.oi.800.desc', carrier: 'oi', category: 'saldo' },
+
+  // Android & Sistema / Diagnóstico / Testes
+  { code: '*#06#', titleKey: 'ussd.code.geral.06.title', descKey: 'ussd.code.geral.06.desc', carrier: 'geral', category: 'sistema' },
+  { code: '*#*#4636#*#*', titleKey: 'ussd.code.android.4636.title', descKey: 'ussd.code.android.4636.desc', carrier: 'android', category: 'teste' },
+  { code: '*#0*#', titleKey: 'ussd.code.samsung.0.title', descKey: 'ussd.code.samsung.0.desc', carrier: 'samsung', category: 'teste' },
+  { code: '*#*#34971539#*#*', titleKey: 'ussd.code.android.34971539.title', descKey: 'ussd.code.android.34971539.desc', carrier: 'android', category: 'sistema' },
+  { code: '*#*#7594#*#*', titleKey: 'ussd.code.android.7594.title', descKey: 'ussd.code.android.7594.desc', carrier: 'android', category: 'sistema' },
+  { code: '*#*#232338#*#*', titleKey: 'ussd.code.android.232338.title', descKey: 'ussd.code.android.232338.desc', carrier: 'android', category: 'sistema' },
+  { code: '*#*#0289#*#*', titleKey: 'ussd.code.android.0289.title', descKey: 'ussd.code.android.0289.desc', carrier: 'android', category: 'teste' },
+  { code: '*#*#0842#*#*', titleKey: 'ussd.code.android.0842.title', descKey: 'ussd.code.android.0842.desc', carrier: 'android', category: 'teste' },
+];
+
+export const UssdTool: React.FC = () => {
   const { t } = useLanguage();
+  const [search, setSearch] = useState('');
+  const [selectedCarrier, setSelectedCarrier] = useState<string>('todos');
+  const [selectedCategory, setSelectedCategory] = useState<string>('todos');
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
-  // Search and URL state
-  const [searchInput, setSearchInput] = useState('');
-  const [platform, setPlatform] = useState<'youtube' | 'tiktok' | 'instagram' | 'facebook' | 'vimeo' | 'twitter' | 'unknown'>('youtube');
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [searchError, setSearchError] = useState('');
-  const [errorDetails, setErrorDetails] = useState<{
-    is429: boolean;
-    message: string;
-    code?: number;
-  } | null>(null);
-  const [videoInfo, setVideoInfo] = useState<any>(null);
-  const [isDownloading, setIsDownloading] = useState(false);
-  const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null);
+  const handleCopy = (item: UssdCode) => {
+    navigator.clipboard.writeText(item.code);
+    setCopiedCode(item.code);
+    logUssdSearch(item.code, item.titleKey);
+    setTimeout(() => setCopiedCode(null), 2000);
+  };
 
-  // Download mode & quality
-  const [downloadMode, setDownloadMode] = useState<'audio' | 'video'>('video');
-  const [videoQuality, setVideoQuality] = useState<'highest' | '360p' | 'lowest'>('highest');
-  const [audioBitrate, setAudioBitrate] = useState<64 | 128 | 192 | 256 | 320>(320);
-
-  // Sponsored Ad state
-  const [isAdOpen, setIsAdOpen] = useState(false);
-  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
-
-  // Auth State
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [token, setToken] = useState<string | null>(null);
-
-  // VAST Ad State
-  const [showVastAd, setShowVastAd] = useState(false);
-  const [pendingVastAction, setPendingVastAction] = useState<(() => void) | null>(null);
-
-  useEffect(() => {
-    const val = searchInput.toLowerCase();
-    if (!val) {
-      setPlatform('youtube');
-      return;
-    }
+  const filteredCodes = USSD_DATABASE.filter(item => {
+    const matchesSearch = item.code.toLowerCase().includes(search.toLowerCase()) ||
+                          t(item.titleKey).toLowerCase().includes(search.toLowerCase()) ||
+                          t(item.descKey).toLowerCase().includes(search.toLowerCase());
     
-    if (val.includes('tiktok.com')) setPlatform('tiktok');
-    else if (val.includes('instagram.com')) setPlatform('instagram');
-    else if (val.includes('facebook.com') || val.includes('fb.watch')) setPlatform('facebook');
-    else if (val.includes('vimeo.com')) setPlatform('vimeo');
-    else if (val.includes('twitter.com') || val.includes('x.com')) setPlatform('twitter');
-    else if (val.includes('youtube.com') || val.includes('youtu.be')) setPlatform('youtube');
-    else setPlatform('unknown');
-  }, [searchInput]);
+    const matchesCarrier = selectedCarrier === 'todos' || item.carrier === selectedCarrier;
+    const matchesCategory = selectedCategory === 'todos' || item.category === selectedCategory;
 
-  useEffect(() => {
-    const unsubscribe = initAuth(
-      (user, tkn) => {
-        setUser(user);
-        setToken(tkn);
-      },
-      () => {
-        setUser(null);
-        setToken(null);
-      }
-    );
-    return () => {
-      if (typeof unsubscribe === 'function') unsubscribe();
-    };
-  }, []);
-
-  const handleLogin = async () => {
-    setIsLoggingIn(true);
-    try {
-      const result = await googleSignIn();
-      if (result) {
-        setToken(result.accessToken);
-        setUser(result.user);
-      }
-    } catch (err) {
-      console.error('Login failed:', err);
-    } finally {
-      setIsLoggingIn(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    await logout();
-    setUser(null);
-    setToken(null);
-  };
-
-  const handlePasteClipboard = async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      setSearchInput(text);
-    } catch (err) {
-      console.warn('Falha ao ler a área de transferência', err);
-    }
-  };
-
-  const handleSearchClick = () => {
-    setSearchError('');
-    setErrorDetails(null);
-    setSearchResults([]);
-    setDownloadSuccess(null);
-    if (!searchInput.trim()) return;
-
-    const query = searchInput.trim();
-    const isHttp = query.startsWith('http://') || query.startsWith('https://');
-
-    // Trigger VAST Video Ad modal first, then proceed with the search/download
-    setPendingVastAction(() => () => {
-      if (isHttp) {
-        downloadUrl(query);
-      } else {
-        performSearch(query);
-      }
-    });
-    setShowVastAd(true);
-  };
-
-    const performSearch = async (query: string) => {
-    setIsSearching(true);
-    setSearchError('');
-    setErrorDetails(null);
-    try {
-      // Changed to PHP endpoint for extraction
-      const res = await fetch(`api/extract.php`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ url: query, mode: downloadMode, quality: downloadMode === 'video' ? videoQuality : audioBitrate })
-      });
-
-      if (!res.ok) {
-        const errorText = await res.text().catch(() => '');
-        throw new Error(errorText || 'Falha ao processar URL pelo PHP');
-      }
-
-      const data = await res.json();
-      if (!data || !data.success) {
-        setSearchError('Nenhum resultado encontrado ou erro na extração. Tente outros termos ou cole o link direto.');
-      } else {
-        // Mocking a search result list with the single extracted item
-        setSearchResults([{
-          id: '1',
-          title: data.title || 'Mídia Extraída (PHP)',
-          author: 'Down&Convert Serverless',
-          url: data.url,
-          thumbnail: data.thumbnail || '',
-          duration: data.duration || '0:00'
-        }]);
-      }
-    } catch (err: any) {
-      console.error('Search error:', err);
-      setSearchError(
-        err.message || 'Erro ao pesquisar vídeos via PHP.'
-      );
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  const downloadUrl = async (url: string, title?: string) => {
-    if (isDownloading) return;
-    setIsDownloading(true);
-    setSearchError('');
-    setErrorDetails(null);
-    setDownloadSuccess(null);
-
-    const maxRetries = 2;
-    let lastError: any = null;
-
-    for (let attempt = 1; attempt <= maxRetries + 1; attempt++) {
-      try {
-        const isHttp = url.startsWith('http://') || url.startsWith('https://');
-
-        // Proxy the final download URL through PHP to avoid CORS issues
-        const fetchUrl = isHttp ? `api/proxy.php?url=${encodeURIComponent(url)}` : url;
-
-        const response = await fetch(fetchUrl);
-        if (!response.ok) {
-          const errText = await response.text().catch(() => '');
-          let is429 = response.status === 429;
-          let detailedMsg = errText;
-          try {
-            const parsed = JSON.parse(errText);
-            if (parsed.code === 429 || parsed.error === 'RATE_LIMIT_429') {
-              is429 = true;
-            }
-            detailedMsg = parsed.message || detailedMsg;
-          } catch(e) {
-            if (errText.includes('429') || errText.includes('Too Many Requests') || errText.includes('Anti-Bot') || errText.includes('Sign in to confirm')) {
-              is429 = true;
-            }
-          }
-
-          if (is429) {
-            setErrorDetails({
-              is429: true,
-              code: 429,
-              message: detailedMsg || 'O provedor bloqueou temporariamente a requisição no servidor em nuvem (Status 429: Proteção Anti-Bot / Too Many Requests).'
-            });
-            setIsDownloading(false);
-            return;
-          }
-
-          const isServerRetryable = response.status === 500 || response.status === 502 || response.status === 503 || response.status === 504;
-          if (attempt <= maxRetries && isServerRetryable) {
-            const delayMs = Math.pow(2, attempt - 1) * 1500;
-            console.warn(`[downloadUrl] Falha ${response.status} na tentativa ${attempt}/${maxRetries + 1}. Tentando novamente em ${delayMs}ms...`);
-            setSearchError(`Servidor ocupado (${response.status}). Tentando novamente em ${(delayMs / 1000).toFixed(1)}s (Tentativa ${attempt + 1}/${maxRetries + 1})...`);
-            await new Promise((r) => setTimeout(r, delayMs));
-            continue;
-          }
-
-          throw new Error(detailedMsg || `Erro ao baixar arquivo (status ${response.status}).`);
-        }
-
-        const blob = await response.blob();
-        
-        let filename = 'media.mp4';
-        if (isHttp) {
-          const contentDisposition = response.headers.get('content-disposition');
-          if (contentDisposition && contentDisposition.includes('filename="')) {
-            filename = decodeURIComponent(contentDisposition.split('filename="')[1].split('"')[0]);
-          } else {
-            filename = title ? `${title}.${downloadMode === 'video' ? 'mp4' : 'm4a'}` : `media_${downloadMode}.${downloadMode === 'video' ? 'mp4' : 'm4a'}`;
-          }
-        } else {
-          filename = url.split('/').pop()?.split('?')[0] || 'media.mp4';
-        }
-
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.href = URL.createObjectURL(blob);
-        downloadAnchor.download = filename;
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        document.body.removeChild(downloadAnchor);
-        setTimeout(() => URL.revokeObjectURL(downloadAnchor.href), 100);
-        
-        if (downloadMode === 'video') {
-          setDownloadSuccess(`Vídeo "${filename}" baixado com sucesso!`);
-        } else {
-          setDownloadSuccess(`Áudio "${filename}" baixado com sucesso!`);
-        }
-
-        setSearchInput('');
-        setVideoInfo(null);
-        setSearchResults([]);
-        setSearchError('');
-        setIsDownloading(false);
-        return;
-      } catch (err: unknown) {
-        lastError = err;
-        if (attempt <= maxRetries) {
-          const delayMs = Math.pow(2, attempt - 1) * 1500;
-          console.warn(`[downloadUrl] Erro na tentativa ${attempt}. Tentando novamente em ${delayMs}ms...`, err);
-          setSearchError(`Falha temporária de conexão. Tentando novamente em ${(delayMs / 1000).toFixed(1)}s (Tentativa ${attempt + 1}/${maxRetries + 1})...`);
-          await new Promise((r) => setTimeout(r, delayMs));
-        }
-      }
-    }
-
-    const msg = lastError instanceof Error ? lastError.message : 'Falha ao buscar URL.';
-    setSearchError(msg);
-    setIsDownloading(false);
-  };
+    return matchesSearch && matchesCarrier && matchesCategory;
+  });
 
   return (
-    <div className="max-w-4xl mx-auto w-full">
-      {/* Downloader Hero */}
-      <div className="text-center max-w-3xl mx-auto mb-8">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-semibold mb-3">
-          <Globe className="w-3.5 h-3.5" />
-          <span>{t('downloader.hero.badge')}</span>
-        </div>
-        <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight mb-3">
-          {t('downloader.hero.title')}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fadeIn">
+      {/* Header section */}
+      <div className="text-center max-w-3xl mx-auto mb-10">
+        <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight mb-3">
+          {t('ussd.title')}
         </h1>
-        <p className="text-sm text-slate-400 max-w-xl mx-auto">
-          {t('downloader.hero.desc')}
+        <p className="text-sm sm:text-base text-slate-400">
+          {t('ussd.desc')}
         </p>
       </div>
 
-      {/* Main Search / URL Card */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative">
-        <div className="flex flex-col gap-4">
-          {/* Controls Bar: Mode Switch, Quality, Auth */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-800/80">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <span className="text-xs text-slate-400 font-semibold">{t('downloader.mode')}</span>
-              <div className="flex bg-slate-800 rounded-xl p-1 border border-slate-700 w-fit">
-                <button
-                  onClick={() => setDownloadMode('video')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                    downloadMode === 'video' 
-                      ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 shadow-md' 
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  <Video className="w-3.5 h-3.5" />
-                  <span>{t('downloader.videoOption')}</span>
-                </button>
-                <button
-                  onClick={() => setDownloadMode('audio')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                    downloadMode === 'audio' 
-                      ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 shadow-md' 
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  <Music className="w-3.5 h-3.5" />
-                  <span>{t('downloader.audioOption')}</span>
-                </button>
-              </div>
-
-              {downloadMode === 'video' && (
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-slate-500">{t('downloader.quality')}</span>
-                  <select
-                    value={videoQuality}
-                    onChange={(e) => setVideoQuality(e.target.value as any)}
-                    className="bg-slate-800 text-xs text-slate-300 border border-slate-700 rounded-lg px-2.5 py-1.5 outline-none hover:border-slate-600 transition-colors focus:border-cyan-500 cursor-pointer font-medium"
-                  >
-                    <option value="highest">{t('downloader.quality.highest')}</option>
-                    <option value="360p">{t('downloader.quality.medium')}</option>
-                    <option value="lowest">{t('downloader.quality.lowest')}</option>
-                  </select>
-                </div>
-              )}
-
-              {downloadMode === 'audio' && (
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-slate-500">{t('downloader.quality')}</span>
-                  <select
-                    value={audioBitrate}
-                    onChange={(e) => setAudioBitrate(Number(e.target.value) as 64 | 128 | 192 | 256 | 320)}
-                    className="bg-slate-800 text-xs text-emerald-400 border border-slate-700 rounded-lg px-2.5 py-1.5 outline-none hover:border-slate-600 transition-colors focus:border-emerald-500 cursor-pointer font-medium"
-                  >
-                    <option value={320}>{t('downloader.audioQuality.320')}</option>
-                    <option value={256}>{t('downloader.audioQuality.256')}</option>
-                    <option value={192}>{t('downloader.audioQuality.192')}</option>
-                    <option value={128}>{t('downloader.audioQuality.128')}</option>
-                    <option value={64}>{t('downloader.audioQuality.64')}</option>
-                  </select>
-                </div>
-              )}
-            </div>
-
-            {/* Optional Auth Button */}
-            {user ? (
-              <div className="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700">
-                <span className="text-xs text-emerald-400 flex items-center gap-1.5 font-medium">
-                  <UserIcon className="w-3.5 h-3.5" /> {user.displayName || 'Conectado'}
-                </span>
-                <button 
-                  onClick={handleLogout}
-                  className="text-xs text-slate-400 hover:text-rose-300 underline underline-offset-2 transition-colors ml-1"
-                >
-                  Sair
-                </button>
-              </div>
-            ) : (
-              <button 
-                onClick={handleLogin}
-                disabled={isLoggingIn}
-                className="group flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors bg-slate-800/50 hover:bg-slate-700/80 px-3 py-1.5 rounded-xl border border-slate-700/60 w-fit"
-              >
-                <LogIn className="w-3.5 h-3.5 text-emerald-500 group-hover:text-emerald-400" />
-                <span>{isLoggingIn ? 'Conectando...' : 'Login Opcional (Bypass Anti-Bot)'}</span>
-              </button>
-            )}
-          </div>
-
-          {/* Input Bar */}
-          <div className="flex items-center bg-slate-950/80 border border-slate-700/90 rounded-2xl p-2 focus-within:border-cyan-500/80 focus-within:shadow-[0_0_20px_rgba(6,182,212,0.2)] transition-all">
-            <div className="pl-3 pr-2 text-slate-400">
-              {isSearching || isDownloading ? (
-                <RefreshCw className="w-5 h-5 animate-spin text-cyan-400" />
-              ) : (
-                <Youtube className="w-5 h-5 text-rose-500" />
-              )}
-            </div>
+      {/* Search & Filters */}
+      <div className="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 mb-8 shadow-xl backdrop-blur-md">
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+          {/* Search Bar */}
+          <div className="relative w-full md:w-96">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
-              placeholder={t('dropzone.placeholder')}
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearchClick()}
-              className="flex-1 bg-transparent border-none focus:outline-none text-white text-sm py-2 px-1 placeholder:text-slate-500"
+              placeholder={t('ussd.search')}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-slate-950/80 border border-slate-700/70 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
             />
-            {searchInput && (
-              <button
-                onClick={() => { setSearchInput(''); setSearchResults([]); setVideoInfo(null); setSearchError(''); setDownloadSuccess(null); }}
-                className="p-2 text-slate-400 hover:text-slate-200 mr-1"
-                title="Limpar"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-            <button
-              onClick={handlePasteClipboard}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition-colors mr-2 cursor-pointer"
-              title={t('dropzone.paste')}
-            >
-              <Clipboard className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{t('dropzone.paste')}</span>
-            </button>
-            <button
-              onClick={handleSearchClick}
-              disabled={isSearching || isDownloading}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 disabled:opacity-80 text-slate-950 text-xs font-bold transition-all shadow-md cursor-pointer shrink-0"
-            >
-              {isDownloading || isSearching ? (
-                <RefreshCw className="w-3.5 h-3.5 animate-spin shrink-0" />
-              ) : (
-                <Search className="w-3.5 h-3.5 shrink-0" />
-              )}
-              <span>
-                {isDownloading 
-                  ? (downloadMode === 'audio' ? t('downloader.preparingAudio') : t('downloader.preparingVideo')) 
-                  : isSearching 
-                    ? t('downloader.searching') 
-                    : t('downloader.downloadMedia')}
-              </span>
-            </button>
           </div>
 
-          <p className="text-[11px] text-slate-400 px-1">
-            {t('dropzone.urlHint')}
-          </p>
-
-          {/* Downloading / Preparing Alert */}
-          {isDownloading && (
-            <div className="mt-1 p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/40 text-cyan-300 text-xs flex items-center gap-2.5 animate-in fade-in shadow-inner">
-              <RefreshCw className="w-4 h-4 text-cyan-400 animate-spin shrink-0" />
-              <span className="font-semibold tracking-wide">
-                {downloadMode === 'audio' 
-                  ? t('downloader.preparingAudio') 
-                  : t('downloader.preparingVideo')}
-              </span>
-            </div>
-          )}
-
-          {/* Success Banner */}
-          {downloadSuccess && (
-            <div className="mt-2 p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs flex items-center justify-between gap-3 animate-in fade-in">
-              <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>{downloadSuccess}</span>
-              </div>
+          {/* Carrier Filter Tabs */}
+          <div className="flex flex-wrap items-center gap-1.5 w-full md:w-auto justify-start md:justify-end">
+            {[
+              { id: 'todos', label: t('ussd.all') },
+              { id: 'vivo', label: 'Vivo' },
+              { id: 'claro', label: 'Claro' },
+              { id: 'tim', label: 'TIM' },
+              { id: 'oi', label: 'Oi' },
+              { id: 'geral', label: t('ussd.universal') },
+              { id: 'samsung', label: 'Samsung/Android' },
+            ].map(c => (
               <button
-                onClick={() => setDownloadSuccess(null)}
-                className="text-xs text-emerald-400 hover:text-white underline shrink-0"
+                key={c.id}
+                onClick={() => setSelectedCarrier(c.id)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  selectedCarrier === c.id
+                    ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 font-bold shadow-md'
+                    : 'bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-slate-200 border border-slate-700/50'
+                }`}
               >
-                Fechar
+                {c.label}
               </button>
-            </div>
-          )}
+            ))}
+          </div>
+        </div>
 
-          {/* Error Message */}
-          {searchError && !errorDetails?.is429 && (
-            <div className="mt-2 text-rose-400 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 px-4 py-3 bg-rose-950/30 rounded-xl border border-rose-900/50">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" /> 
-                <span>{searchError}</span>
-              </div>
-              <button
-                onClick={() => setSearchError('')}
-                className="text-[11px] text-rose-400 hover:text-rose-200 underline ml-auto shrink-0 cursor-pointer"
-              >
-                Fechar
-              </button>
-            </div>
-          )}
-
-          {/* Error 429 Explanatory Card */}
-          {errorDetails?.is429 && (
-            <div className="mt-3 rounded-2xl bg-amber-950/40 border border-amber-500/40 p-4 sm:p-5 text-left shadow-xl shadow-amber-950/20 animate-in fade-in slide-in-from-top-2 duration-300">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 shrink-0">
-                    <ShieldAlert className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="text-sm font-bold text-amber-200">
-                        {t('error.429.title')}
-                      </h4>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                        HTTP 429 Too Many Requests
-                      </span>
-                    </div>
-                    <p className="text-xs text-amber-300/90 mt-0.5">
-                      {t('error.429.desc')}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setErrorDetails(null)}
-                  className="p-1 text-amber-400/70 hover:text-amber-200 hover:bg-amber-500/10 rounded-lg transition-colors shrink-0"
-                  title="Fechar"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="mt-3.5 pt-3 border-t border-amber-500/20 text-xs text-slate-300 space-y-2.5">
-                <div className="flex items-start gap-2 bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                  <Info className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-                  <p className="leading-relaxed text-slate-300 text-[11px] sm:text-xs">
-                    {t('error.429.why')}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="font-semibold text-amber-200 text-xs mb-2 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                    {t('error.429.solution')}
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => onNavigateToConverter && onNavigateToConverter()}
-                      className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-emerald-500/50 text-left transition-all group cursor-pointer"
-                    >
-                      <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:scale-110 transition-transform">
-                        <FileUp className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-bold text-white group-hover:text-emerald-300">Ir para o Conversor</p>
-                        <p className="text-[10px] text-slate-400 truncate">100% privado e sem limites</p>
-                      </div>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={onOpenRecorder}
-                      className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-cyan-500/50 text-left transition-all group cursor-pointer"
-                    >
-                      <div className="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 group-hover:scale-110 transition-transform">
-                        <Radio className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-bold text-white group-hover:text-cyan-300">Gravar Tela / Câmera</p>
-                        <p className="text-[10px] text-slate-400 truncate">Captura em tempo real</p>
-                      </div>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={onOpenSampleModal}
-                      className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-indigo-500/50 text-left transition-all group cursor-pointer"
-                    >
-                      <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 group-hover:scale-110 transition-transform">
-                        <Sparkles className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-bold text-white group-hover:text-indigo-300">Vídeo de Exemplo</p>
-                        <p className="text-[10px] text-slate-400 truncate">Testar agora</p>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Search Results Dropdown */}
-          {searchResults.length > 0 && !isSearching && !videoInfo && (
-            <div className="mt-4 bg-slate-950 border border-slate-700/80 rounded-2xl p-3 shadow-xl max-h-96 overflow-y-auto space-y-2">
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-2 pt-1">
-                {t('downloader.searchResults')}
-              </h4>
-              {searchResults.map((vid) => (
-                <div 
-                  key={vid.id} 
-                  className="flex items-center gap-3 p-2.5 hover:bg-slate-800/80 rounded-xl transition-colors group cursor-pointer border border-transparent hover:border-slate-700" 
-                  onClick={() => {
-                    setPendingVastAction(() => () => downloadUrl(vid.url, vid.title));
-                    setShowVastAd(true);
-                  }}
-                >
-                  <div className="relative w-24 h-16 shrink-0 rounded-lg overflow-hidden border border-slate-700 bg-black">
-                    <img src={vid.thumbnail} alt={vid.title} className="w-full h-full object-cover" />
-                    <span className="absolute bottom-1 right-1 bg-black/80 px-1 py-0.5 rounded text-[9px] text-white font-mono">{vid.duration}</span>
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                      <Play className="w-6 h-6 text-white" />
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-bold text-white truncate group-hover:text-cyan-300" title={vid.title}>{vid.title}</h4>
-                    <p className="text-xs text-slate-400 truncate mt-0.5">{vid.author}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[10px] text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/60 font-medium">
-                        {downloadMode === 'video' ? t('downloader.videoOption') : `${t('downloader.audioOption')} (${audioBitrate} kbps)`}
-                      </span>
-                    </div>
-                  </div>
-                  <button className="shrink-0 p-2.5 rounded-xl bg-slate-800 group-hover:bg-cyan-500 group-hover:text-slate-950 text-slate-300 transition-colors font-bold text-xs flex items-center gap-1">
-                    <Download className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+        {/* Category Filter Pills */}
+        <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-slate-800/60">
+          <span className="text-xs text-slate-400 font-medium mr-1 flex items-center gap-1">
+            <Filter className="w-3 h-3 text-cyan-400" /> {t('ussd.cat')}
+          </span>
+          {[
+            { id: 'todos', label: t('ussd.cat.all') },
+            { id: 'saldo', label: t('ussd.cat.saldo') },
+            { id: 'recarga', label: t('ussd.cat.recarga') },
+            { id: 'internet', label: t('ussd.cat.internet') },
+            { id: 'numero', label: t('ussd.cat.numero') },
+            { id: 'teste', label: t('ussd.cat.teste') },
+            { id: 'sistema', label: t('ussd.cat.sistema') },
+          ].map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.id)}
+              className={`px-2.5 py-1 rounded-md text-xs transition-colors ${
+                selectedCategory === cat.id
+                  ? 'bg-cyan-950 text-cyan-300 border border-cyan-700 font-semibold'
+                  : 'bg-slate-950/50 text-slate-400 hover:text-slate-200 border border-slate-800'
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Supported Platforms Grid */}
-      <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-        {[
-          { name: 'TikTok', tag: 'Vídeos & Sons', color: 'border-rose-500/30 text-rose-400 bg-rose-500/5' },
-          { name: 'Instagram', tag: 'Reels & Stories', color: 'border-pink-500/30 text-pink-400 bg-pink-500/5' },
-          { name: 'Facebook', tag: 'Watch & Posts', color: 'border-blue-500/30 text-blue-400 bg-blue-500/5' },
-          { name: 'Twitter / X', tag: 'Vídeos & GIFs', color: 'border-slate-500/30 text-slate-300 bg-slate-500/5' },
-          { name: 'Vimeo', tag: 'HD & 4K', color: 'border-cyan-500/30 text-cyan-400 bg-cyan-500/5' },
-          { name: 'YouTube', tag: 'YouTube áudio & vídeo', color: 'border-rose-500/30 text-rose-400 bg-rose-500/5' },
-        ].map((plat) => (
-          <div
-            key={plat.name}
-            className={`p-3 rounded-2xl border ${plat.color} text-center flex flex-col items-center justify-center`}
+      {/* Grid of Codes */}
+      {filteredCodes.length === 0 ? (
+        <div className="text-center py-16 bg-slate-900/40 border border-slate-800/60 rounded-2xl">
+          <ShieldAlert className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+          <h2 className="text-lg font-semibold text-slate-300">Nenhum código encontrado</h2>
+          <p className="text-xs text-slate-500 mt-1">Tente buscar por outro termo ou selecione outra operadora.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filteredCodes.map((item, idx) => (
+            <div
+              key={idx}
+              className="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-5 hover:border-cyan-500/50 transition-all group flex flex-col justify-between shadow-lg relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-cyan-500/5 to-emerald-500/5 rounded-bl-full pointer-events-none"></div>
+
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
+                    item.carrier === 'vivo' ? 'bg-purple-950/60 text-purple-300 border-purple-800/60' :
+                    item.carrier === 'claro' ? 'bg-red-950/60 text-red-300 border-red-800/60' :
+                    item.carrier === 'tim' ? 'bg-blue-950/60 text-blue-300 border-blue-800/60' :
+                    item.carrier === 'oi' ? 'bg-amber-950/60 text-amber-300 border-amber-800/60' :
+                    item.carrier === 'samsung' ? 'bg-cyan-950/60 text-cyan-300 border-cyan-800/60' :
+                    'bg-emerald-950/60 text-emerald-300 border-emerald-800/60'
+                  }`}>
+                    {item.carrier}
+                  </span>
+
+                  <span className="text-[10px] text-slate-400 capitalize bg-slate-800/60 px-2 py-0.5 rounded">
+                    {item.category}
+                  </span>
+                </div>
+
+                <h2 className="text-base font-bold text-white mb-1 group-hover:text-cyan-300 transition-colors">
+                  {t(item.titleKey)}
+                </h2>
+                <p className="text-xs text-slate-400 mb-4 leading-relaxed">
+                  {t(item.descKey)}
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-slate-800/80 flex items-center justify-between gap-3">
+                <div className="font-mono font-bold text-cyan-400 text-lg bg-slate-950/80 px-3 py-1 rounded-xl border border-cyan-900/50 tracking-wider">
+                  {item.code}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <a
+                    href={`tel:${encodeURIComponent(item.code)}`}
+                    title="Disparar no celular"
+                    className="p-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-md transition-all flex items-center justify-center"
+                  >
+                    <Phone className="w-4 h-4" />
+                  </a>
+
+                  <button
+                    onClick={() => handleCopy(item)}
+                    title="Copiar Código"
+                    className={`p-2.5 rounded-xl transition-all flex items-center gap-1.5 text-xs font-semibold ${
+                      copiedCode === item.code
+                        ? 'bg-emerald-500 text-slate-950'
+                        : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
+                    }`}
+                  >
+                    {copiedCode === item.code ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        <span>{t('ussd.copied')}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Info Notice */}
+      <div className="mt-12 bg-slate-900/50 border border-cyan-900/30 rounded-2xl p-6 text-center max-w-3xl mx-auto space-y-3">
+        <p className="text-xs text-slate-400 leading-relaxed">
+          💡 {t('ussd.tip')}
+        </p>
+        <div className="pt-2 border-t border-slate-800 flex items-center justify-center gap-2 text-xs">
+          <a
+            href="https://pt.wikipedia.org/wiki/Dados_de_Servi%C3%A7os_Suplementares_N%C3%A3o_estruturados"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-cyan-400 hover:text-cyan-300 underline inline-flex items-center gap-1.5 font-medium"
           >
-            <span className="text-xs font-bold text-white">{plat.name}</span>
-            <span className="text-[10px] text-slate-400 mt-0.5">{plat.tag}</span>
-          </div>
-        ))}
+            {t('ussd.wikipedia')} <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        </div>
       </div>
 
-      {/* Sponsored Ad Modal */}
-      <SponsoredAdModal
-        isOpen={isAdOpen}
-        onClose={() => {
-          setIsAdOpen(false);
-          setPendingAction(null);
-        }}
-        onProceed={() => {
-          if (pendingAction) {
-            pendingAction();
-            setPendingAction(null);
-          }
-        }}
-      />
-
-      {/* VAST Video Ad Modal */}
-      <AdPlayerModal
-        isOpen={showVastAd}
-        adTagUrl="https://youradexchange.com/video/select.php?r=12052110"
-        onClose={() => {
-          setShowVastAd(false);
-          setPendingVastAction(null);
-        }}
-        onComplete={() => {
-          setShowVastAd(false);
-          if (pendingVastAction) {
-            pendingVastAction();
-            setPendingVastAction(null);
-          }
-        }}
-      />
+      {/* Editorial Content Section for AdSense Policy Compliance */}
+      <section className="mt-16 max-w-4xl mx-auto bg-slate-900/70 border border-slate-800/80 rounded-3xl p-8 shadow-xl">
+        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-cyan-400" />
+          {t('editorial.ussd.title')}
+        </h2>
+        <div className="space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
+          <p>
+            {t('editorial.ussd.p1')}
+          </p>
+          <h3 className="text-sm font-bold text-cyan-300 mt-4">{t('editorial.ussd.h2')}</h3>
+          <p>
+            {t('editorial.ussd.p2')}
+          </p>
+          <p>
+            {t('editorial.ussd.p3')}
+          </p>
+          <h3 className="text-sm font-bold text-cyan-300 mt-4">{t('editorial.ussd.h3')}</h3>
+          <p>
+            {t('editorial.ussd.p4')}
+          </p>
+        </div>
+      </section>
     </div>
   );
 };
