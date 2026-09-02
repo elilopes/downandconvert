@@ -156,7 +156,7 @@ export const UssdTool: React.FC = () => {
       {filteredCodes.length === 0 ? (
         <div className="text-center py-16 bg-slate-900/40 border border-slate-800/60 rounded-2xl">
           <ShieldAlert className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-          <h3 className="text-lg font-semibold text-slate-300">Nenhum código encontrado</h3>
+          <h2 className="text-lg font-semibold text-slate-300">Nenhum código encontrado</h2>
           <p className="text-xs text-slate-500 mt-1">Tente buscar por outro termo ou selecione outra operadora.</p>
         </div>
       ) : (
@@ -186,9 +186,9 @@ export const UssdTool: React.FC = () => {
                   </span>
                 </div>
 
-                <h3 className="text-base font-bold text-white mb-1 group-hover:text-cyan-300 transition-colors">
+                <h2 className="text-base font-bold text-white mb-1 group-hover:text-cyan-300 transition-colors">
                   {t(item.titleKey)}
-                </h3>
+                </h2>
                 <p className="text-xs text-slate-400 mb-4 leading-relaxed">
                   {t(item.descKey)}
                 </p>
