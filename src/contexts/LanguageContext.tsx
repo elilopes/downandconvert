@@ -1432,6 +1432,139 @@ const dict: Translations = {
     HI: "404 त्रुटि वाले लिंक का पता लगाया गया और स्वचालित रूप से अवरुद्ध कर दिया गया।",
     KO: "개의 404 에러 링크가 감지되어 자동으로 차단/제외되었습니다."
   },
+  "news.addNews": {
+    PT: "Adicionar Notícia",
+    EN: "Add News",
+    RU: "Добавить новость",
+    HI: "समाचार जोड़ें",
+    KO: "뉴스 추가"
+  },
+  "news.suggestNews": {
+    PT: "Sugerir Notícia",
+    EN: "Suggest News",
+    RU: "Предложить новость",
+    HI: "समाचार सुझाएं",
+    KO: "뉴스 제안"
+  },
+  "news.addNewsTitle": {
+    PT: "Adicionar Link de Notícia",
+    EN: "Add News Article Link",
+    RU: "Добавить ссылку на новость",
+    HI: "समाचार लेख लिंक जोड़ें",
+    KO: "뉴스 기사 링크 추가"
+  },
+  "news.addNewsDesc": {
+    PT: "Cole o link de uma notícia de tecnologia para auto-detectar dados e exibir no site",
+    EN: "Paste a tech news link to auto-detect content and publish to the site",
+    RU: "Вставьте ссылку на новость для автоопределения и публикации",
+    HI: "सामग्री का स्वतः पता लगाने और साइट पर प्रकाशित करने के लिए एक टेक समाचार लिंक पेस्ट करें",
+    KO: "콘텐츠를 자동 감지하고 사이트에 게시할 기술 뉴스 링크를 입력하세요"
+  },
+  "news.suggestTitle": {
+    PT: "Sugerir Notícia & Pautas em Alta",
+    EN: "Suggest News & Trending Topics",
+    RU: "Предложить новость и тренды",
+    HI: "समाचार और ट्रेंडिंग विषय सुझाएं",
+    KO: "뉴스 제안 및 트렌드 주제"
+  },
+  "news.suggestDesc": {
+    PT: "Escolha notícias em alta selecionadas ou envie uma sugestão para ser exibida",
+    EN: "Pick curated trending news or submit a suggestion to be featured",
+    RU: "Выберите актуальные новости или отправьте свое предложение",
+    HI: "क्यूरेटेड ट्रेंडिंग समाचार चुनें या प्रदर्शित करने के लिए सुझाव भेजें",
+    KO: "추천 트렌드 뉴스를 선택하거나 게시할 제안을 제출하세요"
+  },
+  "news.pasteLink": {
+    PT: "Link da Notícia (URL)",
+    EN: "News Article Link (URL)",
+    RU: "Ссылка на новость (URL)",
+    HI: "समाचार लिंक (URL)",
+    KO: "뉴스 링크 (URL)"
+  },
+  "news.autoDetect": {
+    PT: "Auto-Detectar Dados",
+    EN: "Auto-Detect Data",
+    RU: "Автоопределение",
+    HI: "स्वतः डेटा पहचानें",
+    KO: "데이터 자동 감지"
+  },
+  "news.detecting": {
+    PT: "Analisando Link...",
+    EN: "Analyzing Link...",
+    RU: "Анализ ссылки...",
+    HI: "लिंक का विश्लेषण...",
+    KO: "링크 분석 중..."
+  },
+  "news.articleTitle": {
+    PT: "Título da Matéria",
+    EN: "Article Title",
+    RU: "Заголовок статьи",
+    HI: "लेख का शीर्षक",
+    KO: "기사 제목"
+  },
+  "news.articleSubtitle": {
+    PT: "Subtítulo / Linha Fina (Opcional)",
+    EN: "Subtitle (Optional)",
+    RU: "Подзаголовок (необязательно)",
+    HI: "उपशीर्षक (वैकल्पिक)",
+    KO: "부제목 (선택사항)"
+  },
+  "news.articleLead": {
+    PT: "Resumo / Lead da Notícia",
+    EN: "Article Summary / Lead",
+    RU: "Краткое содержание",
+    HI: "लेख सारांश",
+    KO: "기사 요약"
+  },
+  "news.articleCategory": {
+    PT: "Categoria",
+    EN: "Category",
+    RU: "Категория",
+    HI: "श्रेणी",
+    KO: "카테고리"
+  },
+  "news.articleAuthor": {
+    PT: "Autor / Fonte ou Portal",
+    EN: "Author / Source Portal",
+    RU: "Автор / Источник",
+    HI: "लेखक / स्रोत पोर्टल",
+    KO: "작성자 / 출처"
+  },
+  "news.publishNews": {
+    PT: "Publicar Notícia no Site",
+    EN: "Publish News to Site",
+    RU: "Опубликовать на сайте",
+    HI: "साइट पर प्रकाशित करें",
+    KO: "사이트에 뉴스 게시"
+  },
+  "news.customBadge": {
+    PT: "Notícia Adicionada",
+    EN: "Added News",
+    RU: "Добавленная новость",
+    HI: "जोड़ा गया समाचार",
+    KO: "사용자 추가 뉴스"
+  },
+  "news.deleteCustom": {
+    PT: "Remover",
+    EN: "Remove",
+    RU: "Удалить",
+    HI: "हटाएं",
+    KO: "삭제"
+  },
+  "news.suggestAddToSite": {
+    PT: "Publicar no Site",
+    EN: "Publish to Site",
+    RU: "Опубликовать",
+    HI: "साइट पर प्रकाशित करें",
+    KO: "사이트에 게시"
+  },
+  "news.suggestAdded": {
+    PT: "Publicada!",
+    EN: "Published!",
+    RU: "Опубликовано!",
+    HI: "प्रकाशित!",
+    KO: "게시됨!"
+  },
   "smartphones.sharePhone": {
     PT: "Compartilhar Ficha",
     EN: "Share Specs",
