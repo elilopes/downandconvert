@@ -13,6 +13,76 @@ interface Translations {
 }
 
 const dict: Translations = {
+  "seo.title.converter": {
+    PT: "Conversor de Vídeo para Áudio | Down&Convert",
+    EN: "Video to Audio Converter | Down&Convert",
+    RU: "Конвертер видео в аудио | Down&Convert",
+    HI: "वीडियो से ऑडियो कनवर्टर | Down&Convert",
+    KO: "비디오를 오디오로 변환기 | Down&Convert"
+  },
+  "seo.desc.converter": {
+    PT: "Converta seus vídeos para áudio de forma fácil, gratuita e ilimitada.",
+    EN: "Convert your videos to audio easily, for free and unlimited.",
+    RU: "Конвертируйте ваши видео в аудио легко, бесплатно и без ограничений.",
+    HI: "अपने वीडियो को आसानी से, मुफ्त और असीमित ऑडियो में बदलें।",
+    KO: "비디오를 오디오로 쉽고 무료로 무제한 변환하세요."
+  },
+  "seo.title.downloader": {
+    PT: "Baixar Vídeos Grátis | Down&Convert",
+    EN: "Download Videos for Free | Down&Convert",
+    RU: "Скачать видео бесплатно | Down&Convert",
+    HI: "मुफ्त में वीडियो डाउनलोड करें | Down&Convert",
+    KO: "무료로 비디오 다운로드 | Down&Convert"
+  },
+  "seo.desc.downloader": {
+    PT: "Baixe vídeos das suas redes sociais favoritas com qualidade.",
+    EN: "Download videos from your favorite social networks in high quality.",
+    RU: "Скачивайте видео из ваших любимых социальных сетей в высоком качестве.",
+    HI: "अपने पसंदीदा सोशल नेटवर्क से उच्च गुणवत्ता में वीडियो डाउनलोड करें।",
+    KO: "좋아하는 소셜 네트워크에서 고품질로 비디오를 다운로드하세요."
+  },
+  "seo.title.ussd": {
+    PT: "Códigos USSD | Down&Convert",
+    EN: "USSD Codes | Down&Convert",
+    RU: "USSD коды | Down&Convert",
+    HI: "USSD कोड | Down&Convert",
+    KO: "USSD 코드 | Down&Convert"
+  },
+  "seo.desc.ussd": {
+    PT: "Lista completa de códigos secretos USSD para sua operadora.",
+    EN: "Complete list of secret USSD codes for your carrier.",
+    RU: "Полный список секретных USSD кодов для вашего оператора.",
+    HI: "आपके कैरियर के लिए गुप्त USSD कोड की पूरी सूची।",
+    KO: "통신사를 위한 비밀 USSD 코드 전체 목록입니다."
+  },
+  "seo.title.smartphones": {
+    PT: "Especificações de Smartphones | Down&Convert",
+    EN: "Smartphone Specifications | Down&Convert",
+    RU: "Характеристики смартфонов | Down&Convert",
+    HI: "स्मार्टफोन विनिर्देश | Down&Convert",
+    KO: "스마트폰 사양 | Down&Convert"
+  },
+  "seo.desc.smartphones": {
+    PT: "Compare e descubra especificações detalhadas de smartphones.",
+    EN: "Compare and discover detailed smartphone specifications.",
+    RU: "Сравнивайте и узнавайте подробные характеристики смартфонов.",
+    HI: "स्मार्टफोन के विस्तृत विनिर्देशों की तुलना करें और खोजें।",
+    KO: "자세한 스마트폰 사양을 비교하고 확인하세요."
+  },
+  "seo.title.news": {
+    PT: "Notícias de Tecnologia | Down&Convert",
+    EN: "Technology News | Down&Convert",
+    RU: "Новости технологий | Down&Convert",
+    HI: "प्रौद्योगिकी समाचार | Down&Convert",
+    KO: "기술 뉴스 | Down&Convert"
+  },
+  "seo.desc.news": {
+    PT: "Fique por dentro das últimas notícias sobre gadgets e tecnologia.",
+    EN: "Stay up to date with the latest gadgets and technology news.",
+    RU: "Будьте в курсе последних новостей о гаджетах и технологиях.",
+    HI: "गैजेट्स और प्रौद्योगिकी समाचारों के साथ अद्यतित रहें।",
+    KO: "가젯 및 기술 뉴스에 대한 최신 소식을 받아보세요."
+  },
   "header.subtitle": {
     PT: "by TechViva!",
     EN: "by TechViva!",
