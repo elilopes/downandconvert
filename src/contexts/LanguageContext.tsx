@@ -1439,6 +1439,34 @@ const dict: Translations = {
     HI: "समाचार जोड़ें",
     KO: "뉴스 추가"
   },
+  "news.suggestNewsBtn": {
+    PT: "News sugeridas",
+    EN: "Suggested News",
+    RU: "Предложенные новости",
+    HI: "सुझाए गए समाचार",
+    KO: "추천 뉴스"
+  },
+  "news.addNewsBtn": {
+    PT: "Add news",
+    EN: "Add News",
+    RU: "Добавить новость",
+    HI: "समाचार जोड़ें",
+    KO: "뉴스 추가"
+  },
+  "news.openRssImporter": {
+    PT: "Importar RSS",
+    EN: "Import RSS",
+    RU: "Импорт RSS",
+    HI: "आरएसएस आयात",
+    KO: "RSS 가져오기"
+  },
+  "news.verifierAlwaysActive": {
+    PT: "Verificador 404 Automático Sempre Ativo",
+    EN: "Automatic 404 Verifier Always Active",
+    RU: "Автоматический детектор 404 всегда активен",
+    HI: "स्वचालित 404 सत्यापनकर्ता हमेशा सक्रिय",
+    KO: "자동 404 검증기 항상 활성화"
+  },
   "news.suggestNews": {
     PT: "Sugerir Notícia",
     EN: "Suggest News",
