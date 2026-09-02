@@ -423,9 +423,9 @@ export const GadgetNews: React.FC = () => {
       {/* Header Banner */}
       <div className="mb-8 flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="text-center md:text-left">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight">
             {t('news.latest')}
-          </h2>
+          </h1>
           <p className="text-slate-400 mt-2 max-w-2xl text-sm sm:text-base">
             {t('news.description')}
           </p>
