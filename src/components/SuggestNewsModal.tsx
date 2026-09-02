@@ -61,7 +61,14 @@ export const SuggestNewsModal: React.FC<SuggestNewsModalProps> = ({ isOpen, onCl
       const res = await fetch('/api/news/suggestions');
       const data = await res.json();
       if (data.success && Array.isArray(data.suggestions)) {
-        setSuggestions(data.suggestions);
+        // Filtra sugestões garantindo que não contenham 'trailer' ou 'filme', nem links incorretos
+        const validSuggestions = data.suggestions.filter(
+          (s: SuggestionItem) =>
+            !/trailer|filme/i.test(s.title) &&
+            !s.link?.includes('anuncios-do-gamescom') &&
+            !s.link?.includes('canaltech.com.br/rss')
+        );
+        setSuggestions(validSuggestions);
       }
     } catch (err) {
       console.error('Erro ao buscar sugestões:', err);
@@ -167,6 +174,10 @@ export const SuggestNewsModal: React.FC<SuggestNewsModalProps> = ({ isOpen, onCl
       }
 
       const meta = metaData.data;
+
+      if (/trailer|filme/i.test(meta.title || '')) {
+        throw new Error('Notícias sobre trailers ou filmes não são permitidas nesta aba.');
+      }
 
       // 2. Publica automaticamente no feed da sessão do usuário
       const newItem: GadgetNewsItem = {
