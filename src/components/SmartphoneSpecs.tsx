@@ -473,7 +473,7 @@ export const SmartphoneSpecs: React.FC = () => {
             >
               <Menu className="w-5 h-5 text-cyan-400 group-hover:text-cyan-300 transition-colors shrink-0" />
               {!isFiltersMinimized && (
-                <h3 className="font-bold text-white text-base sm:text-lg group-hover:text-cyan-200 transition-colors">{t('smartphones.filters')}</h3>
+                <h2 className="font-bold text-white text-base sm:text-lg group-hover:text-cyan-200 transition-colors">{t('smartphones.filters')}</h2>
               )}
               {activeFiltersCount > 0 && (
                 <span className="bg-cyan-500/20 text-cyan-300 text-xs px-2 py-0.5 rounded-full font-bold ml-1">
@@ -507,7 +507,7 @@ export const SmartphoneSpecs: React.FC = () => {
             <div className="space-y-6 animate-in fade-in duration-200">
             {/* General */}
             <div>
-              <h4 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">Geral</h4>
+              <h3 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">Geral</h3>
               <div className="flex flex-col gap-3">
                 <div className="flex flex-col gap-2">
                   <span className="text-xs font-medium text-slate-400">{t('smartphones.brand')}</span>
@@ -648,7 +648,7 @@ export const SmartphoneSpecs: React.FC = () => {
 
             {/* Screen */}
             <div>
-              <h4 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">Tela</h4>
+              <h3 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">Tela</h3>
               <div className="flex flex-col gap-3">
                 <div>
                   <div className="flex justify-between items-center text-xs text-slate-400 mb-1">
@@ -686,7 +686,7 @@ export const SmartphoneSpecs: React.FC = () => {
 
             {/* Performance */}
             <div>
-              <h4 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">Performance & Hardware</h4>
+              <h3 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">Performance & Hardware</h3>
               <div className="flex flex-col gap-4">
                 
                 {/* RAM Slider com números padrões */}
@@ -879,7 +879,7 @@ export const SmartphoneSpecs: React.FC = () => {
 
             {/* Camera */}
             <div>
-              <h4 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">Câmera & Vídeo</h4>
+              <h3 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">Câmera & Vídeo</h3>
               <div className="flex flex-col gap-4">
                 
                 {/* Câmera Selfie Slider com números padrões */}
@@ -957,7 +957,7 @@ export const SmartphoneSpecs: React.FC = () => {
             
             {/* Camera Features Section */}
             <div className="mb-6 bg-slate-900/50 p-3 rounded-xl border border-slate-700/50">
-              <h4 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">{t('smartphones.cameraFeatures')}</h4>
+              <h3 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">{t('smartphones.cameraFeatures')}</h3>
               <div className="flex flex-col gap-3">
                 <CheckboxFilter label={t('smartphones.opticalZoom')} checked={opticalZoom} onChange={setOpticalZoom} />
                 <CheckboxFilter label={t('smartphones.stabilization')} checked={stabilization} onChange={setStabilization} />
@@ -967,7 +967,7 @@ export const SmartphoneSpecs: React.FC = () => {
             </div>
 
             <div>
-              <h4 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">{t('smartphones.features')}</h4>
+              <h3 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">{t('smartphones.features')}</h3>
               <div className="flex flex-col gap-3">
                 <CheckboxFilter label={t('smartphones.supportsWhatsApp')} checked={supportsWhatsApp} onChange={setSupportsWhatsApp} />
                 <CheckboxFilter label="GPS" checked={hasGps} onChange={setHasGps} />
@@ -1057,7 +1057,7 @@ export const SmartphoneSpecs: React.FC = () => {
                 <div className="mb-5 pb-4 border-b border-slate-800/80 flex justify-between items-start">
                   <div>
                     <span className="text-[10px] font-extrabold uppercase tracking-widest text-cyan-500">{phone.brand}</span>
-                    <h3 className="text-xl sm:text-2xl font-black text-white leading-tight mt-0.5">{phone.model}</h3>
+                    <h2 className="text-xl sm:text-2xl font-black text-white leading-tight mt-0.5">{phone.model}</h2>
                   </div>
                   <div className="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2.5 py-1">
                     <span className="text-[10px] font-bold text-slate-300">{phone.releaseYear}</span>
@@ -1240,7 +1240,7 @@ export const SmartphoneSpecs: React.FC = () => {
           {filteredPhones.length === 0 && (
             <div className="col-span-1 xl:col-span-2 py-16 flex flex-col items-center justify-center text-center bg-slate-900/30 border border-slate-800 border-dashed rounded-2xl p-6">
               <Maximize2 className="w-12 h-12 text-slate-600 mb-3" />
-              <h3 className="text-lg font-bold text-slate-300">{t('smartphones.noResults')}</h3>
+              <h2 className="text-lg font-bold text-slate-300">{t('smartphones.noResults')}</h2>
               <p className="text-sm text-slate-500 mt-1 mb-4">{t('smartphones.tryDifferentFilters')}</p>
               <button
                 onClick={handleResetFilters}
