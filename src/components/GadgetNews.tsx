@@ -15,9 +15,19 @@ import {
   CheckCircle2,
   AlertTriangle,
   Radio,
-  Plus
+  Plus,
+  PlusCircle,
+  Sparkles,
+  Lightbulb,
+  Trash2,
+  Flame,
+  BadgeCheck
 } from 'lucide-react';
 import { mockedGadgetNews, LocalizedString, NewsCategory, GadgetNewsItem } from '../data/gadgetNews';
+import { AddNewsModal } from './AddNewsModal';
+import { SuggestNewsModal } from './SuggestNewsModal';
+
+const STORAGE_KEY_CUSTOM_NEWS = 'user_custom_gadget_news_v1';
 
 export const GadgetNews: React.FC = () => {
   const { t, lang } = useLanguage();
@@ -25,6 +35,10 @@ export const GadgetNews: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<NewsCategory | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
+
+  // Estados dos Modais de Adicionar & Sugerir Notícia
+  const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
+  const [isSuggestModalOpen, setIsSuggestModalOpen] = useState<boolean>(false);
 
   // Estados do Importador de Feed e Verificador 404
   const [isImporting, setIsImporting] = useState<boolean>(false);
@@ -36,17 +50,81 @@ export const GadgetNews: React.FC = () => {
   const [auto404VerificationEnabled, setAuto404VerificationEnabled] = useState<boolean>(true);
   const [verifiedLinksMap, setVerifiedLinksMap] = useState<Record<string, boolean>>({});
 
-  // Executa checagem de links automática na montagem inicial para garantir 0 erros 404
+  // Carrega notícias salvas localmente pelo usuário e inicializa lista
   useEffect(() => {
-    const markInitialLinksAsValid = () => {
-      const initialMap: Record<string, boolean> = {};
-      mockedGadgetNews.forEach((item) => {
-        initialMap[item.link] = true;
-      });
-      setVerifiedLinksMap(initialMap);
-    };
-    markInitialLinksAsValid();
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_CUSTOM_NEWS);
+      if (saved) {
+        const parsedCustom: GadgetNewsItem[] = JSON.parse(saved);
+        if (Array.isArray(parsedCustom) && parsedCustom.length > 0) {
+          setNewsList((prev) => {
+            const seen = new Set<string>();
+            const combined: GadgetNewsItem[] = [];
+            for (const item of [...parsedCustom, ...prev]) {
+              if (!seen.has(item.link)) {
+                seen.add(item.link);
+                combined.push(item);
+              }
+            }
+            return combined;
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Erro ao carregar notícias customizadas do localStorage:', e);
+    }
+
+    const initialMap: Record<string, boolean> = {};
+    mockedGadgetNews.forEach((item) => {
+      initialMap[item.link] = true;
+    });
+    setVerifiedLinksMap(initialMap);
   }, []);
+
+  // Adiciona nova notícia (por URL ou sugerida) à lista e persiste
+  const handleAddNewItem = (newItem: GadgetNewsItem) => {
+    setNewsList((prev) => {
+      // Remove duplicados pelo link se já existirem
+      const filtered = prev.filter((item) => item.link !== newItem.link && item.id !== newItem.id);
+      const updated = [newItem, ...filtered];
+
+      // Salva itens customizados no localStorage
+      try {
+        const savedRaw = localStorage.getItem(STORAGE_KEY_CUSTOM_NEWS);
+        const existingCustom: GadgetNewsItem[] = savedRaw ? JSON.parse(savedRaw) : [];
+        const customFiltered = existingCustom.filter((item) => item.link !== newItem.link);
+        const newCustomList = [newItem, ...customFiltered];
+        localStorage.setItem(STORAGE_KEY_CUSTOM_NEWS, JSON.stringify(newCustomList));
+      } catch (e) {
+        console.warn('Falha ao salvar no localStorage:', e);
+      }
+
+      return updated;
+    });
+
+    setVerifiedLinksMap((prev) => ({ ...prev, [newItem.link]: true }));
+    setImportStatusMessage(`🎉 Notícia "${getLocalizedText(newItem.title)}" foi adicionada e publicada com sucesso no feed!`);
+  };
+
+  // Remove notícia customizada
+  const handleDeleteCustomItem = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setNewsList((prev) => {
+      const updated = prev.filter((item) => item.id !== id);
+      try {
+        const savedRaw = localStorage.getItem(STORAGE_KEY_CUSTOM_NEWS);
+        if (savedRaw) {
+          const existingCustom: GadgetNewsItem[] = JSON.parse(savedRaw);
+          const newCustomList = existingCustom.filter((item) => item.id !== id);
+          localStorage.setItem(STORAGE_KEY_CUSTOM_NEWS, JSON.stringify(newCustomList));
+        }
+      } catch (err) {
+        console.warn('Erro ao atualizar localStorage ao deletar notícia:', err);
+      }
+      return updated;
+    });
+    setImportStatusMessage('Notícia removida da sua listagem.');
+  };
 
   // Função para acionar o Importador de RSS/Feeds com Verificador Automático de Erro 404
   const handleImportFeeds = async (specificUrl?: string) => {
@@ -272,13 +350,36 @@ export const GadgetNews: React.FC = () => {
   return (
     <div className="w-full max-w-7xl mx-auto py-8 px-4 animate-in fade-in duration-300">
       {/* Header Banner */}
-      <div className="mb-8 flex flex-col items-center justify-center text-center">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight">
-          {t('news.latest')}
-        </h2>
-        <p className="text-slate-400 mt-2 max-w-2xl text-sm sm:text-base">
-          {t('news.description')}
-        </p>
+      <div className="mb-8 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="text-center md:text-left">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight">
+            {t('news.latest')}
+          </h2>
+          <p className="text-slate-400 mt-2 max-w-2xl text-sm sm:text-base">
+            {t('news.description')}
+          </p>
+        </div>
+
+        {/* Botões de Ação Rápida: Adicionar Link & Sugerir Notícia */}
+        <div className="flex items-center gap-3 flex-wrap justify-center shrink-0">
+          <button
+            type="button"
+            onClick={() => setIsSuggestModalOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-cyan-500/20 hover:from-amber-500/30 hover:to-cyan-500/30 text-amber-300 hover:text-white border border-amber-500/40 hover:border-amber-400 rounded-2xl text-xs sm:text-sm font-bold shadow-lg shadow-amber-500/10 transition-all cursor-pointer group"
+          >
+            <Sparkles className="w-4 h-4 text-amber-400 group-hover:rotate-12 transition-transform" />
+            <span>{t('news.suggestNewsBtn')}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsAddModalOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-slate-950 font-bold rounded-2xl text-xs sm:text-sm shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30 transition-all cursor-pointer group"
+          >
+            <PlusCircle className="w-4 h-4 text-slate-950 group-hover:scale-110 transition-transform" />
+            <span>{t('news.addNewsBtn')}</span>
+          </button>
+        </div>
       </div>
 
       {/* Painel do Importador de RSS/Feeds com Verificador Automático de Erro 404 */}
@@ -441,27 +542,41 @@ export const GadgetNews: React.FC = () => {
           const leadContent = getLocalizedText(item.lead);
           const categoryTag = getLocalizedText(item.categoryLabel);
           const isVerified = verifiedLinksMap[item.link] !== false;
+          const isCustom = item.id.startsWith('custom-') || item.id.startsWith('user-suggest-') || item.id.startsWith('suggested-');
 
           return (
             <article
               key={item.id}
-              className="flex flex-col bg-slate-900/60 border border-slate-800/80 hover:border-cyan-500/40 rounded-2xl p-6 transition-all hover:shadow-xl hover:shadow-cyan-500/5 relative overflow-hidden group"
+              className={`flex flex-col bg-slate-900/60 border rounded-2xl p-6 transition-all hover:shadow-xl relative overflow-hidden group ${
+                isCustom
+                  ? 'border-cyan-500/40 hover:border-cyan-400 hover:shadow-cyan-500/10 bg-slate-900/80'
+                  : 'border-slate-800/80 hover:border-cyan-500/40 hover:shadow-cyan-500/5'
+              }`}
             >
               {/* Category & Metadata Header */}
               <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-                <span
-                  className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg ${
-                    item.category === 'gadgets'
-                      ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
-                      : item.category === 'inventions'
-                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                      : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
-                  }`}
-                >
-                  {categoryTag}
-                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span
+                    className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg ${
+                      item.category === 'gadgets'
+                        ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
+                        : item.category === 'inventions'
+                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                        : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+                    }`}
+                  >
+                    {categoryTag}
+                  </span>
 
-                <div className="flex items-center gap-3 text-xs text-slate-400">
+                  {isCustom && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-cyan-500/20 to-amber-500/20 text-cyan-300 border border-cyan-500/30">
+                      <Sparkles className="w-3 h-3 text-amber-400" />
+                      Comunidade
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2.5 text-xs text-slate-400">
                   <span className="flex items-center gap-1 text-slate-300 font-medium">
                     <Building2 className="w-3.5 h-3.5 text-slate-500" />
                     {item.author}
@@ -482,10 +597,20 @@ export const GadgetNews: React.FC = () => {
                     )}
                   </span>
                   {isVerified && (
-                    <span className="inline-flex items-center gap-0.5 text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20" title="Link verificado e ativo">
+                    <span className="inline-flex items-center gap-0.5 text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20" title="Link verificado e ativo (HTTP 200 OK)">
                       <CheckCircle2 className="w-3 h-3" />
                       200 OK
                     </span>
+                  )}
+                  {isCustom && (
+                    <button
+                      type="button"
+                      onClick={(e) => handleDeleteCustomItem(item.id, e)}
+                      title="Remover esta notícia customizada"
+                      className="p-1 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   )}
                 </div>
               </div>
@@ -577,6 +702,20 @@ export const GadgetNews: React.FC = () => {
           <p className="text-xs sm:text-sm text-slate-500 mt-1">{t('smartphones.tryDifferentFilters')}</p>
         </div>
       )}
+
+      {/* Modal de Adicionar Notícia por Link com Auto-Detecção */}
+      <AddNewsModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAddNews={handleAddNewItem}
+      />
+
+      {/* Modal de Sugerir Notícia / Pautas em Alta */}
+      <SuggestNewsModal
+        isOpen={isSuggestModalOpen}
+        onClose={() => setIsSuggestModalOpen(false)}
+        onAddNews={handleAddNewItem}
+      />
     </div>
   );
 };
