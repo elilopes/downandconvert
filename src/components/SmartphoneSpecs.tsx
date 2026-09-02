@@ -11,196 +11,183 @@ interface GameCompatibility {
   badge: string;
   badgeColor: string;
   note: string;
+  isSupported: boolean;
+  unsupportedReason?: string;
 }
 
 const getCompatibleGamesForPhone = (phone: SmartphoneType): GameCompatibility[] => {
   const antutu = phone.specs.performance?.antutu || 1000000;
   const chipset = phone.specs.processor.chipset.toLowerCase();
+  const ramOptions = Array.isArray(phone.specs.ram) ? phone.specs.ram : [phone.specs.ram];
+  const maxRam = Math.max(...ramOptions);
 
-  if (antutu >= 1800000 || chipset.includes('elite') || chipset.includes('gen 3') || chipset.includes('a17') || chipset.includes('a18')) {
-    return [
-      {
-        title: "Red Dead Redemption (Port Oficial)",
-        genre: "Ação / Mundo Aberto AAA",
-        graphics: "Máximo / Configurações de Console",
-        fps: "60 FPS Estáveis",
-        badge: "Desempenho de Console",
-        badgeColor: "bg-purple-500/10 text-purple-400 border-purple-500/30",
-        note: "Executa com maestria e taxas de quadros elevadas, aproveitando o poder da GPU Adreno de última geração."
-      },
-      {
-        title: "Call of Duty: Warzone Mobile",
-        genre: "Battle Royale Pesado",
-        graphics: "Ultra / Texturas em Alta Resolução",
-        fps: "60 FPS (Fluido)",
-        badge: "Qualidade Máxima",
-        badgeColor: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
-        note: "Carregamento instantâneo de shaders e alta taxa de quadros sem travamentos em confrontos complexos."
-      },
-      {
-        title: "XCOM 2 Collection",
-        genre: "Estratégia Tática AAA",
-        graphics: "Gráficos Máximos com Filtros",
-        fps: "60 FPS",
-        badge: "Fluidez Perfeita",
-        badgeColor: "bg-cyan-500/10 text-cyan-400 border-cyan-500/30",
-        note: "Ideal para cálculos de IA complexos e transições de turnos extremamente rápidas."
-      },
-      {
-        title: "Genshin Impact / Wuthering Waves",
-        genre: "RPG de Mundo Aberto",
-        graphics: "Máximo / 60 FPS (Sombras e Efeitos no Talo)",
-        fps: "60 FPS Estáveis",
-        badge: "Máxima Performance",
-        badgeColor: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
-        note: "Suporta sessões longas de jogo em áreas abertas com estabilidade térmica e fluidez impecável."
-      },
-      {
-        title: "Resident Evil Village / 4 Remake",
-        genre: "Survival Horror AAA",
-        graphics: "Configurações Altas",
-        fps: "60 FPS",
-        badge: "Port AAA Nativo",
-        badgeColor: "bg-indigo-500/10 text-indigo-400 border-indigo-500/30",
-        note: "Compatível com ray tracing por hardware e renderização de alta fidelidade visual."
-      },
-      {
-        title: "PUBG Mobile",
-        genre: "Battle Royale",
-        graphics: "Ultra Extreme / HDR",
-        fps: "90 / 120 FPS",
-        badge: "Competitivo Pro",
-        badgeColor: "bg-amber-500/10 text-amber-400 border-amber-500/30",
-        note: "Taxa de atualização máxima da tela aproveitada ao limite para menor latência de toque."
-      }
-    ];
-  } else if (antutu >= 1200000 || chipset.includes('gen 2') || chipset.includes('dimensity 9200') || chipset.includes('dimensity 8300')) {
-    return [
-      {
-        title: "Call of Duty: Mobile / Warzone",
-        genre: "FPS / Battle Royale",
-        graphics: "Muito Alto / Alta Taxa de Quadros",
-        fps: "60 FPS",
-        badge: "Excelente Fluidez",
-        badgeColor: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
-        note: "Excelente desempenho com alta taxa de quadros e excelente resposta tátil."
-      },
-      {
-        title: "Genshin Impact",
-        genre: "RPG de Mundo Aberto",
-        graphics: "Alto / 60 FPS",
-        fps: "55 - 60 FPS",
-        badge: "Desempenho Sólido",
-        badgeColor: "bg-cyan-500/10 text-cyan-400 border-cyan-500/30",
-        note: "Executa muito bem com configurações altas, apresentando mínimas variações em combates intensos."
-      },
-      {
-        title: "XCOM 2 Collection",
-        genre: "Estratégia Tática",
-        graphics: "Configuração Alta",
-        fps: "45 - 60 FPS",
-        badge: "Muito Fluido",
-        badgeColor: "bg-cyan-500/10 text-cyan-400 border-cyan-500/30",
-        note: "Carregamentos rápidos e excelente experiência tática."
-      },
-      {
-        title: "PUBG Mobile",
-        genre: "Battle Royale",
-        graphics: "HDR / Extreme",
-        fps: "90 FPS",
-        badge: "Alta Taxa de Quadros",
-        badgeColor: "bg-amber-500/10 text-amber-400 border-amber-500/30",
-        note: "Permite jogabilidade altamente competitiva."
-      },
-      {
-        title: "Honkai: Star Rail",
-        genre: "RPG Turnos",
-        graphics: "Alto",
-        fps: "60 FPS",
-        badge: "Excelente",
-        badgeColor: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
-        note: "Animações fluidas e visuais de altíssima qualidade."
-      }
-    ];
-  } else if (antutu >= 800000 || chipset.includes('gen 1') || chipset.includes('dimensity 8100') || chipset.includes('dimensity 8200') || chipset.includes('7+ gen 2')) {
-    return [
-      {
-        title: "Call of Duty: Mobile",
-        genre: "FPS",
-        graphics: "Alto / Quadros Elevados",
-        fps: "60 FPS",
-        badge: "Fluido e Estável",
-        badgeColor: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
-        note: "Jogabilidade altamente estável em partidas multiplayer."
-      },
-      {
-        title: "Genshin Impact / Wuthering Waves",
-        genre: "RPG de Mundo Aberto",
-        graphics: "Médio / 60 FPS",
-        fps: "45 - 60 FPS",
-        badge: "Bom Desempenho",
-        badgeColor: "bg-cyan-500/10 text-cyan-400 border-cyan-500/30",
-        note: "Recomenda-se ajustar sombras para médio para garantir 60 FPS constantes."
-      },
-      {
-        title: "PUBG Mobile",
-        genre: "Battle Royale",
-        graphics: "HD / Ultra",
-        fps: "40 - 60 FPS",
-        badge: "Equilibrado",
-        badgeColor: "bg-amber-500/10 text-amber-400 border-amber-500/30",
-        note: "Bom equilíbrio entre qualidade visual e taxa de quadros."
-      },
-      {
-        title: "Asphalt Legends Unite",
-        genre: "Corrida Arcade",
-        graphics: "Alto",
-        fps: "60 FPS",
-        badge: "Muito Fluido",
-        badgeColor: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
-        note: "Efeitos de partículas e velocidade sem engasgos."
-      }
-    ];
+  // We want to evaluate these heavy games for all phones:
+  // - Call of Duty: Warzone Mobile
+  // - Red Dead Redemption
+  // - XCOM 2 Collection
+  // - Genshin Impact
+  // - Wuthering Waves
+  // - Resident Evil Village
+
+  const games: GameCompatibility[] = [];
+
+  // 1. Red Dead Redemption
+  if (antutu >= 1600000 || chipset.includes('elite') || chipset.includes('gen 3') || chipset.includes('a17') || chipset.includes('a18') || chipset.includes('gen 2')) {
+    games.push({
+      title: "Red Dead Redemption (Port Oficial)",
+      genre: "Ação / Mundo Aberto AAA",
+      graphics: antutu >= 1800000 ? "Máximo / Configurações de Console" : "Médio / 30 FPS",
+      fps: antutu >= 1800000 ? "60 FPS Estáveis" : "30 FPS Estáveis",
+      badge: antutu >= 1800000 ? "Desempenho de Console" : "Configuração Mínima / Moderada",
+      badgeColor: antutu >= 1800000 ? "bg-purple-500/10 text-purple-400 border-purple-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
+      note: antutu >= 1800000 ? "Executa com maestria e taxas de quadros elevadas." : "Executável com ajustes gráficos reduzidos e limitações de taxa de quadros.",
+      isSupported: true
+    });
   } else {
-    return [
-      {
-        title: "Call of Duty: Mobile",
-        genre: "FPS",
-        graphics: "Médio / Standard",
-        fps: "45 - 60 FPS",
-        badge: "Jogável",
-        badgeColor: "bg-blue-500/10 text-blue-400 border-blue-500/30",
-        note: "Funciona perfeitamente ajustando gráficos para o nível médio."
-      },
-      {
-        title: "PUBG Mobile",
-        genre: "Battle Royale",
-        graphics: "Balanceado / Alto",
-        fps: "30 - 40 FPS",
-        badge: "Estável",
-        badgeColor: "bg-blue-500/10 text-blue-400 border-blue-500/30",
-        note: "Experiência satisfatória com configurações moderadas."
-      },
-      {
-        title: "Free Fire / Mobile Legends",
-        genre: "Battle Royale / MOBA",
-        graphics: "Alto / Máximo",
-        fps: "60 FPS",
-        badge: "Fluido",
-        badgeColor: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
-        note: "Jogos otimizados rodam com excelente fluidez neste hardware."
-      },
-      {
-        title: "Subway Surfers / Candy Crush",
-        genre: "Casual",
-        graphics: "Máximo",
-        fps: "60 FPS",
-        badge: "Perfeito",
-        badgeColor: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
-        note: "Execução instantânea e sem esforço para o processador."
-      }
-    ];
+    games.push({
+      title: "Red Dead Redemption (Port Oficial)",
+      genre: "Ação / Mundo Aberto AAA",
+      graphics: "Incompatível / Não Recomendado",
+      fps: "< 20 FPS",
+      badge: "Não Suportado com Fluidez",
+      badgeColor: "bg-red-500/10 text-red-400 border-red-500/30",
+      note: "Hardware insuficiente para rodar o port AAA com fluidez aceitável.",
+      isSupported: false,
+      unsupportedReason: "Requer GPU e processador mais potentes."
+    });
   }
+
+  // 2. Call of Duty: Warzone Mobile
+  if (antutu >= 1100000 || maxRam >= 8) {
+    games.push({
+      title: "Call of Duty: Warzone Mobile",
+      genre: "Battle Royale Pesado",
+      graphics: antutu >= 1500000 ? "Ultra / Texturas em Alta Resolução" : "Baixo / Configuração Mínima",
+      fps: antutu >= 1500000 ? "60 FPS (Fluido)" : "30 - 45 FPS (Instável)",
+      badge: antutu >= 1500000 ? "Qualidade Máxima" : "Configuração Mínima Apenas",
+      badgeColor: antutu >= 1500000 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
+      note: antutu >= 1500000 ? "Carregamento instantâneo e alta taxa de quadros." : "Requer gráficos no mínimo e pode apresentar quedas de quadros durante confrontos.",
+      isSupported: true
+    });
+  } else {
+    games.push({
+      title: "Call of Duty: Warzone Mobile",
+      genre: "Battle Royale Pesado",
+      graphics: "Incompatível",
+      fps: "< 20 FPS",
+      badge: "Não Suportado com Fluidez",
+      badgeColor: "bg-red-500/10 text-red-400 border-red-500/30",
+      note: "O jogo fecha ou apresenta travamentos severos devido a limitações de RAM e chipset.",
+      isSupported: false,
+      unsupportedReason: "Exige ao menos 8GB de RAM e processador intermediário-alto."
+    });
+  }
+
+  // 3. XCOM 2 Collection
+  if (antutu >= 900000 || maxRam >= 6) {
+    games.push({
+      title: "XCOM 2 Collection",
+      genre: "Estratégia Tática AAA",
+      graphics: antutu >= 1400000 ? "Gráficos Máximos" : "Gráficos Mínimos / Desempenho",
+      fps: antutu >= 1400000 ? "60 FPS" : "30 FPS",
+      badge: antutu >= 1400000 ? "Fluidez Perfeita" : "Configuração Mínima",
+      badgeColor: antutu >= 1400000 ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
+      note: antutu >= 1400000 ? "Transições de turnos extremamente rápidas." : "Funciona na configuração gráfica mínima, com tempos de carregamento maiores.",
+      isSupported: true
+    });
+  } else {
+    games.push({
+      title: "XCOM 2 Collection",
+      genre: "Estratégia Tática AAA",
+      graphics: "Incompatível",
+      fps: "< 15 FPS",
+      badge: "Não Suportado com Fluidez",
+      badgeColor: "bg-red-500/10 text-red-400 border-red-500/30",
+      note: "Incompatível com a arquitetura ou memória RAM limitada do dispositivo.",
+      isSupported: false,
+      unsupportedReason: "Exige suporte avançado a OpenGL/Vulkan e mais RAM."
+    });
+  }
+
+  // 4. Genshin Impact
+  if (antutu >= 750000) {
+    games.push({
+      title: "Genshin Impact",
+      genre: "RPG de Mundo Aberto",
+      graphics: antutu >= 1500000 ? "Máximo / 60 FPS" : "Médio / Baixo (60 ou 30 FPS)",
+      fps: antutu >= 1500000 ? "60 FPS Estáveis" : "30 - 45 FPS",
+      badge: antutu >= 1500000 ? "Máxima Performance" : "Configuração Mínima / Moderada",
+      badgeColor: antutu >= 1500000 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
+      note: antutu >= 1500000 ? "Rodando no talo com todas as opções ativadas." : "Necessário reduzir a qualidade gráfica para obter estabilidade.",
+      isSupported: true
+    });
+  } else {
+    games.push({
+      title: "Genshin Impact",
+      genre: "RPG de Mundo Aberto",
+      graphics: "Incompatível / Travamentos",
+      fps: "< 20 FPS",
+      badge: "Não Suportado com Fluidez",
+      badgeColor: "bg-red-500/10 text-red-400 border-red-500/30",
+      note: "Aparelho não possui capacidade de processamento gráfico para renderizar o mundo aberto.",
+      isSupported: false,
+      unsupportedReason: "Processador gráfico muito antigo ou de entrada."
+    });
+  }
+
+  // 5. Wuthering Waves
+  if (antutu >= 900000) {
+    games.push({
+      title: "Wuthering Waves",
+      genre: "Action RPG de Mundo Aberto",
+      graphics: antutu >= 1500000 ? "Alto / 60 FPS" : "Mínimo / 30 FPS",
+      fps: antutu >= 1500000 ? "60 FPS" : "30 FPS (Quedas ocasionais)",
+      badge: antutu >= 1500000 ? "Excelente" : "Configuração Mínima",
+      badgeColor: antutu >= 1500000 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
+      note: antutu >= 1500000 ? "Combates fluidos e responsivos." : "Exige gráficos no mínimo para evitar engasgos em lutas com muitos efeitos.",
+      isSupported: true
+    });
+  } else {
+    games.push({
+      title: "Wuthering Waves",
+      genre: "Action RPG de Mundo Aberto",
+      graphics: "Incompatível",
+      fps: "< 15 FPS",
+      badge: "Não Suportado com Fluidez",
+      badgeColor: "bg-red-500/10 text-red-400 border-red-500/30",
+      note: "Jogo muito pesado para o chipset deste modelo.",
+      isSupported: false,
+      unsupportedReason: "Falta de suporte a instruções avançadas de GPU."
+    });
+  }
+
+  // 6. Resident Evil Village / 4 Remake
+  if (antutu >= 1700000 || chipset.includes('a17') || chipset.includes('a18') || chipset.includes('elite')) {
+    games.push({
+      title: "Resident Evil Village / 4 Remake",
+      genre: "Survival Horror AAA",
+      graphics: "Configurações Altas / Médias",
+      fps: "60 FPS",
+      badge: "Port AAA Nativo",
+      badgeColor: "bg-indigo-500/10 text-indigo-400 border-indigo-500/30",
+      note: "Compatível com ray tracing e renderização de alta fidelidade.",
+      isSupported: true
+    });
+  } else {
+    games.push({
+      title: "Resident Evil Village / 4 Remake",
+      genre: "Survival Horror AAA",
+      graphics: "Incompatível / Não Disponível",
+      fps: "Não Roda",
+      badge: "Não Suportado com Fluidez",
+      badgeColor: "bg-red-500/10 text-red-400 border-red-500/30",
+      note: "Requer chips topo de linha específicos com aceleração por hardware dedicada.",
+      isSupported: false,
+      unsupportedReason: "Exige chipsets da linha Apple A Pro ou Snapdragon de última geração."
+    });
+  }
+
+  return games;
 };
 
 const NETWORK_STEPS = ['any', '3G', '4G', '5G'];
@@ -1308,31 +1295,37 @@ export const SmartphoneSpecs: React.FC = () => {
                 </div>
               </div>
 
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider pt-2">Jogos Populares e Pesados Suportados com Fluidez:</h3>
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider pt-2">Compatibilidade com Jogos Pesados (Warzone Mobile, Red Dead, XCOM 2, Genshin, Wuthering Waves, RE Village):</h3>
 
               <div className="grid grid-cols-1 gap-3">
                 {getCompatibleGamesForPhone(selectedPhoneForGames).map((game, idx) => (
-                  <div key={idx} className="bg-slate-950/40 border border-slate-800/80 rounded-2xl p-4 flex flex-col gap-2 hover:border-purple-500/30 transition-all">
+                  <div key={idx} className={`bg-slate-950/40 border ${game.isSupported ? 'border-slate-800/80 hover:border-purple-500/30' : 'border-red-950/60 bg-red-950/10'} rounded-2xl p-4 flex flex-col gap-2 transition-all`}>
                     <div className="flex items-center justify-between gap-2 flex-wrap">
                       <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
-                        <h4 className="font-bold text-white text-sm sm:text-base">{game.title}</h4>
+                        {game.isSupported ? (
+                          <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+                        ) : (
+                          <div className="w-5 h-5 rounded-full bg-red-500/20 border border-red-500/50 flex items-center justify-center text-red-400 font-bold text-xs shrink-0">
+                            ✕
+                          </div>
+                        )}
+                        <h4 className={`font-bold text-sm sm:text-base ${game.isSupported ? 'text-white' : 'text-red-200 line-through decoration-red-500/60'}`}>{game.title}</h4>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border ${game.badgeColor}`}>
                           {game.badge}
                         </span>
-                        <span className="text-xs font-bold text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded-lg border border-cyan-900/60">
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-lg border ${game.isSupported ? 'text-cyan-400 bg-cyan-950/60 border-cyan-900/60' : 'text-red-400 bg-red-950/60 border-red-900/60'}`}>
                           {game.fps}
                         </span>
                       </div>
                     </div>
                     <div className="text-xs text-slate-400 flex flex-wrap gap-x-4 gap-y-1">
                       <span>Gênero: <strong className="text-slate-300">{game.genre}</strong></span>
-                      <span>Configuração: <strong className="text-purple-300">{game.graphics}</strong></span>
+                      <span>Configuração: <strong className={game.isSupported ? 'text-purple-300' : 'text-red-300'}>{game.graphics}</strong></span>
                     </div>
-                    <p className="text-xs text-slate-300 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800 mt-1">
-                      {game.note}
+                    <p className={`text-xs p-2.5 rounded-xl border mt-1 ${game.isSupported ? 'text-slate-300 bg-slate-900/60 border-slate-800' : 'text-red-300/90 bg-red-950/30 border-red-900/40'}`}>
+                      {game.note} {game.unsupportedReason && <span className="block mt-1 font-semibold text-red-400">Motivo: {game.unsupportedReason}</span>}
                     </p>
                   </div>
                 ))}
