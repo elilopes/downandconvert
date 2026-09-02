@@ -37,13 +37,13 @@
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://downandconvert.onrender.com/?modal=popular</loc>
+    <loc>https://downandconvert.onrender.com/popular</loc>
     <lastmod>2026-09-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://downandconvert.onrender.com/?modal=faq</loc>
+    <loc>https://downandconvert.onrender.com/faq</loc>
     <lastmod>2026-09-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
