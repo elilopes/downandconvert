@@ -103,6 +103,11 @@ export const AddNewsModal: React.FC<AddNewsModalProps> = ({ isOpen, onClose, onA
       return;
     }
 
+    if (/trailer|filme/i.test(title.trim())) {
+      setErrorMessage('Notícias sobre trailers ou filmes não são permitidas nesta aba. Foque em tecnologia ou gadgets.');
+      return;
+    }
+
     if (!lead.trim()) {
       setErrorMessage('O resumo / lead da notícia é obrigatório.');
       return;
