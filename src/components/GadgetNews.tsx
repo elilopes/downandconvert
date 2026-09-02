@@ -600,15 +600,15 @@ export const GadgetNews: React.FC = () => {
               </div>
 
               {/* Título Principal */}
-              <h3 className="text-lg sm:text-xl font-bold text-white mb-2 leading-snug group-hover:text-cyan-300 transition-colors">
+              <h2 className="text-lg sm:text-xl font-bold text-white mb-2 leading-snug group-hover:text-cyan-300 transition-colors">
                 {mainTitle}
-              </h3>
+              </h2>
 
               {/* Título Secundário / Subtítulo */}
               {subTitle && (
-                <h4 className="text-sm font-semibold text-cyan-400/90 mb-3 leading-relaxed">
+                <h3 className="text-sm font-semibold text-cyan-400/90 mb-3 leading-relaxed">
                   {subTitle}
-                </h4>
+                </h3>
               )}
 
               {/* Lead */}
