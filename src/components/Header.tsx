@@ -70,10 +70,6 @@ export const Header: React.FC<HeaderProps> = ({ darkMode, setDarkMode, onOpenFAQ
                 <Sparkles className="w-4 h-4 text-emerald-400" />
                 {t('header.free')}
               </span>
-              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-300">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                {t('header.secure')}
-              </span>
             </div>
 
             {/* Popular Codes Modal Button */}
