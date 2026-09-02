@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Smartphone, Cpu, Camera, Battery, Monitor, HardDrive, Search, Filter, Check, MapPin, Wifi, Fingerprint, Maximize2, RotateCcw, Share2, CheckCheck, Layers, MessageSquare, MessageSquareShare } from 'lucide-react';
+import { Smartphone, Cpu, Camera, Battery, Monitor, HardDrive, Search, Filter, Check, MapPin, Wifi, Fingerprint, Maximize2, RotateCcw, Share2, CheckCheck, Layers, MessageSquare, MessageSquareShare, ChevronUp, ChevronDown, Menu } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { mockedSmartphones } from '../data/smartphones';
 
@@ -16,6 +16,7 @@ export const SmartphoneSpecs: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedPhoneId, setCopiedPhoneId] = useState<string | null>(null);
+  const [isFiltersMinimized, setIsFiltersMinimized] = useState<boolean>(false);
   
   // Basic Filters
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
@@ -274,26 +275,48 @@ export const SmartphoneSpecs: React.FC = () => {
     <div className="w-full max-w-[1400px] mx-auto py-8 px-4 flex flex-col lg:flex-row gap-6 animate-in fade-in duration-300">
       
       {/* Sidebar Filters */}
-      <aside className="w-full lg:w-80 shrink-0 flex flex-col gap-6">
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 lg:h-[84vh] overflow-y-auto custom-scrollbar shadow-lg">
-          <div className="flex items-center justify-between gap-2 mb-5 sticky top-0 bg-slate-900/95 py-2.5 z-10 backdrop-blur-md border-b border-slate-800">
-            <div className="flex items-center gap-2">
-              <Filter className="w-5 h-5 text-cyan-400" />
-              <h3 className="font-bold text-white text-base sm:text-lg">{t('smartphones.filters')}</h3>
+      <aside className={`w-full ${isFiltersMinimized ? 'lg:w-20' : 'lg:w-80'} shrink-0 flex flex-col gap-6 transition-all duration-300`}>
+        <div className={`bg-slate-900/60 border border-slate-800 rounded-2xl ${isFiltersMinimized ? 'p-3 lg:p-3 lg:h-auto overflow-hidden' : 'p-5 lg:h-[84vh] overflow-y-auto custom-scrollbar'} shadow-lg transition-all`}>
+          <div className={`flex ${isFiltersMinimized ? 'lg:flex-col lg:items-center' : 'items-center justify-between'} gap-2 mb-3 lg:mb-5 sticky top-0 bg-slate-900/95 py-2.5 z-10 backdrop-blur-md border-b border-slate-800`}>
+            <div 
+              className={`flex items-center gap-2 cursor-pointer select-none group ${isFiltersMinimized ? 'lg:justify-center lg:w-full' : ''}`} 
+              onClick={() => setIsFiltersMinimized(prev => !prev)}
+              title={isFiltersMinimized ? "Expandir Filtros & Categorias" : "Minimizar Filtros & Categorias"}
+            >
+              <Menu className="w-5 h-5 text-cyan-400 group-hover:text-cyan-300 transition-colors shrink-0" />
+              {!isFiltersMinimized && (
+                <h3 className="font-bold text-white text-base sm:text-lg group-hover:text-cyan-200 transition-colors">{t('smartphones.filters')}</h3>
+              )}
+              {activeFiltersCount > 0 && (
+                <span className="bg-cyan-500/20 text-cyan-300 text-xs px-2 py-0.5 rounded-full font-bold ml-1">
+                  {activeFiltersCount}
+                </span>
+              )}
             </div>
-            {activeFiltersCount > 0 && (
+            <div className={`flex items-center gap-2 ${isFiltersMinimized ? 'lg:flex-col lg:w-full' : ''}`}>
+              {!isFiltersMinimized && activeFiltersCount > 0 && (
+                <button
+                  onClick={handleResetFilters}
+                  className="flex items-center gap-1 text-[11px] font-bold text-cyan-400 hover:text-cyan-300 bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-800/60 px-2 py-1 rounded-lg transition-colors cursor-pointer"
+                  title="Limpar todos os filtros"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span className="hidden sm:inline">Limpar ({activeFiltersCount})</span>
+                </button>
+              )}
               <button
-                onClick={handleResetFilters}
-                className="flex items-center gap-1 text-[11px] font-bold text-cyan-400 hover:text-cyan-300 bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-800/60 px-2 py-1 rounded-lg transition-colors cursor-pointer"
-                title="Limpar todos os filtros"
+                type="button"
+                onClick={() => setIsFiltersMinimized(prev => !prev)}
+                className="p-1.5 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer w-full flex items-center justify-center"
+                title={isFiltersMinimized ? "Expandir Filtros & Categorias" : "Minimizar Filtros & Categorias"}
               >
-                <RotateCcw className="w-3 h-3" />
-                <span>Limpar ({activeFiltersCount})</span>
+                {isFiltersMinimized ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
               </button>
-            )}
+            </div>
           </div>
           
-          <div className="space-y-6">
+          {!isFiltersMinimized && (
+            <div className="space-y-6 animate-in fade-in duration-200">
             {/* General */}
             <div>
               <h4 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">Geral</h4>
@@ -769,6 +792,7 @@ export const SmartphoneSpecs: React.FC = () => {
               </div>
             </div>
           </div>
+          )}
         </div>
       </aside>
 
