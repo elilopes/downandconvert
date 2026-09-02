@@ -22,7 +22,7 @@ export const Footer: React.FC<FooterProps> = ({
     if (onNavigateTab) {
       onNavigateTab(tab);
     } else {
-      window.location.href = `/?tab=${tab}`;
+      window.location.href = tab === 'converter' ? '/' : `/${tab}`;
     }
   };
 
@@ -53,14 +53,14 @@ export const Footer: React.FC<FooterProps> = ({
             </button>
             <span className="hidden md:inline">•</span>
             <button
-              onClick={() => window.location.href = '/?modal=popular'}
+              onClick={() => window.location.href = '/popular'}
               className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors"
             >
               {t('footer.popular')}
             </button>
             <span className="hidden md:inline">•</span>
             <button
-              onClick={() => window.location.href = '/?modal=faq'}
+              onClick={() => window.location.href = '/faq'}
               className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors"
             >
               {t('footer.howItWorks')}
