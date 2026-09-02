@@ -21,24 +21,63 @@ import {
   Lightbulb,
   Trash2,
   Flame,
-  BadgeCheck
+  BadgeCheck,
+  X
 } from 'lucide-react';
 import { mockedGadgetNews, LocalizedString, NewsCategory, GadgetNewsItem } from '../data/gadgetNews';
 import { AddNewsModal } from './AddNewsModal';
 import { SuggestNewsModal } from './SuggestNewsModal';
+import { RssImporterModal } from './RssImporterModal';
 
 const STORAGE_KEY_CUSTOM_NEWS = 'user_custom_gadget_news_v1';
 
+// Helper para verificar e excluir notícias sobre 'trailer' ou 'filme'
+export const isTrailerOrMovieNews = (title?: LocalizedString | string): boolean => {
+  if (!title) return false;
+  const textToCheck = typeof title === 'string'
+    ? title
+    : [title.PT, title.EN, title.RU, title.HI, title.KO].filter(Boolean).join(' ');
+  return /trailer|filme/i.test(textToCheck);
+};
+
+// Helper para verificar notícias com link ou título inconsistente
+export const isInvalidOrOutdatedNews = (item: { link?: string; title?: LocalizedString | string }): boolean => {
+  if (!item) return false;
+  if (
+    item.link?.includes('anuncios-do-gamescom') ||
+    item.link?.includes('gamescom') ||
+    item.link === 'https://canaltech.com.br/rss/' ||
+    item.link === 'https://canaltech.com.br/rss'
+  ) {
+    return true;
+  }
+  const titleText = typeof item.title === 'string'
+    ? item.title
+    : [item.title?.PT, item.title?.EN].filter(Boolean).join(' ');
+  if (
+    titleText.includes('Óculos de Realidade Aumentada Leves com Display Holográfico') ||
+    titleText.includes('Processadores Fotônicos Integrados realizam cálculos de IA')
+  ) {
+    return true;
+  }
+  return false;
+};
+
 export const GadgetNews: React.FC = () => {
   const { t, lang } = useLanguage();
-  const [newsList, setNewsList] = useState<GadgetNewsItem[]>(mockedGadgetNews);
+  const [newsList, setNewsList] = useState<GadgetNewsItem[]>(() =>
+    mockedGadgetNews.filter(
+      (item) => !isTrailerOrMovieNews(item.title) && !isInvalidOrOutdatedNews(item)
+    )
+  );
   const [selectedCategory, setSelectedCategory] = useState<NewsCategory | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
 
-  // Estados dos Modais de Adicionar & Sugerir Notícia
+  // Estados dos Modais de Adicionar, Sugerir Notícia & Importador RSS
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [isSuggestModalOpen, setIsSuggestModalOpen] = useState<boolean>(false);
+  const [isRssModalOpen, setIsRssModalOpen] = useState<boolean>(false);
 
   // Estados do Importador de Feed e Verificador 404
   const [isImporting, setIsImporting] = useState<boolean>(false);
@@ -57,11 +96,21 @@ export const GadgetNews: React.FC = () => {
       if (saved) {
         const parsedCustom: GadgetNewsItem[] = JSON.parse(saved);
         if (Array.isArray(parsedCustom) && parsedCustom.length > 0) {
+          // Higieniza removendo trailers, filmes e links desatualizados
+          const cleanedCustom = parsedCustom.filter(
+            (item) => !isTrailerOrMovieNews(item.title) && !isInvalidOrOutdatedNews(item)
+          );
+          localStorage.setItem(STORAGE_KEY_CUSTOM_NEWS, JSON.stringify(cleanedCustom));
+
           setNewsList((prev) => {
             const seen = new Set<string>();
             const combined: GadgetNewsItem[] = [];
-            for (const item of [...parsedCustom, ...prev]) {
-              if (!seen.has(item.link)) {
+            for (const item of [...cleanedCustom, ...prev]) {
+              if (
+                !seen.has(item.link) &&
+                !isTrailerOrMovieNews(item.title) &&
+                !isInvalidOrOutdatedNews(item)
+              ) {
                 seen.add(item.link);
                 combined.push(item);
               }
@@ -83,6 +132,15 @@ export const GadgetNews: React.FC = () => {
 
   // Adiciona nova notícia (por URL ou sugerida) à lista e persiste
   const handleAddNewItem = (newItem: GadgetNewsItem) => {
+    if (isTrailerOrMovieNews(newItem.title)) {
+      setImportStatusMessage('⚠️ Notícias de trailers ou filmes não são permitidas nesta aba.');
+      return;
+    }
+    if (isInvalidOrOutdatedNews(newItem)) {
+      setImportStatusMessage('⚠️ Esta notícia possui link ou título inconsistente e foi descartada.');
+      return;
+    }
+
     setNewsList((prev) => {
       // Remove duplicados pelo link se já existirem
       const filtered = prev.filter((item) => item.link !== newItem.link && item.id !== newItem.id);
@@ -92,7 +150,9 @@ export const GadgetNews: React.FC = () => {
       try {
         const savedRaw = localStorage.getItem(STORAGE_KEY_CUSTOM_NEWS);
         const existingCustom: GadgetNewsItem[] = savedRaw ? JSON.parse(savedRaw) : [];
-        const customFiltered = existingCustom.filter((item) => item.link !== newItem.link);
+        const customFiltered = existingCustom.filter(
+          (item) => item.link !== newItem.link && !isTrailerOrMovieNews(item.title) && !isInvalidOrOutdatedNews(item)
+        );
         const newCustomList = [newItem, ...customFiltered];
         localStorage.setItem(STORAGE_KEY_CUSTOM_NEWS, JSON.stringify(newCustomList));
       } catch (e) {
@@ -133,7 +193,8 @@ export const GadgetNews: React.FC = () => {
 
     try {
       const urlParam = specificUrl || customFeedUrl.trim();
-      const endpoint = `/api/news/feed-import?verify404=${auto404VerificationEnabled ? 'true' : 'false'}${
+      // O Verificador Automático de Erro 404 é SEMPRE ativo de forma obrigatória
+      const endpoint = `/api/news/feed-import?verify404=true${
         urlParam ? `&feedUrl=${encodeURIComponent(urlParam)}` : ''
       }`;
 
@@ -178,13 +239,18 @@ export const GadgetNews: React.FC = () => {
           } : undefined
         }));
 
+        // Filtra os itens importados excluindo trailers, filmes e links inválidos
+        const validImportedItems = importedItems.filter(
+          (item) => !isTrailerOrMovieNews(item.title) && !isInvalidOrOutdatedNews(item)
+        );
+
         // Junta as notícias existentes com as novas importadas, sem duplicar links
         setNewsList((prev) => {
           const seen = new Set<string>();
           const combined: GadgetNewsItem[] = [];
           
-          for (const item of [...importedItems, ...prev]) {
-            if (!seen.has(item.link)) {
+          for (const item of [...validImportedItems, ...prev]) {
+            if (!seen.has(item.link) && !isTrailerOrMovieNews(item.title) && !isInvalidOrOutdatedNews(item)) {
               seen.add(item.link);
               combined.push(item);
             }
@@ -194,7 +260,7 @@ export const GadgetNews: React.FC = () => {
 
         // Atualiza mapa de links verificados
         const newVerifiedMap = { ...verifiedLinksMap };
-        importedItems.forEach((item) => {
+        validImportedItems.forEach((item) => {
           newVerifiedMap[item.link] = true;
         });
         setVerifiedLinksMap(newVerifiedMap);
@@ -320,6 +386,11 @@ export const GadgetNews: React.FC = () => {
 
   const filteredNews = useMemo(() => {
     return newsList.filter((item) => {
+      // Exclui estritamente notícias com trailer ou filme no título, ou links inválidos
+      if (isTrailerOrMovieNews(item.title) || isInvalidOrOutdatedNews(item)) {
+        return false;
+      }
+
       const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
       if (!matchesCategory) return false;
 
@@ -360,144 +431,57 @@ export const GadgetNews: React.FC = () => {
           </p>
         </div>
 
-        {/* Botões de Ação Rápida: Adicionar Link & Sugerir Notícia */}
-        <div className="flex items-center gap-3 flex-wrap justify-center shrink-0">
+        {/* Botões de Ação Compactos: RSS Importer, News sugeridas, Add news */}
+        <div className="flex items-center gap-2 flex-wrap justify-center shrink-0">
+          {/* Botão para abrir o Modal do Importador de RSS */}
+          <button
+            type="button"
+            onClick={() => setIsRssModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800/90 hover:bg-slate-700/90 text-cyan-300 hover:text-white border border-slate-700/80 rounded-xl text-xs font-semibold shadow-sm transition-all cursor-pointer group"
+            title={t('news.importerTitle')}
+          >
+            <Rss className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" />
+            <span>{t('news.openRssImporter')}</span>
+          </button>
+
+          {/* Botão News sugeridas (tamanho reduzido) */}
           <button
             type="button"
             onClick={() => setIsSuggestModalOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-cyan-500/20 hover:from-amber-500/30 hover:to-cyan-500/30 text-amber-300 hover:text-white border border-amber-500/40 hover:border-amber-400 rounded-2xl text-xs sm:text-sm font-bold shadow-lg shadow-amber-500/10 transition-all cursor-pointer group"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 hover:text-white border border-amber-500/35 rounded-xl text-xs font-semibold shadow-sm transition-all cursor-pointer group"
           >
-            <Sparkles className="w-4 h-4 text-amber-400 group-hover:rotate-12 transition-transform" />
+            <Sparkles className="w-3.5 h-3.5 text-amber-400 group-hover:rotate-12 transition-transform" />
             <span>{t('news.suggestNewsBtn')}</span>
           </button>
 
+          {/* Botão Add news (tamanho reduzido) */}
           <button
             type="button"
             onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-slate-950 font-bold rounded-2xl text-xs sm:text-sm shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30 transition-all cursor-pointer group"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-slate-950 font-bold rounded-xl text-xs shadow-sm transition-all cursor-pointer group"
           >
-            <PlusCircle className="w-4 h-4 text-slate-950 group-hover:scale-110 transition-transform" />
+            <PlusCircle className="w-3.5 h-3.5 text-slate-950 group-hover:scale-110 transition-transform" />
             <span>{t('news.addNewsBtn')}</span>
           </button>
         </div>
       </div>
 
-      {/* Painel do Importador de RSS/Feeds com Verificador Automático de Erro 404 */}
-      <div className="mb-8 bg-gradient-to-br from-slate-900/90 via-slate-900/60 to-slate-950/90 border border-cyan-500/20 rounded-2xl p-4 sm:p-6 shadow-xl relative overflow-hidden">
-        {/* Glow de fundo */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-emerald-500 p-0.5 flex items-center justify-center shadow-md shadow-cyan-500/20 shrink-0">
-              <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-                <Rss className="w-5 h-5 text-cyan-400" />
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
-                  {t('news.importerTitle')}
-                </h3>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  {t('news.verifier404Active')}
-                </span>
-              </div>
-              <p className="text-xs text-slate-400 mt-0.5">
-                {t('news.importerDesc')}
-              </p>
-            </div>
-          </div>
-
-          {/* Ações de Sincronização e Checagem */}
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => handleImportFeeds()}
-              disabled={isImporting}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-slate-950 font-bold rounded-xl text-xs sm:text-sm shadow-md shadow-cyan-500/20 transition-all disabled:opacity-50 cursor-pointer"
-            >
-              <RefreshCw className={`w-4 h-4 ${isImporting ? 'animate-spin' : ''}`} />
-              <span>{isImporting ? t('news.syncing') : t('news.syncNow')}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleVerifyCurrentLinks}
-              disabled={isCheckingLinks || isImporting}
-              className="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-800/80 hover:bg-slate-700/80 text-cyan-300 hover:text-white border border-slate-700/80 rounded-xl text-xs sm:text-sm font-semibold transition-all disabled:opacity-50 cursor-pointer"
-            >
-              <ShieldCheck className={`w-4 h-4 ${isCheckingLinks ? 'animate-spin text-emerald-400' : 'text-cyan-400'}`} />
-              <span>{isCheckingLinks ? 'Verificando Status...' : t('news.checkAllLinks')}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Input para Feed RSS Personalizado */}
-        <div className="mt-4 pt-1 flex flex-col sm:flex-row items-center gap-2">
-          <div className="relative w-full flex-1">
-            <Radio className="w-4 h-4 text-cyan-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="url"
-              value={customFeedUrl}
-              onChange={(e) => setCustomFeedUrl(e.target.value)}
-              placeholder={t('news.customFeedPlaceholder')}
-              className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-3 py-2 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/60 transition-all"
-            />
+      {/* Notificação Compacta de Status (se houver mensagem de importação/remoção) */}
+      {importStatusMessage && (
+        <div className="mb-6 p-3 bg-cyan-950/40 border border-cyan-500/30 rounded-2xl text-xs sm:text-sm text-cyan-200 flex items-center justify-between gap-3 animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{importStatusMessage}</span>
           </div>
           <button
             type="button"
-            onClick={() => handleImportFeeds(customFeedUrl)}
-            disabled={!customFeedUrl.trim() || isImporting}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 hover:text-white border border-slate-700 rounded-xl text-xs sm:text-sm font-bold transition-all disabled:opacity-40 cursor-pointer whitespace-nowrap"
+            onClick={() => setImportStatusMessage(null)}
+            className="p-1 text-slate-400 hover:text-white rounded-lg transition-colors cursor-pointer"
           >
-            <Plus className="w-4 h-4" />
-            <span>{t('news.importButton')}</span>
+            <X className="w-4 h-4" />
           </button>
         </div>
-
-        {/* Status de Sincronização & Alertas do Verificador 404 */}
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400 pt-3 border-t border-slate-800/60">
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1.5 text-slate-300">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              {t('news.lastSync')}: <strong className="text-white">{lastSyncTime}</strong>
-            </span>
-            <span>•</span>
-            <span className="text-slate-400">
-              Total de Notícias Ativas: <strong className="text-cyan-400 font-mono">{newsList.length}</strong>
-            </span>
-            {rejected404Count > 0 && (
-              <>
-                <span>•</span>
-                <span className="text-emerald-400 font-medium flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  {rejected404Count} links 404 descartados
-                </span>
-              </>
-            )}
-          </div>
-
-          <label className="flex items-center gap-2 cursor-pointer select-none text-slate-300 hover:text-white">
-            <input
-              type="checkbox"
-              checked={auto404VerificationEnabled}
-              onChange={(e) => setAuto404VerificationEnabled(e.target.checked)}
-              className="rounded border-slate-700 text-cyan-500 focus:ring-cyan-500/40 bg-slate-950 w-3.5 h-3.5 cursor-pointer"
-            />
-            <span className="text-xs">{t('news.verifier404Active')}</span>
-          </label>
-        </div>
-
-        {/* Notificação / Feedback de Importação e Verificação */}
-        {importStatusMessage && (
-          <div className="mt-3 p-3 bg-cyan-950/40 border border-cyan-500/30 rounded-xl text-xs sm:text-sm text-cyan-200 flex items-center gap-2 animate-in fade-in">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span className="flex-1">{importStatusMessage}</span>
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Filter and Search Bar */}
       <div className="mb-8 flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-900/40 p-3 sm:p-4 rounded-2xl border border-slate-800">
@@ -715,6 +699,22 @@ export const GadgetNews: React.FC = () => {
         isOpen={isSuggestModalOpen}
         onClose={() => setIsSuggestModalOpen(false)}
         onAddNews={handleAddNewItem}
+      />
+
+      {/* Modal do Importador de RSS & Feeds */}
+      <RssImporterModal
+        isOpen={isRssModalOpen}
+        onClose={() => setIsRssModalOpen(false)}
+        onImportFeeds={handleImportFeeds}
+        onVerifyCurrentLinks={handleVerifyCurrentLinks}
+        isImporting={isImporting}
+        isCheckingLinks={isCheckingLinks}
+        customFeedUrl={customFeedUrl}
+        setCustomFeedUrl={setCustomFeedUrl}
+        importStatusMessage={importStatusMessage}
+        lastSyncTime={lastSyncTime}
+        totalActiveNews={newsList.length}
+        rejected404Count={rejected404Count}
       />
     </div>
   );
