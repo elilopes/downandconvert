@@ -1237,11 +1237,11 @@ const dict: Translations = {
   "smartphones.whatsAppIncompatible": { PT: "Sem Suporte ao WhatsApp", EN: "No WhatsApp Support", RU: "Без поддержки WhatsApp", HI: "व्हाट्सएप समर्थन नहीं", KO: "WhatsApp 미지원" },
   "smartphones.features": { PT: "Recursos Especiais", EN: "Special Features", RU: "Специальные возможности", HI: "विशेष सुविधाएँ", KO: "특수 기능" },
   "tabs.news": {
-    PT: "Notícias & Gadgets",
-    EN: "News & Gadgets",
-    RU: "Новости и Гаджеты",
-    HI: "समाचार और गैजेट्स",
-    KO: "뉴스 및 가젯"
+    PT: "News gadget",
+    EN: "News gadget",
+    RU: "News gadget",
+    HI: "News gadget",
+    KO: "News gadget"
   },
   "news.loading": {
     PT: "Buscando as últimas notícias...",
