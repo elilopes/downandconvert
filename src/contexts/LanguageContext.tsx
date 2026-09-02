@@ -14,11 +14,11 @@ interface Translations {
 
 const dict: Translations = {
   "header.subtitle": {
-    PT: "Converte e baixa vídeos, áudio, reels",
-    EN: "Converts and downloads videos, audio, reels",
-    RU: "Конвертирует и скачивает видео, аудио, reels",
-    HI: "वीडियो, ऑडियो, रील्स कनवर्ट और डाउनलोड करता है",
-    KO: "동영상, 오디오, 릴스 변환 및 다운로드"
+    PT: "by TechViva!",
+    EN: "by TechViva!",
+    RU: "by TechViva!",
+    HI: "by TechViva!",
+    KO: "by TechViva!"
   },
   "hero.title": {
     PT: "Baixe e converta mídias da web",
@@ -28,11 +28,11 @@ const dict: Translations = {
     KO: "웹에서 미디어 다운로드 및 변환"
   },
   "hero.desc": {
-    PT: "Converta vídeos, baixe mídias das redes sociais, grave sua tela ou câmera e salve no seu Google Drive. Corte áudio, corte vídeo, adicione metadados, converta arquivos de mídia localmente no navegador com total privacidade e, pesquise códigos secretos USSD e MMI para celular.",
-    EN: "Convert videos, download social media media, record your screen or camera, and save to your Google Drive. Trim audio, trim video, add metadata, convert media files locally in the browser with total privacy, and search secret USSD and MMI mobile codes.",
-    RU: "Конвертируйте видео, скачивайте медиа из социальных сетей, записывайте экран или камеру и сохраняйте на свой Google Диск. Обрезайте аудио, обрезайте видео, добавляйте метаданные, конвертируйте медиафайлы локально в браузере с полной конфиденциальностью и ищите секретные коды USSD и MMI для мобильных устройств.",
-    HI: "वीडियो कनवर्ट करें, सोशल मीडिया मीडिया डाउनलोड करें, अपनी स्क्रीन या कैमरा रिकॉर्ड करें, और अपने Google ड्राइव में सहेजें। ऑडियो ट्रिम करें, वीडियो ट्रिम करें, मेटाडेटा जोड़ें, पूर्ण गोपनीयता के साथ ब्राउज़र में स्थानीय रूप से मीडिया फ़ाइलों को कनवर्ट करें, और गुप्त USSD और MMI मोबाइल कोड खोजें।",
-    KO: "동영상을 변환하고, 소셜 미디어 미디어를 다운로드하고, 화면이나 카메라를 녹화하여 Google 드라이브에 저장하세요. 오디오 다듬기, 비디오 다듬기, 메타데이터 추가, 브라우저에서 로컬로 미디어 파일 변환, 비밀 USSD 및 MMI 모바일 코드 검색을 완벽한 개인정보 보호와 함께 이용하세요."
+    PT: "Baixe mídias das redes sociais, ou converta para vários formatos. Também tem códigos secretos USSD, gadgets e, especificações. by TechViva!",
+    EN: "Download social media media or convert to various formats. Also features USSD secret codes, gadgets, and specifications. by TechViva!",
+    RU: "Скачивайте медиа из соцсетей или конвертируйте в различные форматы. Также включает секретные коды USSD, гаджеты и спецификации. by TechViva!",
+    HI: "सोशल मीडिया मीडिया डाउनलोड करें या विभिन्न प्रारूपों में कनवर्ट करें। इसमें USSD गुप्त कोड, गैजेट्स और विशिष्टताएँ भी शामिल हैं। by TechViva!",
+    KO: "소셜 미디어 미디어를 다운로드하거나 다양한 형식으로 변환하세요. USSD 비밀 코드, 가젯 및 사양도 제공됩니다. by TechViva!"
   },
   "header.free": {
     PT: "Conversor Grátis & Ilimitado",
