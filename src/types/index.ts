@@ -1,5 +1,5 @@
 export type AudioFormat = 'mp3' | 'wav' | 'aiff' | 'aac' | 'm4a' | 'flac' | 'wma' | 'ogg';
-export type VideoFormat = 'mp4' | 'webm' | 'avi' | 'mov' | 'mkv';
+export type VideoFormat = 'mp4' | 'webm' | 'avi' | 'mov' | 'mkv' | 'gif';
 
 export type OutputFormat = AudioFormat | VideoFormat;
 
@@ -13,6 +13,15 @@ export interface ID3Metadata {
   genre: string;
   includeCover?: boolean;
   coverImage?: string; // base64 or blob URL
+}
+
+export interface CropOptions {
+  enabled: boolean;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  shape?: 'rect' | 'circle';
 }
 
 export interface ConversionOptions {
@@ -31,7 +40,8 @@ export interface ConversionOptions {
   equalizer: EqualizerPreset;
   metadata: ID3Metadata;
   // Video specific options
-  videoQuality?: 'high' | 'medium' | 'low';
+  videoQuality?: 'high' | 'medium' | 'low' | 'very_low';
+  crop?: CropOptions;
 }
 
 export type ConversionStatus =
