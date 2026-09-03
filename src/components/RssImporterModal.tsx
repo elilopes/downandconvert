@@ -153,6 +153,18 @@ export const RssImporterModal: React.FC<RssImporterModalProps> = ({
               <span>{t('news.importButton')}</span>
             </button>
           </div>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-[11px] text-slate-500">Sugestão de revista:</span>
+            <button
+              type="button"
+              onClick={() => {
+                setCustomFeedUrl('https://flipboard.com/@elilopes/techviva-gadgets-e-games-brasil-79uavc9uy.rss');
+              }}
+              className="text-[11px] text-cyan-400 hover:text-cyan-300 underline cursor-pointer text-left"
+            >
+              TechViva Flipboard (Gadgets & Invenções)
+            </button>
+          </div>
         </form>
 
         {/* Notificação / Feedback de Importação e Verificação */}
