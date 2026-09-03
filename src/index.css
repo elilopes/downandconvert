@@ -38,3 +38,21 @@
 .animate-rainbow-letter {
   animation: rainbowLetterShift 3.5s linear infinite;
 }
+
+.tabs-scrollbar::-webkit-scrollbar {
+  height: 4px;
+}
+.tabs-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.tabs-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.3);
+  border-radius: 9999px;
+}
+.tabs-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.6);
+}
+.tabs-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.3) transparent;
+}
