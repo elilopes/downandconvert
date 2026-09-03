@@ -12,8 +12,7 @@ import fs from 'fs';
 import { spawn } from 'child_process';
 import youtubedl from 'youtube-dl-exec';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+
 
 function extractVideoId(url: string) {
   const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([^&?]+)/);
@@ -1875,7 +1874,7 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.resolve(__dirname, 'dist');
+    const distPath = path.join(process.cwd(), 'dist');
     
     // Rota explícita para o sitemap.xml para garantir que seja reconhecido pelos motores de busca (como Google Cloud Run / Search Console)
     app.get('/sitemap.xml', (req, res) => {
