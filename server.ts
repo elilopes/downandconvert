@@ -1155,7 +1155,7 @@ async function startServer() {
     const format = (req.body.format || 'mp4').toLowerCase();
     const videoQuality = req.body.videoQuality || 'medium';
     const bitrate = req.body.bitrate || '192';
-    const isVideo = ['mp4', 'webm', 'mkv', 'avi', 'mov'].includes(format);
+    const isVideo = ['mp4', 'webm', 'mkv', 'avi', 'mov', 'gif'].includes(format);
 
     const safeId = Math.random().toString(36).substring(2, 8);
     const outputFilename = `converted_${Date.now()}_${safeId}.${format}`;
@@ -1174,8 +1174,17 @@ async function startServer() {
         const cX = Math.max(0, Math.floor(Number(req.body.cropX) || 0));
         const cY = Math.max(0, Math.floor(Number(req.body.cropY) || 0));
         vFilters.push(`crop=${cW}:${cH}:${cX}:${cY}`);
+        
+        if (req.body.cropShape === 'circle') {
+          // Add a circular mask using geq filter. This will make pixels outside the circle black.
+          // Formula: (x - w/2)^2 + (y - h/2)^2 <= (min(w,h)/2)^2
+          vFilters.push(`geq=lum='if(lt((X-(W/2))^2+(Y-(H/2))^2,(min(W,H)/2)^2),p(X,Y),0)':cb='if(lt((X-(W/2))^2+(Y-(H/2))^2,(min(W,H)/2)^2),p(X,Y),128)':cr='if(lt((X-(W/2))^2+(Y-(H/2))^2,(min(W,H)/2)^2),p(X,Y),128)'`);
+        }
       }
 
+      if (videoQuality === 'very_low') {
+        vFilters.push("scale='min(480,iw)':-2");
+      }
       switch (format) {
         case 'webm':
           if (vFilters.length > 0) args.push('-vf', vFilters.join(','));
@@ -1554,8 +1563,15 @@ async function startServer() {
       const author = authorMatch ? cleanXmlText(authorMatch[1]) : defaultAuthor;
 
       if (title && link) {
-        // Excluir notícias que possuem trailer ou filme no título
-        if (/trailer|filme/i.test(title)) {
+        const fullText = (title + ' ' + lead + ' ' + category).toLowerCase();
+        const fullBlock = block.toLowerCase();
+        // Excluir notícias que possuem trailer, filme, entretenimento ou jogos/games
+        if (
+          fullBlock.includes('videogames') ||
+          fullBlock.includes('video games') ||
+          fullBlock.includes('/topic/videogames') ||
+          /trailer|filme|série|series|game|games|jogo|jogos|videogame|playstation|xbox|nintendo|pokemon|pokémon|gta|god of war|elden ring|voxel|mouses gamer|gamer|gameplay|ps5|ps4|ps2|switch/i.test(fullText)
+        ) {
           continue;
         }
 
@@ -1586,7 +1602,8 @@ async function startServer() {
             { url: 'https://olhardigital.com.br/feed/', author: 'Olhar Digital' },
             { url: 'https://rss.tecmundo.com.br/feed', author: 'TecMundo' },
             { url: 'https://www.inovacaotecnologica.com.br/boletim/rss.xml', author: 'Inovação Tecnológica' },
-            { url: 'https://canaltech.com.br/rss/', author: 'Canaltech' }
+            { url: 'https://canaltech.com.br/rss/', author: 'Canaltech' },
+            { url: 'https://flipboard.com/@elilopes/techviva-gadgets-e-games-brasil-79uavc9uy.rss', author: 'TechViva Flipboard' }
           ];
 
       const rawArticles: any[] = [];
@@ -1617,10 +1634,10 @@ async function startServer() {
         })
       );
 
-      // Elimina itens duplicados e exclui notícias com trailer/filme no título ou links inválidos
+      // Elimina itens duplicados e exclui notícias com trailer/filme/jogos no título ou links inválidos
       const uniqueMap = new Map<string, any>();
       for (const art of rawArticles) {
-        if (/trailer|filme/i.test(art.title)) continue;
+        if (/trailer|filme|série|series|game|games|jogo|jogos|videogame|playstation|xbox|nintendo|pokemon|pokémon|gta|god of war|elden ring|voxel|mouses gamer/i.test(art.title + ' ' + (art.lead || ''))) continue;
         if (art.link.includes('anuncios-do-gamescom') || art.link === 'https://canaltech.com.br/rss/' || art.link === 'https://canaltech.com.br/rss') continue;
         if (!uniqueMap.has(art.link)) {
           uniqueMap.set(art.link, art);
