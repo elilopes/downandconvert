@@ -74,7 +74,7 @@ export const UssdTool: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fadeIn">
       {/* Header section */}
       <div className="text-center max-w-3xl mx-auto mb-10">
-        <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight mb-3">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-3">
           {t('ussd.title')}
         </h1>
         <p className="text-sm sm:text-base text-slate-400">
@@ -156,7 +156,7 @@ export const UssdTool: React.FC = () => {
       {filteredCodes.length === 0 ? (
         <div className="text-center py-16 bg-slate-900/40 border border-slate-800/60 rounded-2xl">
           <ShieldAlert className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-          <h2 className="text-lg font-semibold text-slate-300">Nenhum código encontrado</h2>
+          <h3 className="text-lg font-semibold text-slate-300">Nenhum código encontrado</h3>
           <p className="text-xs text-slate-500 mt-1">Tente buscar por outro termo ou selecione outra operadora.</p>
         </div>
       ) : (
@@ -186,9 +186,9 @@ export const UssdTool: React.FC = () => {
                   </span>
                 </div>
 
-                <h2 className="text-base font-bold text-white mb-1 group-hover:text-cyan-300 transition-colors">
+                <h3 className="text-base font-bold text-white mb-1 group-hover:text-cyan-300 transition-colors">
                   {t(item.titleKey)}
-                </h2>
+                </h3>
                 <p className="text-xs text-slate-400 mb-4 leading-relaxed">
                   {t(item.descKey)}
                 </p>
