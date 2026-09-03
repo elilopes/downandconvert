@@ -30,7 +30,8 @@ interface AspectPreset {
   id: string;
   name: string;
   sub: string;
-  ratio: number | null; // width / height, or null for free
+  ratio: number | null;
+  shape?: 'rect' | 'circle'; // width / height, or null for free
   icon: React.ReactNode;
 }
 
@@ -89,6 +90,14 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
       icon: <Tv className="w-4 h-4 text-sky-400" />,
     },
     {
+      id: 'circle',
+      name: 'Círculo Perfeito',
+      sub: 'Avatar / Profile',
+      ratio: 1,
+      shape: 'circle',
+      icon: <div className="w-4 h-4 rounded-full border-2 border-indigo-400" />,
+    },
+    {
       id: 'free',
       name: 'Livre / Personalizado',
       sub: 'Qualquer proporção',
@@ -105,11 +114,13 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
     y: number; // percentage (0 to 100)
     width: number; // percentage (0 to 100)
     height: number; // percentage (0 to 100)
+    shape?: 'rect' | 'circle';
   }>({
     x: 25,
     y: 0,
     width: 50,
     height: 100,
+    shape: 'rect',
   });
 
   // State for dragging/resizing
@@ -118,7 +129,7 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
   const dragStartPos = useRef<{ clientX: number; clientY: number; initialCrop: typeof cropBox }>({
     clientX: 0,
     clientY: 0,
-    initialCrop: { x: 0, y: 0, width: 100, height: 100 },
+    initialCrop: { x: 0, y: 0, width: 100, height: 100, shape: 'rect' as 'rect' | 'circle' },
   });
 
   const [videoSrcUrl, setVideoSrcUrl] = useState<string>('');
@@ -156,7 +167,7 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
         });
       } else {
         // Default to 9:16 centered
-        applyPresetRatio(9 / 16, nw, nh);
+        applyPresetRatio(9 / 16, 'rect', nw, nh);
       }
     }
   };
@@ -176,7 +187,7 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
   }, [updateDisplaySize]);
 
   // Apply a specific aspect ratio to the cropBox
-  const applyPresetRatio = (ratio: number | null, videoW = videoNaturalSize.width, videoH = videoNaturalSize.height) => {
+  const applyPresetRatio = (ratio: number | null, shape?: 'rect' | 'circle', videoW = videoNaturalSize.width, videoH = videoNaturalSize.height) => {
     if (!ratio) return;
 
     const videoAspect = videoW / videoH;
@@ -206,13 +217,16 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
       y: newY,
       width: targetWidthPct,
       height: targetHeightPct,
+      shape: shape || 'rect',
     });
   };
 
   const handleSelectPreset = (preset: AspectPreset) => {
     setSelectedPresetId(preset.id);
     if (preset.ratio !== null) {
-      applyPresetRatio(preset.ratio);
+      applyPresetRatio(preset.ratio, preset.shape);
+    } else {
+      setCropBox(prev => ({ ...prev, shape: 'rect' }));
     }
   };
 
@@ -233,6 +247,7 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
       y: 0,
       width: 100,
       height: 100,
+      shape: 'rect',
     });
   };
 
@@ -273,7 +288,7 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
       const xPct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
       const yPct = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
 
-      const initial = { x: xPct, y: yPct, width: 0, height: 0 };
+      const initial = { x: xPct, y: yPct, width: 0, height: 0, shape: 'rect' as 'rect' | 'circle' };
       dragStartPos.current = {
         clientX: e.clientX,
         clientY: e.clientY,
@@ -302,12 +317,13 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
       const newW = Math.abs(currentXPct - startX);
       const newH = Math.abs(currentYPct - startY);
 
-      setCropBox({
+      setCropBox(prev => ({
+        ...prev,
         x: newX,
         y: newY,
         width: Math.max(1, newW),
         height: Math.max(1, newH),
-      });
+      }));
       return;
     }
 
@@ -319,7 +335,7 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
 
     const initial = dragStartPos.current.initialCrop;
     const currentPreset = presets.find((p) => p.id === selectedPresetId);
-    const fixedRatio = currentPreset?.ratio || null;
+    const fixedRatio = selectedPresetId === 'free' ? null : currentPreset?.ratio || null;
 
     if (dragHandle === 'move') {
       let newX = initial.x + deltaXPct;
@@ -378,12 +394,13 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
         }
       }
 
-      setCropBox({
+      setCropBox(prev => ({
+        ...prev,
         x: Math.max(0, Math.min(100 - newW, newX)),
         y: Math.max(0, Math.min(100 - newH, newY)),
         width: Math.max(1, Math.min(100, newW)),
         height: Math.max(1, Math.min(100, newH)),
-      });
+      }));
     }
   };
 
@@ -411,6 +428,7 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
       y: pixelY,
       width: pixelW,
       height: pixelH,
+      shape: cropBox.shape,
     });
     onClose();
   };
@@ -513,27 +531,22 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
               />
 
               {/* Darkened Mask Outside Crop Area */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background: `radial-gradient(transparent, transparent)`,
-                  boxShadow: `inset 0 0 0 9999px rgba(0, 0, 0, 0.65)`,
-                  clipPath: `polygon(
-                    0% 0%, 0% 100%, 
-                    ${cropBox.x}% 100%, 
-                    ${cropBox.x}% ${cropBox.y}%, 
-                    ${cropBox.x + cropBox.width}% ${cropBox.y}%, 
-                    ${cropBox.x + cropBox.width}% ${cropBox.y + cropBox.height}%, 
-                    ${cropBox.x}% ${cropBox.y + cropBox.height}%, 
-                    ${cropBox.x}% 100%, 
-                    100% 100%, 100% 0%
-                  )`,
-                }}
-              />
+              <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div
+                  className={`absolute pointer-events-none ${cropBox.shape === 'circle' ? 'rounded-full' : ''}`}
+                  style={{
+                    left: `${cropBox.x}%`,
+                    top: `${cropBox.y}%`,
+                    width: `${cropBox.width}%`,
+                    height: `${cropBox.height}%`,
+                    boxShadow: '0 0 0 9999px rgba(0,0,0,0.65)',
+                  }}
+                />
+              </div>
 
               {/* Interactive Crop Frame */}
               <div
-                className="absolute border-2 border-cyan-400 rounded cursor-move group shadow-2xl shadow-cyan-500/40"
+                className={`absolute border-2 border-cyan-400 ${cropBox.shape === 'circle' ? 'rounded-full' : 'rounded'} cursor-move group shadow-2xl shadow-cyan-500/40`}
                 style={{
                   left: `${cropBox.x}%`,
                   top: `${cropBox.y}%`,
@@ -544,7 +557,8 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
                 onPointerDown={(e) => handlePointerDown(e, 'move')}
               >
                 {/* Rule of Thirds Grid Lines inside Crop Box */}
-                <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none opacity-40">
+                {cropBox.shape !== 'circle' && (
+                  <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none opacity-40">
                   <div className="border-r border-b border-cyan-300/40" />
                   <div className="border-r border-b border-cyan-300/40" />
                   <div className="border-b border-cyan-300/40" />
@@ -554,7 +568,8 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
                   <div className="border-r border-cyan-300/40" />
                   <div className="border-r border-cyan-300/40" />
                   <div />
-                </div>
+                  </div>
+                )}
 
                 {/* Dimension Badge in Center Top */}
                 <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-black/85 text-cyan-300 font-mono text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full border border-cyan-500/40 pointer-events-none shadow backdrop-blur-sm whitespace-nowrap">
