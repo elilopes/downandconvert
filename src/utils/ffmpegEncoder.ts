@@ -120,13 +120,21 @@ export async function encodeWithFFmpeg(
         const cropX = Math.max(0, Math.floor(options.crop.x));
         const cropY = Math.max(0, Math.floor(options.crop.y));
         vFilters.push(`crop=${cropW}:${cropH}:${cropX}:${cropY}`);
+        
+        if (options.crop.shape === 'circle') {
+          vFilters.push(`geq=lum='if(lt((X-(W/2))^2+(Y-(H/2))^2,(min(W,H)/2)^2),p(X,Y),0)':cb='if(lt((X-(W/2))^2+(Y-(H/2))^2,(min(W,H)/2)^2),p(X,Y),128)':cr='if(lt((X-(W/2))^2+(Y-(H/2))^2,(min(W,H)/2)^2),p(X,Y),128)'`);
+        }
       }
-      vFilters.push("scale='min(1280,iw)':-2");
+      if (options.videoQuality === 'very_low') {
+        vFilters.push("scale='min(480,iw)':-2");
+      } else {
+        vFilters.push("scale='min(1280,iw)':-2");
+      }
       const vfString = vFilters.join(',');
 
       // Optimized parameters for browser WebAssembly memory safety
-      const preset = options.videoQuality === 'high' ? 'fast' : options.videoQuality === 'low' ? 'ultrafast' : 'veryfast';
-      const crf = options.videoQuality === 'high' ? '22' : options.videoQuality === 'low' ? '30' : '26';
+      const preset = options.videoQuality === 'high' ? 'fast' : (options.videoQuality === 'low' || options.videoQuality === 'very_low') ? 'ultrafast' : 'veryfast';
+      const crf = options.videoQuality === 'high' ? '22' : options.videoQuality === 'low' ? '30' : options.videoQuality === 'very_low' ? '38' : '26';
 
       switch (options.format) {
         case 'webm':
@@ -138,6 +146,9 @@ export async function encodeWithFFmpeg(
         case 'mov':
           // Scale to max 720p with ultrafast/veryfast for stability in browser
           args.push('-vf', vfString, '-c:v', 'libx264', '-preset', preset, '-crf', crf, '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '128k', '-threads', '1');
+          break;
+        case 'gif':
+          args.push('-vf', vfString + ',fps=10', '-threads', '1');
           break;
         case 'avi':
           args.push('-vf', vfString, '-c:v', 'mpeg4', '-q:v', '6', '-c:a', 'libmp3lame', '-threads', '1');
