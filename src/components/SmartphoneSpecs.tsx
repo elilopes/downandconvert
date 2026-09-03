@@ -201,7 +201,6 @@ const RES_RANK_MAP: Record<string, number> = { 'HD': 1, 'FHD': 2, '2K': 3, '4K':
 export const SmartphoneSpecs: React.FC = () => {
   const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
-  const [copiedLink, setCopiedLink] = useState(false);
   const [copiedPhoneId, setCopiedPhoneId] = useState<string | null>(null);
   const [isFiltersMinimized, setIsFiltersMinimized] = useState<boolean>(false);
   const [selectedPhoneForGames, setSelectedPhoneForGames] = useState<SmartphoneType | null>(null);
@@ -302,19 +301,6 @@ export const SmartphoneSpecs: React.FC = () => {
     setHasNfc(false);
     setSlowMotion(false);
     setSearchTerm('');
-  };
-
-  const handleCopyLink = () => {
-    try {
-      const url = new URL(window.location.origin + window.location.pathname);
-      url.searchParams.set('tab', 'smartphones');
-      navigator.clipboard.writeText(url.toString());
-      setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2500);
-    } catch (e) {
-      setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2500);
-    }
   };
 
   const handleSharePhone = async (phone: typeof mockedSmartphones[0]) => {
@@ -460,10 +446,44 @@ export const SmartphoneSpecs: React.FC = () => {
   );
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto py-8 px-4 flex flex-col lg:flex-row gap-6 animate-in fade-in duration-300">
+    <div className="w-full max-w-[1400px] mx-auto py-6 sm:py-8 px-4 flex flex-col gap-6 animate-in fade-in duration-300">
       
-      {/* Sidebar Filters */}
-      <aside className={`w-full ${isFiltersMinimized ? 'lg:w-20' : 'lg:w-80'} shrink-0 flex flex-col gap-6 transition-all duration-300`}>
+      {/* Header Section - Padrão limpo sem fundo e sem borda como nas outras abas */}
+      <div className="text-center max-w-3xl mx-auto mb-2 sm:mb-4">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-3">
+          {t('smartphones.title')}
+        </h1>
+        <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
+          {t('smartphones.subtitle')}
+        </p>
+      </div>
+
+      {/* Barra de Pesquisa - Abaixo do cabeçalho e acima da seção Filtros e Categorias */}
+      <div className="w-full max-w-3xl mx-auto relative mb-2">
+        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+          <Search className="w-5 h-5 text-slate-500" />
+        </div>
+        <input
+          type="text"
+          placeholder={t('smartphones.searchPlaceholder')}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full bg-slate-900/80 border border-slate-700/80 rounded-2xl pl-11 pr-11 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all text-sm shadow-sm"
+        />
+        {searchTerm && (
+          <button
+            onClick={() => setSearchTerm('')}
+            className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-white cursor-pointer"
+            title="Limpar pesquisa"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        {/* Sidebar Filters */}
+        <aside className={`w-full ${isFiltersMinimized ? 'lg:w-20' : 'lg:w-80'} shrink-0 flex flex-col gap-6 transition-all duration-300`}>
         <div className={`bg-slate-900/60 border border-slate-800 rounded-2xl ${isFiltersMinimized ? 'p-3 lg:p-3 lg:h-auto overflow-hidden' : 'p-5 lg:h-[84vh] overflow-y-auto custom-scrollbar'} shadow-lg transition-all`}>
           <div className={`flex ${isFiltersMinimized ? 'lg:flex-col lg:items-center' : 'items-center justify-between'} gap-2 mb-3 lg:mb-5 sticky top-0 bg-slate-900/95 py-2.5 z-10 backdrop-blur-md border-b border-slate-800`}>
             <div 
@@ -473,7 +493,7 @@ export const SmartphoneSpecs: React.FC = () => {
             >
               <Menu className="w-5 h-5 text-cyan-400 group-hover:text-cyan-300 transition-colors shrink-0" />
               {!isFiltersMinimized && (
-                <h2 className="font-bold text-white text-base sm:text-lg group-hover:text-cyan-200 transition-colors">{t('smartphones.filters')}</h2>
+                <h3 className="font-bold text-white text-base sm:text-lg group-hover:text-cyan-200 transition-colors">{t('smartphones.filters')}</h3>
               )}
               {activeFiltersCount > 0 && (
                 <span className="bg-cyan-500/20 text-cyan-300 text-xs px-2 py-0.5 rounded-full font-bold ml-1">
@@ -507,7 +527,7 @@ export const SmartphoneSpecs: React.FC = () => {
             <div className="space-y-6 animate-in fade-in duration-200">
             {/* General */}
             <div>
-              <h3 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">Geral</h3>
+              <h4 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">Geral</h4>
               <div className="flex flex-col gap-3">
                 <div className="flex flex-col gap-2">
                   <span className="text-xs font-medium text-slate-400">{t('smartphones.brand')}</span>
@@ -648,7 +668,7 @@ export const SmartphoneSpecs: React.FC = () => {
 
             {/* Screen */}
             <div>
-              <h3 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">Tela</h3>
+              <h4 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">Tela</h4>
               <div className="flex flex-col gap-3">
                 <div>
                   <div className="flex justify-between items-center text-xs text-slate-400 mb-1">
@@ -686,7 +706,7 @@ export const SmartphoneSpecs: React.FC = () => {
 
             {/* Performance */}
             <div>
-              <h3 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">Performance & Hardware</h3>
+              <h4 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">Performance & Hardware</h4>
               <div className="flex flex-col gap-4">
                 
                 {/* RAM Slider com números padrões */}
@@ -879,7 +899,7 @@ export const SmartphoneSpecs: React.FC = () => {
 
             {/* Camera */}
             <div>
-              <h3 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">Câmera & Vídeo</h3>
+              <h4 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">Câmera & Vídeo</h4>
               <div className="flex flex-col gap-4">
                 
                 {/* Câmera Selfie Slider com números padrões */}
@@ -957,7 +977,7 @@ export const SmartphoneSpecs: React.FC = () => {
             
             {/* Camera Features Section */}
             <div className="mb-6 bg-slate-900/50 p-3 rounded-xl border border-slate-700/50">
-              <h3 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">{t('smartphones.cameraFeatures')}</h3>
+              <h4 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">{t('smartphones.cameraFeatures')}</h4>
               <div className="flex flex-col gap-3">
                 <CheckboxFilter label={t('smartphones.opticalZoom')} checked={opticalZoom} onChange={setOpticalZoom} />
                 <CheckboxFilter label={t('smartphones.stabilization')} checked={stabilization} onChange={setStabilization} />
@@ -967,7 +987,7 @@ export const SmartphoneSpecs: React.FC = () => {
             </div>
 
             <div>
-              <h3 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">{t('smartphones.features')}</h3>
+              <h4 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">{t('smartphones.features')}</h4>
               <div className="flex flex-col gap-3">
                 <CheckboxFilter label={t('smartphones.supportsWhatsApp')} checked={supportsWhatsApp} onChange={setSupportsWhatsApp} />
                 <CheckboxFilter label="GPS" checked={hasGps} onChange={setHasGps} />
@@ -985,56 +1005,7 @@ export const SmartphoneSpecs: React.FC = () => {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col gap-6">
-        {/* Header Title */}
-        <div className="flex items-center gap-3 bg-slate-900/60 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg backdrop-blur-md">
-          <div className="p-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 shrink-0">
-            <Smartphone className="w-6 h-6" />
-          </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-              {t('smartphones.title')}
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
-              {t('smartphones.subtitle')}
-            </p>
-          </div>
-        </div>
-
-        {/* Search Bar & Share Link */}
-        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
-          <div className="relative flex-1">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="w-5 h-5 text-slate-500" />
-            </div>
-            <input
-              type="text"
-              placeholder={t('smartphones.searchPlaceholder')}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-900/80 border border-slate-700/80 rounded-2xl pl-11 pr-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all text-sm"
-            />
-          </div>
-
-          <button
-            onClick={handleCopyLink}
-            className="flex items-center justify-center gap-2 px-4 py-3 bg-slate-800/80 hover:bg-slate-700 text-cyan-300 hover:text-white border border-slate-700/80 rounded-2xl transition-all font-semibold text-xs whitespace-nowrap cursor-pointer shadow-sm"
-            title="Copiar link direto para esta aba"
-          >
-            {copiedLink ? (
-              <>
-                <CheckCheck className="w-4 h-4 text-emerald-400" />
-                <span className="text-emerald-400 font-bold">Link Copiado!</span>
-              </>
-            ) : (
-              <>
-                <Share2 className="w-4 h-4 text-cyan-400" />
-                <span>Copiar Link da Aba</span>
-              </>
-            )}
-          </button>
-        </div>
-
+      <div className="flex-1 w-full min-w-0 flex flex-col gap-6">
         {/* Status bar */}
         <div className="flex items-center justify-between text-xs text-slate-400 px-1">
           <span>Exibindo <strong>{filteredPhones.length}</strong> modelo{filteredPhones.length !== 1 ? 's' : ''}</span>
@@ -1057,7 +1028,7 @@ export const SmartphoneSpecs: React.FC = () => {
                 <div className="mb-5 pb-4 border-b border-slate-800/80 flex justify-between items-start">
                   <div>
                     <span className="text-[10px] font-extrabold uppercase tracking-widest text-cyan-500">{phone.brand}</span>
-                    <h2 className="text-xl sm:text-2xl font-black text-white leading-tight mt-0.5">{phone.model}</h2>
+                    <h3 className="text-xl sm:text-2xl font-black text-white leading-tight mt-0.5">{phone.model}</h3>
                   </div>
                   <div className="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2.5 py-1">
                     <span className="text-[10px] font-bold text-slate-300">{phone.releaseYear}</span>
@@ -1240,7 +1211,7 @@ export const SmartphoneSpecs: React.FC = () => {
           {filteredPhones.length === 0 && (
             <div className="col-span-1 xl:col-span-2 py-16 flex flex-col items-center justify-center text-center bg-slate-900/30 border border-slate-800 border-dashed rounded-2xl p-6">
               <Maximize2 className="w-12 h-12 text-slate-600 mb-3" />
-              <h2 className="text-lg font-bold text-slate-300">{t('smartphones.noResults')}</h2>
+              <h3 className="text-lg font-bold text-slate-300">{t('smartphones.noResults')}</h3>
               <p className="text-sm text-slate-500 mt-1 mb-4">{t('smartphones.tryDifferentFilters')}</p>
               <button
                 onClick={handleResetFilters}
@@ -1251,6 +1222,7 @@ export const SmartphoneSpecs: React.FC = () => {
             </div>
           )}
         </div>
+      </div>
       </div>
 
       {/* Game Compatibility Modal */}
