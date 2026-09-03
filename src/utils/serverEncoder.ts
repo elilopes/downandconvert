@@ -25,6 +25,9 @@ async function singleEncodeAttempt(
       formData.append('cropY', String(options.crop.y));
       formData.append('cropW', String(options.crop.width));
       formData.append('cropH', String(options.crop.height));
+      if (options.crop.shape) {
+        formData.append('cropShape', options.crop.shape);
+      }
     }
     if (options.metadata) {
       if (options.metadata.title) formData.append('title', options.metadata.title);
