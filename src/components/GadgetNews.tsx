@@ -31,13 +31,13 @@ import { RssImporterModal } from './RssImporterModal';
 
 const STORAGE_KEY_CUSTOM_NEWS = 'user_custom_gadget_news_v1';
 
-// Helper para verificar e excluir notícias sobre 'trailer' ou 'filme'
+// Helper para verificar e excluir notícias sobre 'trailer', 'filme' ou 'games/jogos'
 export const isTrailerOrMovieNews = (title?: LocalizedString | string): boolean => {
   if (!title) return false;
   const textToCheck = typeof title === 'string'
     ? title
     : [title.PT, title.EN, title.RU, title.HI, title.KO].filter(Boolean).join(' ');
-  return /trailer|filme/i.test(textToCheck);
+  return /trailer|filme|game|games|jogo|jogos|videogame|playstation|xbox|nintendo|pokemon|pokémon|gta|elden ring|voxel|mouses gamer/i.test(textToCheck);
 };
 
 // Helper para verificar notícias com link ou título inconsistente
@@ -600,15 +600,15 @@ export const GadgetNews: React.FC = () => {
               </div>
 
               {/* Título Principal */}
-              <h2 className="text-lg sm:text-xl font-bold text-white mb-2 leading-snug group-hover:text-cyan-300 transition-colors">
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-2 leading-snug group-hover:text-cyan-300 transition-colors">
                 {mainTitle}
-              </h2>
+              </h3>
 
               {/* Título Secundário / Subtítulo */}
               {subTitle && (
-                <h3 className="text-sm font-semibold text-cyan-400/90 mb-3 leading-relaxed">
+                <h4 className="text-sm font-semibold text-cyan-400/90 mb-3 leading-relaxed">
                   {subTitle}
-                </h3>
+                </h4>
               )}
 
               {/* Lead */}
