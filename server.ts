@@ -1898,4 +1898,27 @@ async function startServer() {
   });
 }
 
-startServer();
+const logError = (error: Error | any) => {
+  try {
+    const errorMsg = `[${new Date().toISOString()}] ${error?.stack || error}\n`;
+    fs.appendFileSync(path.join(process.cwd(), 'error.log'), errorMsg);
+  } catch (e) {
+    console.error('Failed to write to error.log', e);
+  }
+};
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  logError(err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  logError(reason);
+});
+
+startServer().catch(err => {
+  console.error('Failed to start server:', err);
+  logError(err);
+  process.exit(1);
+});
