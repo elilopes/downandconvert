@@ -39,8 +39,12 @@ export const Header: React.FC<HeaderProps> = ({ darkMode, setDarkMode, onOpenFAQ
       <header className="w-full border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-xl sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           {/* Brand Logo */}
-          <div className="flex items-center gap-3.5">
-            <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-500 p-0.5 shadow-lg shadow-emerald-500/20 ring-1 ring-white/20">
+          <a
+            href="https://downandconvert.onrender.com"
+            className="flex items-center gap-3.5 group hover:opacity-95 transition-opacity cursor-pointer"
+            title="Down&Convert"
+          >
+            <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-500 p-0.5 shadow-lg shadow-emerald-500/20 ring-1 ring-white/20 group-hover:scale-105 transition-transform">
               <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
                 <Music className="w-6 h-6 text-emerald-400 animate-pulse" />
               </div>
@@ -58,7 +62,7 @@ export const Header: React.FC<HeaderProps> = ({ darkMode, setDarkMode, onOpenFAQ
                 {t('header.subtitle')}
               </p>
             </div>
-          </div>
+          </a>
 
           {/* Badges and Actions */}
           <div className="flex items-center gap-2.5">
