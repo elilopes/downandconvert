@@ -49,47 +49,6 @@ export const BatchControls: React.FC<BatchControlsProps> = ({
               </span>
             )}
           </div>
-
-          <div className="h-4 w-px bg-slate-700 hidden sm:block" />
-
-          {/* Format Selector */}
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-medium text-slate-400">Formato:</label>
-            <div className="inline-flex rounded-xl bg-slate-950 p-1 border border-slate-800">
-              {(['mp3', 'wav', 'ogg', 'mp4', 'mkv', 'avi'] as OutputFormat[]).map((fmt) => (
-                <button
-                  key={fmt}
-                  type="button"
-                  onClick={() => setGlobalFormat(fmt)}
-                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-all uppercase ${
-                    globalFormat === fmt
-                      ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  {fmt}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Bitrate Selector (Only relevant for MP3) */}
-          {globalFormat === 'mp3' && (
-            <div className="flex items-center gap-2">
-              <label className="text-xs font-medium text-slate-400">Qualidade:</label>
-              <select
-                value={globalBitrate}
-                onChange={(e) => setGlobalBitrate(Number(e.target.value) as 64 | 128 | 192 | 256 | 320)}
-                className="bg-slate-950 border border-slate-800 text-emerald-400 text-xs font-semibold rounded-xl px-3 py-1.5 focus:outline-none focus:border-emerald-500 cursor-pointer"
-              >
-                <option value={320}>320 kbps (Qualidade Máxima Studio)</option>
-                <option value={256}>256 kbps (Muito Alta)</option>
-                <option value={192}>192 kbps (Padrão Podcast / Música)</option>
-                <option value={128}>128 kbps (Compacto)</option>
-                <option value={64}>64 kbps (Voz Leve)</option>
-              </select>
-            </div>
-          )}
         </div>
 
         {/* Right Side: Action Buttons */}
