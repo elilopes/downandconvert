@@ -14,18 +14,18 @@ interface Translations {
 
 const dict: Translations = {
   "seo.title.converter": {
-    PT: "Conversor de Vídeo para Áudio | Down&Convert",
-    EN: "Video to Audio Converter | Down&Convert",
-    RU: "Конвертер видео в аудио | Down&Convert",
-    HI: "वीडियो से ऑडियो कनवर्टर | Down&Convert",
-    KO: "비디오를 오디오로 변환기 | Down&Convert"
+    PT: "Conversor de mídias (vídeos e áudios) | Down&Convert",
+    EN: "Media Converter (Videos & Audio) | Down&Convert",
+    RU: "Конвертер медиа (видео и аудио) | Down&Convert",
+    HI: "मीडिया कनवर्टर (वीडियो और ऑडियो) | Down&Convert",
+    KO: "미디어 변환기 (비디오 및 오디오) | Down&Convert"
   },
   "seo.desc.converter": {
-    PT: "Converta seus vídeos para áudio de forma fácil, gratuita e ilimitada.",
-    EN: "Convert your videos to audio easily, for free and unlimited.",
-    RU: "Конвертируйте ваши видео в аудио легко, бесплатно и без ограничений.",
-    HI: "अपने वीडियो को आसानी से, मुफ्त और असीमित ऑडियो में बदलें।",
-    KO: "비디오를 오디오로 쉽고 무료로 무제한 변환하세요."
+    PT: "Converta vídeos ou áudios em vários formatos, e outros ajustes, gratuito e ilimitado.",
+    EN: "Convert videos or audio to various formats, with custom adjustments, free and unlimited.",
+    RU: "Конвертируйте видео или аудио в различные форматы с дополнительными настройками, бесплатно и без ограничений.",
+    HI: "विभिन्न प्रारूपों में वीडियो या ऑडियो कनवर्ट करें, अन्य समायोजन के साथ, मुफ्त और असीमित।",
+    KO: "다양한 형식으로 비디오나 오디오를 변환하고 추가 설정을 조절하세요, 무료 및 무제한."
   },
   "seo.title.downloader": {
     PT: "Baixar Vídeos Grátis | Down&Convert",
@@ -35,11 +35,11 @@ const dict: Translations = {
     KO: "무료로 비디오 다운로드 | Down&Convert"
   },
   "seo.desc.downloader": {
-    PT: "Baixe vídeos das suas redes sociais favoritas com qualidade.",
-    EN: "Download videos from your favorite social networks in high quality.",
-    RU: "Скачивайте видео из ваших любимых социальных сетей в высоком качестве.",
-    HI: "अपने पसंदीदा सोशल नेटवर्क से उच्च गुणवत्ता में वीडियो डाउनलोड करें।",
-    KO: "좋아하는 소셜 네트워크에서 고품질로 비디오를 다운로드하세요."
+    PT: "Salve vídeos e áudios das suas redes sociais facilmente.",
+    EN: "Easily save videos and audio from your social networks.",
+    RU: "Легко сохраняйте видео и аудио из ваших социальных сетей.",
+    HI: "अपने सोशल नेटवर्क से वीडियो और ऑडियो आसानी से सहेजें।",
+    KO: "소셜 네트워크의 비디오와 오디오를 간편하게 저장하세요."
   },
   "seo.title.ussd": {
     PT: "Códigos USSD | Down&Convert",
@@ -98,11 +98,11 @@ const dict: Translations = {
     KO: "웹에서 미디어 다운로드 및 변환"
   },
   "hero.desc": {
-    PT: "Baixe mídias das redes sociais, ou converta para vários formatos. Também tem códigos secretos USSD, gadgets e, especificações. by TechViva!",
-    EN: "Download social media media or convert to various formats. Also features USSD secret codes, gadgets, and specifications. by TechViva!",
-    RU: "Скачивайте медиа из соцсетей или конвертируйте в различные форматы. Также включает секретные коды USSD, гаджеты и спецификации. by TechViva!",
-    HI: "सोशल मीडिया मीडिया डाउनलोड करें या विभिन्न प्रारूपों में कनवर्ट करें। इसमें USSD गुप्त कोड, गैजेट्स और विशिष्टताएँ भी शामिल हैं। by TechViva!",
-    KO: "소셜 미디어 미디어를 다운로드하거나 다양한 형식으로 변환하세요. USSD 비밀 코드, 가젯 및 사양도 제공됩니다. by TechViva!"
+    PT: "Baixe mídias das redes sociais; converta vários formatos; códigos secretos do celular; notícias de gadgets e invenções; análise de celulares; crop de vídeo. by TechViva!",
+    EN: "Download social media; convert various formats; phone secret codes; gadget & invention news; phone reviews; video crop. by TechViva!",
+    RU: "Скачивайте медиа из соцсетей; конвертируйте в различные форматы; секретные коды телефонов; новости о гаджетах и изобретениях; анализ смартфонов; обрезка видео. by TechViva!",
+    HI: "सोशल मीडिया डाउनलोड करें; विभिन्न प्रारूपों में कनवर्ट करें; फोन के गुप्त कोड; गैजेट और आविष्कार समाचार; स्मार्टफोन समीक्षा; वीडियो क्रॉप। by TechViva!",
+    KO: "소셜 미디어 다운로드; 다양한 형식 변환; 휴대폰 비밀 코드; 가젯 및 발명 소식; 스마트폰 분석; 비디오 크롭. by TechViva!"
   },
   "header.free": {
     PT: "Conversor Grátis & Ilimitado",
@@ -343,11 +343,11 @@ const dict: Translations = {
     KO: "전화 및 안드로이드 유틸리티"
   },
   "ussd.title": {
-    PT: "Códigos USSD & MMI",
-    EN: "USSD & MMI Codes",
-    RU: "USSD и MMI коды",
-    HI: "USSD और MMI कोड",
-    KO: "USSD 및 MMI 코드"
+    PT: "Pesquise códigos USSD e MMI",
+    EN: "Search USSD and MMI Codes",
+    RU: "Поиск USSD и MMI кодов",
+    HI: "USSD और MMI कोड खोजें",
+    KO: "USSD 및 MMI 코드 검색"
   },
   "ussd.desc": {
     PT: "Pesquise atalhos rápidos de operadoras (Vivo, Claro, TIM, Oi) para consultar saldo, internet, além de códigos secretos de teste e diagnóstico do seu celular.",
@@ -923,6 +923,13 @@ const dict: Translations = {
     HI: "मध्यम (मानक)",
     KO: "중간 (표준)"
   },
+  "quality.video.very_low": {
+    PT: "Baixíssima",
+    EN: "Very Low",
+    RU: "Очень низкое",
+    HI: "बहुत कम",
+    KO: "매우 낮음"
+  },
   "quality.video.low": {
     PT: "Baixa (Rápido)",
     EN: "Low (Fast)",
@@ -1022,11 +1029,11 @@ const dict: Translations = {
     KO: "브라우저에서 비디오 변환 및 오디오 추출"
   },
   "hero.converter.desc": {
-    PT: "Processamento 100% privado e ultrarrápido direto no seu dispositivo. Corte áudio, ajuste bitrate, converta em lote e baixe em MP3, WAV, AAC, FLAC e outros formatos sem enviar nada para servidores externos.",
-    EN: "100% private and ultra-fast processing directly on your device. Trim audio, adjust bitrate, batch convert, and download in MP3, WAV, AAC, FLAC, and other formats without uploading anything to external servers.",
-    RU: "100% приватная и сверхбыстрая обработка прямо на вашем устройстве. Обрезайте аудио, настраивайте битрейт, пакетно конвертируйте и скачивайте в MP3, WAV, AAC, FLAC и других форматах без отправки на внешние серверы.",
-    HI: "आपके डिवाइस पर सीधे 100% निजी और अल्ट्रा-फास्ट प्रोसेसिंग। ऑडियो ट्रिम करें, बिटरेट समायोजित करें, बैच कनवर्ट करें, और बाहरी सर्वर पर कुछ भी अपलोड किए बिना MP3, WAV, AAC, FLAC और अन्य प्रारूपों में डाउनलोड करें।",
-    KO: "기기에서 직접 처리되는 100% 비공개 초고속 미디어 변환. 외부 서버로 파일을 업로드하지 않고 오디오 자르기, 비트레이트 조절, 일괄 변환 및 MP3, WAV, AAC, FLAC 형식으로 다운로드하세요."
+    PT: "Conversão de mídias em vários formatos, processamento privado no seu dispositivo. Crop personalizado de vídeo, com ajuste de resolução. Corte áudio, com ajuste de bitrate.",
+    EN: "Media conversion across multiple formats, private on-device processing. Custom video crop with resolution adjustment. Audio trim with bitrate adjustment.",
+    RU: "Конвертация медиа в различные форматы, приватная обработка на вашем устройстве. Пользовательский кроп видео с настройкой разрешения. Обрезка аудио с регулировкой битрейта.",
+    HI: "विभिन्न प्रारूपों में मीडिया रूपांतरण, आपके डिवाइस पर निजी प्रसंस्करण। रिज़ॉल्यूशन समायोजन के साथ कस्टम वीडियो क्रॉप। बिटरेट समायोजन के साथ ऑडियो ट्रिम।",
+    KO: "다양한 형식의 미디어 변환, 기기 내 안전한 비공개 처리. 해상도 조절이 가능한 맞춤형 비디오 크롭. 비트레이트 조절 지원 오디오 자르기."
   },
   "downloader.preparingVideo": {
     PT: "Preparando para baixar o vídeo...",
@@ -1183,11 +1190,11 @@ const dict: Translations = {
     KO: "스마트폰 사양"
   },
   "smartphones.title": {
-    PT: "Sistema de busca de especificações de smartphones",
-    EN: "Smartphone Specifications Search System",
-    RU: "Система поиска характеристик смартфонов",
-    HI: "स्मार्टफोन विनिर्देश खोज प्रणाली",
-    KO: "스마트폰 사양 검색 시스템"
+    PT: "Pesquise especificações de smartphones",
+    EN: "Search smartphone specifications",
+    RU: "Поиск характеристик смартфонов",
+    HI: "स्मार्टफोन विनिर्देश खोजें",
+    KO: "스마트폰 사양 검색"
   },
   "smartphones.subtitle": {
     PT: "Consulte, compare e filtre fichas técnicas completas de celulares e smartphones",
@@ -1335,11 +1342,11 @@ const dict: Translations = {
     KO: "원문 기사 읽기"
   },
   "news.latest": {
-    PT: "Gadgets, Invenções & Descobertas Científicas",
-    EN: "Gadgets, Inventions & Scientific Discoveries",
-    RU: "Гаджеты, Изобретения и Научные Открытия",
-    HI: "गैजेट्स, आविष्कार और वैज्ञानिक खोजें",
-    KO: "가젯, 발명 및 과학적 발견"
+    PT: "Novidades sobre gadgets e invenções",
+    EN: "News on gadgets and inventions",
+    RU: "Новости о гаджетах и изобретениях",
+    HI: "गैजेट्स और आविष्कारों पर समाचार",
+    KO: "가젯 및 발명에 대한 소식"
   },
   "news.description": {
     PT: "Acompanhe as últimas novidades sobre lançamentos de gadgets, invenções tecnológicas e descobertas científicas de ponta.",
@@ -1363,18 +1370,18 @@ const dict: Translations = {
     KO: "가젯"
   },
   "news.filterInventions": {
-    PT: "Invenções Científicas",
-    EN: "Scientific Inventions",
-    RU: "Научные Изобретения",
-    HI: "वैज्ञानिक आविष्कार",
-    KO: "과학 발명"
+    PT: "Invenções",
+    EN: "Inventions",
+    RU: "Изобретения",
+    HI: "आविष्कार",
+    KO: "발명"
   },
   "news.filterDiscoveries": {
-    PT: "Descobertas Científicas",
-    EN: "Scientific Discoveries",
-    RU: "Научные Открытия",
-    HI: "वैज्ञानिक खोजें",
-    KO: "과학적 발견"
+    PT: "Descobertas",
+    EN: "Discoveries",
+    RU: "Открытия",
+    HI: "खोजें",
+    KO: "발견"
   },
   "news.source": {
     PT: "Fonte",
