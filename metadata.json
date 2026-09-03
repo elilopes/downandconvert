@@ -1,6 +1,6 @@
 {
   "name": "Down&Convert - Baixador e conversor de mídias, USSD e, gadgets",
-  "description": "Baixe mídias das redes sociais, ou converta para vários formatos. Também tem códigos secretos USSD, gadgets e, especificações. by TechViva!",
+  "description": "Baixe mídias das redes sociais; converta vários formatos; códigos secretos do celular; notícias de gadgets e invenções; análise de celulares; crop de vídeo. by TechViva!",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
