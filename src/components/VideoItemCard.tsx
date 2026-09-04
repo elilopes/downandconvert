@@ -18,6 +18,11 @@ import {
   CloudUpload,
   ExternalLink,
   Crop,
+
+  MessageSquare,
+  Zap,
+  BrainCircuit,
+  DownloadCloud
 } from 'lucide-react';
 import { VideoItem } from '../types';
 import { formatBytes, formatTime } from '../utils/audioEncoder';
@@ -47,6 +52,56 @@ export const VideoItemCard: React.FC<VideoItemCardProps> = ({
   isProcessing,
 }) => {
   const { t } = useLanguage();
+  
+  const [showTranscription, setShowTranscription] = useState(false);
+  const [transcriptionMode, setTranscriptionMode] = useState<'fast' | 'slow'>('fast');
+  const [transcriptionKey, setTranscriptionKey] = useState('');
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [transcriptionText, setTranscriptionText] = useState<string | null>(null);
+  const [transcriptionError, setTranscriptionError] = useState<string | null>(null);
+
+  const handleTranscribe = async () => {
+    setIsTranscribing(true);
+    setTranscriptionError(null);
+    setTranscriptionText(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', item.file);
+      formData.append('mode', transcriptionMode);
+      if (transcriptionMode === 'slow' && transcriptionKey) {
+        formData.append('apiKey', transcriptionKey);
+      }
+
+      const response = await fetch('/api/transcribe', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro na transcrição');
+      }
+
+      setTranscriptionText(data.text);
+    } catch (err: any) {
+      setTranscriptionError(err.message);
+    } finally {
+      setIsTranscribing(false);
+    }
+  };
+
+  const handleDownloadTranscription = () => {
+    if (!transcriptionText) return;
+    const element = document.createElement("a");
+    const file = new Blob([transcriptionText], {type: 'text/plain'});
+    element.href = URL.createObjectURL(file);
+    element.download = `Transcricao-${item.name}.txt`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  };
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [audioDuration, setAudioDuration] = useState(item.duration || 0);
@@ -116,7 +171,9 @@ export const VideoItemCard: React.FC<VideoItemCardProps> = ({
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('ended', handleEnded);
 
-    return () => {
+    
+  
+return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('ended', handleEnded);
@@ -430,7 +487,91 @@ export const VideoItemCard: React.FC<VideoItemCardProps> = ({
           </div>
         </div>
 
-        {/* Realtime Progress Bar for Conversion */}
+        
+          {/* Aba de Transcrição */}
+          <div className="mt-4 pt-3 border-t border-slate-800/80">
+            <button
+              type="button"
+              onClick={() => setShowTranscription(!showTranscription)}
+              className="flex items-center gap-2 text-sm font-medium text-slate-300 hover:text-cyan-400 transition-colors w-full p-2 bg-slate-900/50 rounded-xl border border-slate-800"
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>Transcrever Áudio/Vídeo</span>
+            </button>
+            
+            {showTranscription && (
+              <div className="mt-3 p-4 bg-slate-950/50 border border-slate-800 rounded-xl space-y-4 animate-fadeIn">
+                <p className="text-xs text-slate-400">Excelente para áudios do WhatsApp (ogg, mp3, mp4).</p>
+                
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <label className={`flex-1 relative cursor-pointer flex items-start gap-3 p-3 rounded-xl border transition-all ${transcriptionMode === 'fast' ? 'bg-cyan-950/30 border-cyan-500/50' : 'bg-slate-900 border-slate-800 hover:border-slate-700'}`}>
+                    <input type="radio" name="tMode" checked={transcriptionMode === 'fast'} onChange={() => setTranscriptionMode('fast')} className="mt-1" />
+                    <div>
+                      <p className="text-sm font-bold text-slate-200 flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-cyan-400" /> Rápida (Grátis)</p>
+                      <p className="text-xs text-slate-400 mt-0.5">Usa o modelo rápido, sem precisar da sua chave Gemini.</p>
+                    </div>
+                  </label>
+                  
+                  <label className={`flex-1 relative cursor-pointer flex items-start gap-3 p-3 rounded-xl border transition-all ${transcriptionMode === 'slow' ? 'bg-emerald-950/30 border-emerald-500/50' : 'bg-slate-900 border-slate-800 hover:border-slate-700'}`}>
+                    <input type="radio" name="tMode" checked={transcriptionMode === 'slow'} onChange={() => setTranscriptionMode('slow')} className="mt-1" />
+                    <div>
+                      <p className="text-sm font-bold text-slate-200 flex items-center gap-1.5"><BrainCircuit className="w-3.5 h-3.5 text-emerald-400" /> Alta Qualidade (API Key)</p>
+                      <p className="text-xs text-slate-400 mt-0.5">Usa o modelo avançado. Requer sua chave do Gemini.</p>
+                    </div>
+                  </label>
+                </div>
+
+                {transcriptionMode === 'slow' && (
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">Sua Chave do Gemini (API Key)</label>
+                    <input 
+                      type="password" 
+                      value={transcriptionKey} 
+                      onChange={(e) => setTranscriptionKey(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-emerald-500 outline-none"
+                      placeholder="AIzaSy..."
+                    />
+                  </div>
+                )}
+
+                {transcriptionError && (
+                  <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-lg text-rose-300 text-xs">
+                    {transcriptionError}
+                  </div>
+                )}
+
+                {transcriptionText && (
+                  <div className="p-3 bg-slate-900 border border-slate-700 rounded-lg text-slate-300 text-sm max-h-60 overflow-y-auto tabs-scrollbar whitespace-pre-wrap">
+                    {transcriptionText}
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleTranscribe}
+                    disabled={isTranscribing || (transcriptionMode === 'slow' && !transcriptionKey.trim())}
+                    className="flex-1 px-4 py-2 text-xs font-bold rounded-xl text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  >
+                    {isTranscribing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />}
+                    <span>{isTranscribing ? 'Transcrevendo...' : 'Iniciar Transcrição'}</span>
+                  </button>
+                  
+                  {transcriptionText && (
+                    <button
+                      type="button"
+                      onClick={handleDownloadTranscription}
+                      className="px-4 py-2 text-xs font-bold rounded-xl text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-all flex items-center gap-1.5"
+                    >
+                      <DownloadCloud className="w-4 h-4" />
+                      <span>Baixar .txt</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+{/* Realtime Progress Bar for Conversion */}
         {isConvertingThis && (
           <div className="mt-4 pt-3 border-t border-slate-800/80">
             <div className="flex items-center justify-between text-xs mb-1.5">
