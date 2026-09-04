@@ -168,11 +168,11 @@ const dict: Translations = {
     KO: "검색 및 다운로드"
   },
   "dropzone.drag": {
-    PT: "Arraste e solte seus vídeos aqui",
-    EN: "Drag and drop your videos here",
-    RU: "Перетащите ваши видео сюда",
-    HI: "अपने वीडियो यहां खींचें और छोड़ें",
-    KO: "여기에 비디오 파일을 드래그 앤 드롭하세요"
+    PT: "Arraste e solte suas mídias aqui para converter (áudio ou vídeo)",
+    EN: "Drag and drop your media here to convert (audio or video)",
+    RU: "Перетащите ваши медиафайлы сюда для конвертации (аудио или видео)",
+    HI: "कन्वर्ट करने के लिए अपनी मीडिया यहां खींचें और छोड़ें (ऑडियो या वीडियो)",
+    KO: "변환할 미디어 파일을 여기에 드래그 앤 드롭하세요 (오디오 또는 비디오)"
   },
   "dropzone.click": {
     PT: "ou clique para selecionar (MP4, MKV, AVI...)",
@@ -1529,6 +1529,20 @@ const dict: Translations = {
     RU: "Добавить новость",
     HI: "समाचार जोड़ें",
     KO: "뉴스 추가"
+  },
+  "news.searchPlaceholder": {
+    PT: "Buscar gadget ou news",
+    EN: "Search gadget or news",
+    RU: "Поиск гаджета или новости",
+    HI: "गैजेट या समाचार खोजें",
+    KO: "가젯 또는 뉴스 검색"
+  },
+  "news.flipboardAutoSync": {
+    PT: "Flipboard (Últimas 48h)",
+    EN: "Flipboard (Last 48h)",
+    RU: "Flipboard (Последние 48ч)",
+    HI: "फ़्लिपबोर्ड (पिछले 48 घंटे)",
+    KO: "플립보드 (최근 48시간)"
   },
   "news.openRssImporter": {
     PT: "Importar RSS",
