@@ -1,3 +1,4 @@
+import { GoogleGenAI } from '@google/genai';
 import express from 'express';
 import cors from 'cors';
 import { createServer as createViteServer } from 'vite';
@@ -1152,7 +1153,68 @@ async function startServer() {
     limits: { fileSize: 1024 * 1024 * 1024 } // 1GB limit
   });
 
-  app.post('/api/convert-server', upload.single('file'), async (req, res) => {
+  
+
+  // =========================================================================
+  // TRANSCRIÇÃO DE ÁUDIO/VÍDEO (GEMINI)
+  // =========================================================================
+  app.post('/api/transcribe', upload.single('file'), async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
+    }
+
+    const { mode, apiKey } = req.body;
+    const inputPath = req.file.path;
+    const mimeType = req.file.mimetype;
+
+    try {
+      // Lê o arquivo do disco para enviar ao Gemini
+      const fileBuffer = fs.readFileSync(inputPath);
+      const base64Audio = fileBuffer.toString('base64');
+      
+      let ai;
+      if (mode === 'slow' && apiKey) {
+        // Usa a chave do usuário se fornecida no modo lento
+        ai = new GoogleGenAI({ 
+            apiKey: apiKey,
+            httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
+        });
+      } else {
+        // Usa a chave do servidor no modo rápido ou se a chave não foi fornecida
+        if (!process.env.GEMINI_API_KEY) {
+            return res.status(500).json({ error: 'Chave do servidor não configurada.' });
+        }
+        ai = new GoogleGenAI({ 
+            apiKey: process.env.GEMINI_API_KEY,
+            httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
+        });
+      }
+
+      const modelToUse = mode === 'slow' ? 'gemini-3.5-transcribe' : 'gemini-3.8-flash';
+      
+      const audioPart = {
+        inlineData: {
+          mimeType: mimeType || 'audio/ogg',
+          data: base64Audio,
+        },
+      };
+
+      const response = await ai.models.generateContent({
+        model: modelToUse,
+        contents: { parts: [audioPart, { text: "Transcreva o conteúdo deste áudio. Mantenha o idioma original. Não faça resumo, apenas a transcrição literal." }] },
+      });
+
+      fs.unlink(inputPath, () => {}); // Limpa o arquivo temp
+
+      res.json({ success: true, text: response.text });
+    } catch (err: any) {
+      console.error('Erro na transcrição:', err);
+      if (fs.existsSync(inputPath)) fs.unlink(inputPath, () => {});
+      res.status(500).json({ error: err.message || 'Erro ao processar a transcrição.' });
+    }
+  });
+
+app.post('/api/convert-server', upload.single('file'), async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: 'Nenhum arquivo de mídia enviado para conversão.' });
     }
