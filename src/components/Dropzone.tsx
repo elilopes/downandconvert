@@ -51,7 +51,8 @@ export const Dropzone: React.FC<DropzoneProps> = ({
       return (
         file.type.startsWith('video/') ||
         file.type.startsWith('audio/') ||
-        /\.(mp4|mkv|webm|mov|avi|flv|3gp|m4v|ts|wmv|mpg|mpeg|mp3|wav|ogg|aac|m4a)$/i.test(file.name)
+        file.type === 'image/gif' ||
+        /\.(mp4|mkv|webm|mov|avi|flv|3gp|m4v|ts|wmv|mpg|mpeg|mp3|wav|ogg|aac|m4a|gif)$/i.test(file.name)
       );
     });
 
@@ -74,7 +75,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
         ref={fileInputRef}
         type="file"
         multiple
-        accept="video/*,audio/*,.mp4,.mkv,.webm,.mov,.avi,.flv,.3gp,.m4v,.ts,.wmv,.mpg,.mpeg"
+        accept="video/*,audio/*,image/gif,.mp4,.mkv,.webm,.mov,.avi,.flv,.3gp,.m4v,.ts,.wmv,.mpg,.mpeg,.gif"
         onChange={handleFileInputChange}
         className="hidden"
       />
@@ -116,7 +117,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
 
         {/* Format Badges */}
         <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
-          {['MP4', 'MKV', 'WebM', 'MOV', 'AVI', 'FLV', '3GP', 'TS', 'M4V'].map((fmt) => (
+          {['MP4', 'MKV', 'WebM', 'MOV', 'AVI', 'FLV', '3GP', 'TS', 'M4V', 'GIF'].map((fmt) => (
             <span
               key={fmt}
               className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-800/90 text-slate-300 border border-slate-700/60 shadow-sm"
@@ -124,9 +125,14 @@ export const Dropzone: React.FC<DropzoneProps> = ({
               .{fmt.toLowerCase()}
             </span>
           ))}
-          <span className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-            ➔ .MP3, .WAV, .AAC, .FLAC, .OGG
-          </span>
+          {['MP3', 'WAV', 'AAC', 'FLAC', 'OGG'].map((fmt) => (
+            <span
+              key={fmt}
+              className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm"
+            >
+              .{fmt.toLowerCase()}
+            </span>
+          ))}
         </div>
 
         {/* Safe Badge Note & Size Limit */}
