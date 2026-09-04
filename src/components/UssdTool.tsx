@@ -7,7 +7,7 @@ interface UssdCode {
   code: string;
   titleKey: string;
   descKey: string;
-  carrier: 'vivo' | 'claro' | 'tim' | 'oi' | 'geral' | 'android' | 'samsung' | 'xiaomi' | 'motorola';
+  carrier: 'vivo' | 'claro' | 'tim' | 'oi' | 'geral' | 'android' | 'samsung' | 'xiaomi' | 'motorola' | 'iphone';
   category: 'saldo' | 'recarga' | 'numero' | 'internet' | 'teste' | 'sistema' | 'limpeza';
 }
 
@@ -43,6 +43,28 @@ const USSD_DATABASE: UssdCode[] = [
   { code: '*#*#232338#*#*', titleKey: 'ussd.code.android.232338.title', descKey: 'ussd.code.android.232338.desc', carrier: 'android', category: 'sistema' },
   { code: '*#*#0289#*#*', titleKey: 'ussd.code.android.0289.title', descKey: 'ussd.code.android.0289.desc', carrier: 'android', category: 'teste' },
   { code: '*#*#0842#*#*', titleKey: 'ussd.code.android.0842.title', descKey: 'ussd.code.android.0842.desc', carrier: 'android', category: 'teste' },
+
+  // Limpeza SysDump, Firmware, Desbloqueio PUK, Diagnóstico
+  { code: '*#9900#', titleKey: 'ussd.code.samsung.9900.title', descKey: 'ussd.code.samsung.9900.desc', carrier: 'samsung', category: 'limpeza' },
+  { code: '*#2663#', titleKey: 'ussd.code.samsung.2663.title', descKey: 'ussd.code.samsung.2663.desc', carrier: 'samsung', category: 'sistema' },
+  { code: '*#05#', titleKey: 'ussd.code.geral.puk05.title', descKey: 'ussd.code.geral.puk05.desc', carrier: 'geral', category: 'sistema' },
+  { code: '*#9090#', titleKey: 'ussd.code.samsung.9090.title', descKey: 'ussd.code.samsung.9090.desc', carrier: 'samsung', category: 'teste' },
+  { code: '*#0228#', titleKey: 'ussd.code.samsung.0228.title', descKey: 'ussd.code.samsung.0228.desc', carrier: 'samsung', category: 'teste' },
+  
+  // iPhone (iOS)
+  { code: '*3001#12345#*', titleKey: 'ussd.code.iphone.3001.title', descKey: 'ussd.code.iphone.3001.desc', carrier: 'iphone', category: 'teste' },
+  { code: '*#5005*7672#', titleKey: 'ussd.code.iphone.smsc.title', descKey: 'ussd.code.iphone.smsc.desc', carrier: 'iphone', category: 'sistema' },
+  { code: '*5005*25371#', titleKey: 'ussd.code.iphone.alerttest.title', descKey: 'ussd.code.iphone.alerttest.desc', carrier: 'iphone', category: 'teste' },
+  { code: '*5005*25370#', titleKey: 'ussd.code.iphone.alertdisable.title', descKey: 'ussd.code.iphone.alertdisable.desc', carrier: 'iphone', category: 'teste' },
+  { code: '*3282#', titleKey: 'ussd.code.iphone.data.title', descKey: 'ussd.code.iphone.data.desc', carrier: 'iphone', category: 'internet' },
+
+  // Encaminhamento e Privacidade
+  { code: '*#21#', titleKey: 'ussd.code.geral.21.title', descKey: 'ussd.code.geral.21.desc', carrier: 'geral', category: 'numero' },
+  { code: '*#43#', titleKey: 'ussd.code.geral.43.title', descKey: 'ussd.code.geral.43.desc', carrier: 'geral', category: 'numero' },
+  { code: '*#33#', titleKey: 'ussd.code.geral.33.title', descKey: 'ussd.code.geral.33.desc', carrier: 'geral', category: 'numero' },
+  { code: '*#61#', titleKey: 'ussd.code.geral.61.title', descKey: 'ussd.code.geral.61.desc', carrier: 'geral', category: 'numero' },
+  { code: '*#67#', titleKey: 'ussd.code.geral.67.title', descKey: 'ussd.code.geral.67.desc', carrier: 'geral', category: 'numero' },
+  { code: '#31#', titleKey: 'ussd.code.geral.31.title', descKey: 'ussd.code.geral.31.desc', carrier: 'geral', category: 'numero' },
 ];
 
 export const UssdTool: React.FC = () => {
@@ -107,6 +129,7 @@ export const UssdTool: React.FC = () => {
               { id: 'oi', label: 'Oi' },
               { id: 'geral', label: t('ussd.universal') },
               { id: 'samsung', label: 'Samsung/Android' },
+              { id: 'iphone', label: 'iPhone (iOS)' },
             ].map(c => (
               <button
                 key={c.id}
@@ -136,6 +159,7 @@ export const UssdTool: React.FC = () => {
             { id: 'numero', label: t('ussd.cat.numero') },
             { id: 'teste', label: t('ussd.cat.teste') },
             { id: 'sistema', label: t('ussd.cat.sistema') },
+            { id: 'limpeza', label: t('ussd.cat.limpeza') },
           ].map(cat => (
             <button
               key={cat.id}
@@ -176,6 +200,7 @@ export const UssdTool: React.FC = () => {
                     item.carrier === 'tim' ? 'bg-blue-950/60 text-blue-300 border-blue-800/60' :
                     item.carrier === 'oi' ? 'bg-amber-950/60 text-amber-300 border-amber-800/60' :
                     item.carrier === 'samsung' ? 'bg-cyan-950/60 text-cyan-300 border-cyan-800/60' :
+                    item.carrier === 'iphone' ? 'bg-slate-800/60 text-slate-300 border-slate-600/60' :
                     'bg-emerald-950/60 text-emerald-300 border-emerald-800/60'
                   }`}>
                     {item.carrier}
