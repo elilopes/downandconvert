@@ -1,7 +1,6 @@
 import React from 'react';
 import { Music, ShieldCheck, Sparkles } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { VisitorCounter } from './VisitorCounter';
 
 interface FooterProps {
   onOpenTerms: () => void;
@@ -22,7 +21,7 @@ export const Footer: React.FC<FooterProps> = ({
     if (onNavigateTab) {
       onNavigateTab(tab);
     } else {
-      window.location.href = tab === 'converter' ? '/' : `/${tab}`;
+      window.location.href = `/?tab=${tab}`;
     }
   };
 
@@ -53,14 +52,14 @@ export const Footer: React.FC<FooterProps> = ({
             </button>
             <span className="hidden md:inline">•</span>
             <button
-              onClick={() => window.location.href = '/popular'}
+              onClick={() => window.location.href = '/?modal=popular'}
               className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors"
             >
               {t('footer.popular')}
             </button>
             <span className="hidden md:inline">•</span>
             <button
-              onClick={() => window.location.href = '/faq'}
+              onClick={() => window.location.href = '/?modal=faq'}
               className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors"
             >
               {t('footer.howItWorks')}
@@ -110,10 +109,6 @@ export const Footer: React.FC<FooterProps> = ({
           </div>
 
           {/* Footer content structure */}
-          
-          <div className="flex flex-col items-center justify-center gap-6 mt-4">
-            <VisitorCounter />
-          </div>
         </div>
       </div>
     </footer>
