@@ -433,6 +433,13 @@ const dict: Translations = {
     HI: "⚙️ सिस्टम और IMEI",
     KO: "⚙️ 시스템 및 IMEI"
   },
+  "ussd.cat.limpeza": {
+    PT: "🧹 Limpeza & Logs",
+    EN: "🧹 Clean & Logs",
+    RU: "🧹 Очистка и логи",
+    HI: "🧹 सफाई और लॉग",
+    KO: "🧹 청소 및 로그"
+  },
   "ussd.copied": {
     PT: "Copiado",
     EN: "Copied",
@@ -874,6 +881,230 @@ const dict: Translations = {
     HI: "कंपन मोटर और स्क्रीन चमक का परीक्षण करता है।",
     KO: "진동 모터와 화면 밝기를 테스트합니다."
   },
+  "ussd.code.samsung.9900.title": {
+    PT: "Limpeza SysDump / Dumpstate (*#9900#)",
+    EN: "SysDump / Dumpstate Cleanup (*#9900#)",
+    RU: "Очистка SysDump / Dumpstate (*#9900#)",
+    HI: "SysDump / Dumpstate सफाई (*#9900#)",
+    KO: "SysDump / Dumpstate 정리 (*#9900#)"
+  },
+  "ussd.code.samsung.9900.desc": {
+    PT: "Acessa o menu SysDump no Samsung/Android para excluir logs temporários de logcat/dumpstate, liberar armazenamento interno e gerar relatórios de depuração.",
+    EN: "Accesses the SysDump menu on Samsung/Android to delete temporary logcat/dumpstate logs, free up internal storage, and generate debug reports.",
+    RU: "Открывает меню SysDump на Samsung/Android для удаления временных логов dumpstate/logcat, освобождения памяти и создания отчетов отладки.",
+    HI: "Samsung/Android पर SysDump मेनू खोलता है ताकि अस्थायी logcat/dumpstate लॉग हटाए जा सकें, मेमोरी खाली की जा सके और डिबग रिपोर्ट बनाई जा सके।",
+    KO: "Samsung/Android에서 SysDump 메뉴에 접속하여 임시 logcat/dumpstate 로그를 삭제하고 저장 공간을 확보하며 디버그 보고서를 생성합니다."
+  },
+  "ussd.code.samsung.2663.title": {
+    PT: "Firmware TSP e TSK (*#2663#)",
+    EN: "TSP & TSK Firmware (*#2663#)",
+    RU: "Прошивка TSP и TSK (*#2663#)",
+    HI: "फर्मवेयर TSP और TSK (*#2663#)",
+    KO: "TSP 및 TSK 펌웨어 (*#2663#)"
+  },
+  "ussd.code.samsung.2663.desc": {
+    PT: "Exibe e atualiza a versão de firmware da tela de toque (TSP), teclas de toque (TSK) e módulos de hardware.",
+    EN: "Displays and updates firmware versions for the touch screen (TSP), touch keys (TSK), and hardware modules.",
+    RU: "Отображает и обновляет версии прошивки сенсорного экрана (TSP), сенсорных клавиш (TSK) и модулей оборудования.",
+    HI: "टच स्क्रीन (TSP), टच कीज़ (TSK) और हार्डवेयर मॉड्यूल के फर्मवेयर संस्करण प्रदर्शित और अपडेट करता है।",
+    KO: "터치스크린(TSP), 터치키(TSK) 및 하드웨어 모듈의 펌웨어 버전을 확인하고 업데이트합니다."
+  },
+  "ussd.code.geral.puk05.title": {
+    PT: "Desbloqueio de PUK (*#05#)",
+    EN: "PUK Unlock (*#05#)",
+    RU: "Разблокировка PUK (*#05#)",
+    HI: "PUK अनलॉक (*#05#)",
+    KO: "PUK 잠금 해제 (*#05#)"
+  },
+  "ussd.code.geral.puk05.desc": {
+    PT: "Código para consultar o status ou desbloquear chip SIM bloqueado por PUK (*#05#).",
+    EN: "Code to check status or unlock a PUK-locked SIM card (*#05#).",
+    RU: "Код для проверки статуса или разблокировки SIM-карты, заблокированной PUK (*#05#).",
+    HI: "PUK-लॉक सिम कार्ड की स्थिति जांचने या अनलॉक करने का कोड (*#05#)।",
+    KO: "PUK으로 잠긴 SIM 카드의 상태를 확인하거나 잠금 해제하는 코드입니다 (*#05#)."
+  },
+  "ussd.code.samsung.9090.title": {
+    PT: "Diagnóstico e Service Mode (*#9090#)",
+    EN: "Diagnostic & Service Mode (*#9090#)",
+    RU: "Диагностика и Service Mode (*#9090#)",
+    HI: "निदान और सर्विस मोड (*#9090#)",
+    KO: "진단 및 서비스 모드 (*#9090#)"
+  },
+  "ussd.code.samsung.9090.desc": {
+    PT: "Acessa o modo de configuração de diagnóstico para depuração de rede, UART e parâmetros avançados de comunicação.",
+    EN: "Accesses diagnostic configuration mode for network debugging, UART, and advanced communication parameters.",
+    RU: "Открывает режим настройки диагностики для отладки сети, UART и расширенных параметров связи.",
+    HI: "नेटवर्क डिबगिंग, UART और उन्नत संचार मापदंडों के लिए डायग्नोस्टिक कॉन्फ़िगरेशन मोड खोलता है।",
+    KO: "네트워크 디버깅, UART 및 고급 통신 매개변수를 위한 진단 구성 모드에 접속합니다."
+  },
+  "ussd.code.samsung.0228.title": {
+    PT: "Status e Calibragem da Bateria (*#0228#)",
+    EN: "Battery Status & Calibration (*#0228#)",
+    RU: "Статус и калибровка батареи (*#0228#)",
+    HI: "बैटरी की स्थिति और अंशांकन (*#0228#)",
+    KO: "배터리 상태 및 보정 (*#0228#)"
+  },
+  "ussd.code.samsung.0228.desc": {
+    PT: "Exibe informações detalhadas sobre a rede, voltagem e permite calibrar a bateria em dispositivos Samsung.",
+    EN: "Displays detailed information about network, voltage, and allows battery calibration on Samsung devices.",
+    RU: "Отображает подробную информацию о сети, напряжении и позволяет откалибровать батарею на устройствах Samsung.",
+    HI: "सैमसंग उपकरणों पर नेटवर्क, वोल्टेज के बारे में विस्तृत जानकारी प्रदर्शित करता है और बैटरी अंशांकन की अनुमति देता है।",
+    KO: "삼성 기기에서 네트워크, 전압에 대한 자세한 정보를 표시하고 배터리 보정을 허용합니다."
+  },
+  "ussd.code.iphone.3001.title": {
+    PT: "Field Test Mode / Força do Sinal (*3001#12345#*)",
+    EN: "Field Test Mode / Signal Strength (*3001#12345#*)",
+    RU: "Field Test Mode / Уровень сигнала (*3001#12345#*)",
+    HI: "फील्ड टेस्ट मोड / सिग्नल शक्ति (*3001#12345#*)",
+    KO: "필드 테스트 모드 / 신호 강도 (*3001#12345#*)"
+  },
+  "ussd.code.iphone.3001.desc": {
+    PT: "Acessa o Field Test Mode no iPhone para ver a força do sinal em dBm e dados técnicos da rede celular (desligue o Wi-Fi antes).",
+    EN: "Accesses Field Test Mode on iPhone to view signal strength in dBm and technical cellular network data (turn off Wi-Fi first).",
+    RU: "Открывает Field Test Mode на iPhone для просмотра уровня сигнала в дБм и технических данных сотовой сети (сначала отключите Wi-Fi).",
+    HI: "dBm में सिग्नल शक्ति और तकनीकी सेलुलर नेटवर्क डेटा देखने के लिए iPhone पर फील्ड टेस्ट मोड तक पहुँचता है (पहले वाई-फाई बंद करें)।",
+    KO: "iPhone에서 필드 테스트 모드에 접속하여 dBm 단위의 신호 강도와 기술적인 셀룰러 네트워크 데이터를 확인합니다 (먼저 Wi-Fi를 끄세요)."
+  },
+  "ussd.code.geral.61.title": {
+    PT: "Encaminhamento (Sem Resposta) (*#61#)",
+    EN: "Call Forwarding (No Reply) (*#61#)",
+    RU: "Переадресация (Нет ответа) (*#61#)",
+    HI: "कॉल फ़ॉरवर्डिंग (कोई उत्तर नहीं) (*#61#)",
+    KO: "착신 전환 (무응답) (*#61#)"
+  },
+  "ussd.code.geral.61.desc": {
+    PT: "Verifica o status e o número para onde as chamadas são encaminhadas quando você não atende.",
+    EN: "Checks the status and the number to which calls are forwarded when you do not answer.",
+    RU: "Проверяет статус и номер, на который переадресовываются звонки, если вы не отвечаете.",
+    HI: "स्थिति और उस नंबर की जांच करता है जिस पर आपके उत्तर न देने पर कॉल अग्रेषित की जाती हैं।",
+    KO: "전화를 받지 않을 때 통화가 전환되는 번호와 상태를 확인합니다."
+  },
+  "ussd.code.geral.67.title": {
+    PT: "Encaminhamento (Ocupado) (*#67#)",
+    EN: "Call Forwarding (Busy) (*#67#)",
+    RU: "Переадресация (Занято) (*#67#)",
+    HI: "कॉल फ़ॉरवर्डिंग (व्यस्त) (*#67#)",
+    KO: "착신 전환 (통화 중) (*#67#)"
+  },
+  "ussd.code.geral.67.desc": {
+    PT: "Mostra o número para o qual suas chamadas são redirecionadas quando sua linha está ocupada.",
+    EN: "Shows the number to which your calls are redirected when your line is busy.",
+    RU: "Показывает номер, на который перенаправляются ваши звонки, когда ваша линия занята.",
+    HI: "वह नंबर दिखाता है जिस पर आपकी लाइन व्यस्त होने पर आपकी कॉल पुनर्निर्देशित की जाती हैं।",
+    KO: "통화 중일 때 전화가 리디렉션되는 번호를 표시합니다."
+  },
+  "ussd.code.geral.31.title": {
+    PT: "Ocultar Identificador de Chamadas (#31#)",
+    EN: "Hide Caller ID (#31#)",
+    RU: "Скрыть Caller ID (#31#)",
+    HI: "कॉलर आईडी छुपाएं (#31#)",
+    KO: "발신자 번호 표시 제한 (#31#)"
+  },
+  "ussd.code.geral.31.desc": {
+    PT: "Disque #31# seguido do número do destinatário para ocultar seu número (Caller ID) em uma ligação específica.",
+    EN: "Dial #31# followed by the recipient's number to hide your Caller ID for a specific call.",
+    RU: "Наберите #31# перед номером получателя, чтобы скрыть свой номер (Caller ID) для конкретного звонка.",
+    HI: "किसी विशिष्ट कॉल के लिए अपनी कॉलर आईडी छिपाने के लिए प्राप्तकर्ता के नंबर से पहले #31# डायल करें।",
+    KO: "특정 통화에서 발신자 번호를 숨기려면 수신자 번호 앞에 #31#을 누르세요."
+  },
+  "ussd.code.geral.21.title": {
+    PT: "Status de Encaminhamento Geral (*#21#)",
+    EN: "General Call Forwarding Status (*#21#)",
+    RU: "Статус переадресации вызовов (*#21#)",
+    HI: "सामान्य कॉल अग्रेषण स्थिति (*#21#)",
+    KO: "일반 착신 전환 상태 (*#21#)"
+  },
+  "ussd.code.geral.21.desc": {
+    PT: "Verifica se há algum tipo de encaminhamento de chamadas ativo no seu número.",
+    EN: "Checks if there is any type of call forwarding active on your number.",
+    RU: "Проверяет наличие активной переадресации вызовов на вашем номере.",
+    HI: "जांच करता है कि क्या आपके नंबर पर किसी भी प्रकार का कॉल अग्रेषण सक्रिय है।",
+    KO: "번호에 활성화된 착신 전환이 있는지 확인합니다."
+  },
+  "ussd.code.geral.43.title": {
+    PT: "Chamada em Espera (*#43#)",
+    EN: "Call Waiting Status (*#43#)",
+    RU: "Статус ожидания вызова (*#43#)",
+    HI: "कॉल प्रतीक्षा स्थिति (*#43#)",
+    KO: "통화 대기 상태 (*#43#)"
+  },
+  "ussd.code.geral.43.desc": {
+    PT: "Confere se a chamada em espera está ativa. Use *43# para ativar e #43# para desativar.",
+    EN: "Checks if call waiting is active. Use *43# to activate and #43# to deactivate.",
+    RU: "Проверяет, активно ли ожидание вызова. Используйте *43# для включения и #43# для отключения.",
+    HI: "जांच करता है कि कॉल प्रतीक्षा सक्रिय है या नहीं। सक्रिय करने के लिए *43# और निष्क्रिय करने के लिए #43# का उपयोग करें।",
+    KO: "통화 대기가 활성화되어 있는지 확인합니다. 활성화하려면 *43#, 비활성화하려면 #43#을 사용하세요."
+  },
+  "ussd.code.geral.33.title": {
+    PT: "Barramento de Chamadas (*#33#)",
+    EN: "Call Barring Status (*#33#)",
+    RU: "Статус запрета вызовов (*#33#)",
+    HI: "कॉल बैरिंग स्थिति (*#33#)",
+    KO: "발신 제한 상태 (*#33#)"
+  },
+  "ussd.code.geral.33.desc": {
+    PT: "Verifica o status da restrição/barramento de chamadas de voz, SMS e dados.",
+    EN: "Checks the status of call barring for voice, SMS, and data.",
+    RU: "Проверяет статус запрета вызовов для голоса, SMS и данных.",
+    HI: "वॉयस, एसएमएस और डेटा के लिए कॉल बैरिंग की स्थिति की जांच करता है।",
+    KO: "음성, SMS 및 데이터에 대한 발신 제한 상태를 확인합니다."
+  },
+  "ussd.code.iphone.smsc.title": {
+    PT: "Centro de Mensagens SMS (*#5005*7672#)",
+    EN: "SMS Message Center (*#5005*7672#)",
+    RU: "Центр SMS-сообщений (*#5005*7672#)",
+    HI: "एसएमएस संदेश केंद्र (*#5005*7672#)",
+    KO: "SMS 메시지 센터 (*#5005*7672#)"
+  },
+  "ussd.code.iphone.smsc.desc": {
+    PT: "Consulta o número da central de mensagens (SMS) configurado na sua operadora.",
+    EN: "Checks the SMS message center number configured on your carrier.",
+    RU: "Проверяет номер центра SMS-сообщений, настроенный у вашего оператора.",
+    HI: "आपके वाहक पर कॉन्फ़िगर किए गए एसएमएस संदेश केंद्र नंबर की जांच करता है।",
+    KO: "이동통신사에 설정된 SMS 메시지 센터 번호를 확인합니다."
+  },
+  "ussd.code.iphone.alerttest.title": {
+    PT: "Testar Sistema de Alerta (*5005*25371#)",
+    EN: "Test Emergency Alerts (*5005*25371#)",
+    RU: "Тест системы оповещения (*5005*25371#)",
+    HI: "आपातकालीन अलर्ट का परीक्षण करें (*5005*25371#)",
+    KO: "긴급 재난 문자 테스트 (*5005*25371#)"
+  },
+  "ussd.code.iphone.alerttest.desc": {
+    PT: "Verifica se o sistema de alertas de emergência da rede celular está funcionando no iPhone.",
+    EN: "Checks if the cellular network's emergency alert system is working on the iPhone.",
+    RU: "Проверяет работу системы экстренных оповещений сотовой сети на iPhone.",
+    HI: "जांच करता है कि सेलुलर नेटवर्क का आपातकालीन अलर्ट सिस्टम iPhone पर काम कर रहा है या नहीं।",
+    KO: "셀룰러 네트워크의 긴급 재난 문자 시스템이 iPhone에서 작동하는지 확인합니다."
+  },
+  "ussd.code.iphone.alertdisable.title": {
+    PT: "Desativar Alertas de Rede (*5005*25370#)",
+    EN: "Disable Emergency Alerts (*5005*25370#)",
+    RU: "Отключить оповещения сети (*5005*25370#)",
+    HI: "आपातकालीन अलर्ट अक्षम करें (*5005*25370#)",
+    KO: "긴급 재난 문자 비활성화 (*5005*25370#)"
+  },
+  "ussd.code.iphone.alertdisable.desc": {
+    PT: "Desativa temporariamente o sistema de alertas de emergência pelo painel do iPhone.",
+    EN: "Temporarily disables the emergency alert system through the iPhone dashboard.",
+    RU: "Временно отключает систему экстренных оповещений через панель iPhone.",
+    HI: "iPhone डैशबोर्ड के माध्यम से आपातकालीन अलर्ट सिस्टम को अस्थायी रूप से अक्षम करता है।",
+    KO: "iPhone 대시보드를 통해 일시적으로 긴급 재난 문자 시스템을 비활성화합니다."
+  },
+  "ussd.code.iphone.data.title": {
+    PT: "Uso de Dados (*3282#)",
+    EN: "Data Usage (*3282#)",
+    RU: "Использование данных (*3282#)",
+    HI: "डेटा उपयोग (*3282#)",
+    KO: "데이터 사용량 (*3282#)"
+  },
+  "ussd.code.iphone.data.desc": {
+    PT: "Mostra informações de uso de dados celulares e franquia (funciona apenas em algumas operadoras).",
+    EN: "Shows cellular data usage and plan information (works only on certain carriers).",
+    RU: "Показывает информацию об использовании сотовых данных и тарифе (работает только у некоторых операторов).",
+    HI: "सेलुलर डेटा उपयोग और योजना की जानकारी दिखाता है (केवल कुछ वाहकों पर काम करता है)।",
+    KO: "셀룰러 데이터 사용량 및 요금제 정보를 표시합니다 (일부 이동통신사에서만 작동)."
+  },
   "dropzone.extractAudio": {
     PT: "Extrair Áudio",
     EN: "Extract Audio",
@@ -1313,6 +1544,17 @@ const dict: Translations = {
   "smartphones.whatsAppCompatible": { PT: "Compatível com WhatsApp", EN: "WhatsApp Compatible", RU: "Совместимо с WhatsApp", HI: "व्हाट्सएप संगत", KO: "WhatsApp 호환" },
   "smartphones.whatsAppIncompatible": { PT: "Sem Suporte ao WhatsApp", EN: "No WhatsApp Support", RU: "Без поддержки WhatsApp", HI: "व्हाट्सएप समर्थन नहीं", KO: "WhatsApp 미지원" },
   "smartphones.features": { PT: "Recursos Especiais", EN: "Special Features", RU: "Специальные возможности", HI: "विशेष सुविधाएँ", KO: "특수 기능" },
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   "tabs.news": {
     PT: "News gadget",
     EN: "News gadget",
