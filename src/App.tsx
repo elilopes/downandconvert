@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import JSZip from 'jszip';
 import {
@@ -19,7 +19,6 @@ import {
   Smartphone,
   Download,
   RefreshCw,
-  Newspaper,
 } from 'lucide-react';
 import { AudioFormat, VideoItem, ConversionOptions, CropOptions } from './types';
 import { Header } from './components/Header';
@@ -37,8 +36,6 @@ import { MouseFollower } from './components/MouseFollower';
 import { Footer } from './components/Footer';
 import { BottomAdBanner } from './components/BottomAdBanner';
 import { UssdTool } from './components/UssdTool';
-import { SmartphoneSpecs } from './components/SmartphoneSpecs';
-import { GadgetNews } from './components/GadgetNews';
 import { NotFound } from './components/NotFound';
 import { CookieBanner } from './components/CookieBanner';
 import { PopularCodesModal } from './components/PopularCodesModal';
@@ -51,12 +48,11 @@ import {
   encodeAudioBufferToWav,
 } from './utils/audioEncoder';
 import { encodeWithFFmpeg } from './utils/ffmpegEncoder';
-import { encodeOnServer } from './utils/serverEncoder';
 import { useLanguage } from './contexts/LanguageContext';
 
 export default function App() {
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'converter' | 'downloader' | 'ussd' | 'smartphones' | 'news'>('converter');
+  const [activeTab, setActiveTab] = useState<'converter' | 'downloader' | 'ussd'>('converter');
   const [items, setItems] = useState<VideoItem[]>([]);
   const [globalFormat, setGlobalFormat] = useState<AudioFormat>('mp3');
   const [globalBitrate, setGlobalBitrate] = useState<64 | 128 | 192 | 256 | 320>(320);
@@ -91,7 +87,7 @@ export default function App() {
       const legalParam = (searchParams.get('legal') || searchParams.get('page') || '').toLowerCase();
       const tabParam = searchParams.get('tab')?.toLowerCase();
 
-      if (tabParam === 'converter' || tabParam === 'downloader' || tabParam === 'ussd' || tabParam === 'smartphones' || tabParam === 'news') {
+      if (tabParam === 'converter' || tabParam === 'downloader' || tabParam === 'ussd') {
         setActiveTab(tabParam);
       }
 
@@ -117,57 +113,6 @@ export default function App() {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
-
-  useEffect(() => {
-    const title = t(`seo.title.${activeTab}`);
-    const description = t(`seo.desc.${activeTab}`);
-    let canonical = 'https://www.downandconvert.com';
-
-    if (activeTab !== 'converter') {
-      canonical += `?tab=${activeTab}`;
-    }
-
-    document.title = title;
-    
-    let metaDescription = document.querySelector('meta[name="description"]');
-    if (!metaDescription) {
-      metaDescription = document.createElement('meta');
-      metaDescription.setAttribute('name', 'description');
-      document.head.appendChild(metaDescription);
-    }
-    metaDescription.setAttribute('content', description);
-
-    let linkCanonical = document.querySelector('link[rel="canonical"]');
-    if (!linkCanonical) {
-      linkCanonical = document.createElement('link');
-      linkCanonical.setAttribute('rel', 'canonical');
-      document.head.appendChild(linkCanonical);
-    }
-    linkCanonical.setAttribute('href', canonical);
-  }, [activeTab, t]);
-
-  const tabsContainerRef = useRef<HTMLDivElement>(null);
-  const activeTabRef = useRef<HTMLButtonElement>(null);
-
-  // Ensure tabs container is scrolled properly:
-  // - Starts at 0 (Conversor fully visible) on mobile/tablet
-  // - Smoothly centers selected tab into view within the tabs container only
-  useEffect(() => {
-    const container = tabsContainerRef.current;
-    const activeEl = activeTabRef.current;
-    if (!container || !activeEl) return;
-
-    if (activeTab === 'converter') {
-      container.scrollTo({ left: 0, behavior: 'smooth' });
-    } else {
-      const containerRect = container.getBoundingClientRect();
-      const elRect = activeEl.getBoundingClientRect();
-      if (elRect.left < containerRect.left || elRect.right > containerRect.right) {
-        const scrollTarget = activeEl.offsetLeft - (container.clientWidth / 2) + (activeEl.clientWidth / 2);
-        container.scrollTo({ left: Math.max(0, scrollTarget), behavior: 'smooth' });
-      }
-    }
-  }, [activeTab]);
 
   const openLegalModal = (type: 'terms' | 'privacy' | 'contact') => {
     setLegalModalType(type);
@@ -389,88 +334,43 @@ export default function App() {
         const isLargeFile = currentItem.file.size > 25 * 1024 * 1024; // > 25MB
 
         if (isLargeFile) {
-          // Send directly to high-performance Server-Side FFmpeg
+          // Warning for large files in browser-only mode
           setItems((prev) =>
             prev.map((it) =>
               it.id === itemId
                 ? {
                     ...it,
                     progress: 15,
-                    progressText: 'Arquivo grande: convertendo no servidor em alta performance...',
+                    progressText: 'Aviso: Arquivos grandes podem travar o navegador na versão Client-side.',
                   }
                 : it
             )
           );
+        }
 
-          outputBlob = await encodeOnServer(
+        // Client-side WebAssembly ONLY
+        try {
+          outputBlob = await encodeWithFFmpeg(
             currentItem.file,
             currentItem.options,
-            (progress, stage) => {
+            (progress) => {
               setItems((prev) =>
                 prev.map((it) =>
                   it.id === itemId
                     ? {
                         ...it,
                         progress,
-                        progressText: stage,
+                        progressText: `Codificando Vídeo ${format.toUpperCase()} (${progress}%)...`,
                       }
                     : it
                 )
               );
-            }
+            },
+            true // isVideo
           );
-        } else {
-          // Client-side WebAssembly with automatic Server-Side fallback
-          try {
-            outputBlob = await encodeWithFFmpeg(
-              currentItem.file,
-              currentItem.options,
-              (progress) => {
-                setItems((prev) =>
-                  prev.map((it) =>
-                    it.id === itemId
-                      ? {
-                          ...it,
-                          progress,
-                          progressText: `Codificando Vídeo ${format.toUpperCase()} (${progress}%)...`,
-                        }
-                      : it
-                  )
-                );
-              },
-              true // isVideo
-            );
-          } catch (wasmErr) {
-            console.warn('WASM falhou ou limite de memória excedido. Acionando conversor do servidor...', wasmErr);
-            setItems((prev) =>
-              prev.map((it) =>
-                it.id === itemId
-                  ? {
-                      ...it,
-                      progress: 25,
-                      progressText: 'Recorrendo ao conversor do servidor...',
-                    }
-                  : it
-              )
-            );
-            outputBlob = await encodeOnServer(
-              currentItem.file,
-              currentItem.options,
-              (progress, stage) => {
-                setItems((prev) =>
-                  prev.map((it) =>
-                    it.id === itemId
-                      ? {
-                          ...it,
-                          progress,
-                          progressText: stage,
-                        }
-                      : it
-                  )
-                );
-              }
-            );
-          }
+        } catch (wasmErr) {
+          console.warn('WASM falhou ou limite de memória excedido.', wasmErr);
+          throw new Error('Falha no WebAssembly. O arquivo pode ser muito grande para o navegador.');
         }
       } else if (processedBuf) {
         if (format === 'mp3') {
@@ -517,35 +417,8 @@ export default function App() {
               false
             );
           } catch (wasmErr) {
-            console.warn('WASM falhou no áudio. Acionando conversor do servidor...', wasmErr);
-            setItems((prev) =>
-              prev.map((it) =>
-                it.id === itemId
-                  ? {
-                      ...it,
-                      progress: 25,
-                      progressText: 'Recorrendo ao conversor do servidor...',
-                    }
-                  : it
-              )
-            );
-            outputBlob = await encodeOnServer(
-              currentItem.file,
-              currentItem.options,
-              (progress, stage) => {
-                setItems((prev) =>
-                  prev.map((it) =>
-                    it.id === itemId
-                      ? {
-                          ...it,
-                          progress,
-                          progressText: stage,
-                        }
-                      : it
-                  )
-                );
-              }
-            );
+            console.warn('WASM falhou no áudio.', wasmErr);
+            throw new Error('Falha no WebAssembly ao codificar áudio.');
           }
         }
       } else {
@@ -728,17 +601,6 @@ export default function App() {
     );
   };
 
-  const handleTabSelect = (tab: 'converter' | 'downloader' | 'ussd' | 'smartphones' | 'news') => {
-    setActiveTab(tab);
-    try {
-      const url = new URL(window.location.href);
-      url.searchParams.set('tab', tab);
-      window.history.pushState({}, '', url.toString());
-    } catch (e) {
-      // ignore
-    }
-  };
-
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950">
       {/* Background Decorative Glow */}
@@ -749,92 +611,51 @@ export default function App() {
       </div>
 
       {/* Header Bar */}
-      <Header darkMode={true} setDarkMode={() => {}} onOpenFAQ={() => setIsFAQOpen(true)} onNavigateToUssd={() => handleTabSelect('ussd')} />
+      <Header darkMode={true} setDarkMode={() => {}} onOpenFAQ={() => setIsFAQOpen(true)} onNavigateToUssd={() => setActiveTab('ussd')} />
 
       {/* Navigation Tabs Bar */}
-      <nav aria-label="Navegação de abas" className="w-full bg-slate-900/90 border-b border-slate-800/80 sticky top-20 z-30 shadow-md backdrop-blur-md">
-        <div
-          ref={tabsContainerRef}
-          className="max-w-7xl mx-auto overflow-x-auto tabs-scrollbar overscroll-x-contain"
-        >
-          <div className="flex items-center justify-start lg:justify-center gap-2 sm:gap-3 py-3 px-4 sm:px-6 lg:px-8 w-max min-w-full">
-            {/* Tab 1: Conversor */}
-            <button
-              id="tab-btn-converter"
-              ref={activeTab === 'converter' ? activeTabRef : undefined}
-              onClick={() => handleTabSelect('converter')}
-              className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
-                activeTab === 'converter'
-                  ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20'
-                  : 'bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-700/50'
-              }`}
-            >
-              <RefreshCw className="w-4 h-4" />
-              <span>{t('tabs.converter')}</span>
-            </button>
+      <div className="w-full bg-slate-900/90 border-b border-slate-800/80 sticky top-20 z-30 shadow-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center gap-2 sm:gap-3 py-3 overflow-x-auto">
+          {/* Tab 1: Conversor */}
+          <button
+            onClick={() => setActiveTab('converter')}
+            className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
+              activeTab === 'converter'
+                ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20'
+                : 'bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-700/50'
+            }`}
+          >
+            <RefreshCw className="w-4 h-4" />
+            <span>{t('tabs.converter')}</span>
+          </button>
 
-            {/* Tab 2: Downloader */}
-            <button
-              id="tab-btn-downloader"
-              ref={activeTab === 'downloader' ? activeTabRef : undefined}
-              onClick={() => handleTabSelect('downloader')}
-              className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
-                activeTab === 'downloader'
-                  ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20'
-                  : 'bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-700/50'
-              }`}
-            >
-              <Download className="w-4 h-4" />
-              <span>{t('tabs.downloader')}</span>
-            </button>
+          {/* Tab 2: Downloader */}
+          <button
+            onClick={() => setActiveTab('downloader')}
+            className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
+              activeTab === 'downloader'
+                ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20'
+                : 'bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-700/50'
+            }`}
+          >
+            <Download className="w-4 h-4" />
+            <span>{t('tabs.downloader')}</span>
+          </button>
 
-            {/* Tab 3: Códigos USSD/MMI */}
-            <button
-              id="tab-btn-ussd"
-              ref={activeTab === 'ussd' ? activeTabRef : undefined}
-              onClick={() => handleTabSelect('ussd')}
-              className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
-                activeTab === 'ussd'
-                  ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20'
-                  : 'bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-700/50'
-              }`}
-            >
-              <Smartphone className="w-4 h-4" />
-              <span>{t('tabs.ussd')}</span>
-            </button>
-
-            {/* Tab 4: Smartphones */}
-            <button
-              id="tab-btn-smartphones"
-              ref={activeTab === 'smartphones' ? activeTabRef : undefined}
-              onClick={() => handleTabSelect('smartphones')}
-              className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
-                activeTab === 'smartphones'
-                  ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20'
-                  : 'bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-700/50'
-              }`}
-            >
-              <Smartphone className="w-4 h-4" />
-              <span>{t('tabs.smartphones')}</span>
-            </button>
-
-            {/* Tab 5: News */}
-            <button
-              id="tab-btn-news"
-              ref={activeTab === 'news' ? activeTabRef : undefined}
-              onClick={() => handleTabSelect('news')}
-              className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
-                activeTab === 'news'
-                  ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20'
-                  : 'bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-700/50'
-              }`}
-            >
-              <Newspaper className="w-4 h-4" />
-              <span>{t('tabs.news')}</span>
-            </button>
-          </div>
+          {/* Tab 3: Códigos USSD/MMI */}
+          <button
+            onClick={() => setActiveTab('ussd')}
+            className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
+              activeTab === 'ussd'
+                ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20'
+                : 'bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-700/50'
+            }`}
+          >
+            <Smartphone className="w-4 h-4" />
+            <span>Códigos USSD/MMI</span>
+          </button>
         </div>
-      </nav>
+      </div>
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
@@ -842,10 +663,6 @@ export default function App() {
           <NotFound />
         ) : activeTab === 'ussd' ? (
           <UssdTool />
-        ) : activeTab === 'smartphones' ? (
-          <SmartphoneSpecs />
-        ) : activeTab === 'news' ? (
-          <GadgetNews />
         ) : activeTab === 'downloader' ? (
           <VideoDownloader
             onFilesSelected={(files) => {
@@ -861,7 +678,7 @@ export default function App() {
           <>
             {/* Hero Section for Converter */}
             <div className="text-center max-w-3xl mx-auto mb-10">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight leading-tight mb-4">
+              <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight sm:leading-none mb-4">
                 {t('hero.converter.title')}
               </h1>
 
@@ -962,12 +779,6 @@ export default function App() {
         onOpenTerms={() => openLegalModal('terms')}
         onOpenPrivacy={() => openLegalModal('privacy')}
         onOpenContact={() => openLegalModal('contact')}
-        onNavigateTab={(tab) => {
-          setActiveTab(tab);
-          const url = new URL(window.location.href);
-          url.searchParams.set('tab', tab);
-          window.history.pushState({}, '', url.toString());
-        }}
       />
 
       {/* Video Crop Modal */}
