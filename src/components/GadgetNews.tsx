@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import {
   ExternalLink,
@@ -26,18 +26,60 @@ import {
 } from 'lucide-react';
 import { mockedGadgetNews, LocalizedString, NewsCategory, GadgetNewsItem } from '../data/gadgetNews';
 import { AddNewsModal } from './AddNewsModal';
-import { SuggestNewsModal } from './SuggestNewsModal';
 import { RssImporterModal } from './RssImporterModal';
 
 const STORAGE_KEY_CUSTOM_NEWS = 'user_custom_gadget_news_v1';
 
-// Helper para verificar e excluir notícias sobre 'trailer', 'filme' ou 'games/jogos'
-export const isTrailerOrMovieNews = (title?: LocalizedString | string): boolean => {
-  if (!title) return false;
-  const textToCheck = typeof title === 'string'
-    ? title
-    : [title.PT, title.EN, title.RU, title.HI, title.KO].filter(Boolean).join(' ');
-  return /trailer|filme|game|games|jogo|jogos|videogame|playstation|xbox|nintendo|pokemon|pokémon|gta|elden ring|voxel|mouses gamer/i.test(textToCheck);
+// Helper para verificar e excluir notícias que possuem a palavra "jogo", "jogos", "game", "games" ou trailers/filmes
+export const isGameOrExcludedNews = (itemOrTitle?: any): boolean => {
+  if (!itemOrTitle) return false;
+
+  let titleText = '';
+  let subtitleText = '';
+  let leadText = '';
+  let linkClean = '';
+
+  const extractString = (val?: LocalizedString | string): string => {
+    if (!val) return '';
+    if (typeof val === 'string') return val;
+    return [val.PT, val.EN, val.RU, val.HI, val.KO].filter(Boolean).join(' ');
+  };
+
+  if (typeof itemOrTitle === 'string') {
+    titleText = itemOrTitle;
+  } else if ('PT' in itemOrTitle || 'EN' in itemOrTitle) {
+    titleText = extractString(itemOrTitle);
+  } else if (typeof itemOrTitle === 'object') {
+    titleText = extractString(itemOrTitle.title);
+    subtitleText = extractString(itemOrTitle.subtitle);
+    leadText = extractString(itemOrTitle.lead);
+    if (itemOrTitle.link) {
+      // Remove parâmetros de rastreamento/UTM que podem conter o nome da revista
+      linkClean = itemOrTitle.link.split('?')[0].replace(/[-_./]/g, ' ');
+    }
+  }
+
+  const combinedText = `${titleText} ${subtitleText} ${leadText}`.toLowerCase();
+  const cleanLink = linkClean.toLowerCase();
+
+  // Filtro estrito: palavra "jogo", "jogos", "game", "games" e termos correlatos de jogos
+  const gamePattern = /\b(jogos?|games?|gamer|gamers|gaming|gameplay|jogabilidade|jogador|jogadores|videogames?|video\s+games?)\b/i;
+  if (gamePattern.test(combinedText) || gamePattern.test(cleanLink)) {
+    return true;
+  }
+
+  // Termos adicionais excluídos: trailers, filmes, consoles e franquias de games
+  const otherPattern = /\b(trailer|trailers|filme|filmes|playstation|ps5|ps4|ps3|ps2|xbox|nintendo|switch|pokemon|pokémon|gta|elden ring|god of war|voxel)\b/i;
+  if (otherPattern.test(combinedText) || otherPattern.test(cleanLink)) {
+    return true;
+  }
+
+  return false;
+};
+
+// Alias para compatibilidade total
+export const isTrailerOrMovieNews = (itemOrTitle?: any): boolean => {
+  return isGameOrExcludedNews(itemOrTitle);
 };
 
 // Helper para verificar notícias com link ou título inconsistente
@@ -67,17 +109,20 @@ export const GadgetNews: React.FC = () => {
   const { t, lang } = useLanguage();
   const [newsList, setNewsList] = useState<GadgetNewsItem[]>(() =>
     mockedGadgetNews.filter(
-      (item) => !isTrailerOrMovieNews(item.title) && !isInvalidOrOutdatedNews(item)
+      (item) => !isGameOrExcludedNews(item) && !isInvalidOrOutdatedNews(item)
     )
   );
   const [selectedCategory, setSelectedCategory] = useState<NewsCategory | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
 
-  // Estados dos Modais de Adicionar, Sugerir Notícia & Importador RSS
+  // Estados dos Modais de Adicionar & Importador RSS
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
-  const [isSuggestModalOpen, setIsSuggestModalOpen] = useState<boolean>(false);
   const [isRssModalOpen, setIsRssModalOpen] = useState<boolean>(false);
+
+  // Estados da Importação Automática Flipboard (Período 48h)
+  const [isFlipboardSyncing, setIsFlipboardSyncing] = useState<boolean>(false);
+  const [flipboardArticlesCount, setFlipboardArticlesCount] = useState<number>(0);
 
   // Estados do Importador de Feed e Verificador 404
   const [isImporting, setIsImporting] = useState<boolean>(false);
@@ -89,6 +134,95 @@ export const GadgetNews: React.FC = () => {
   const [auto404VerificationEnabled, setAuto404VerificationEnabled] = useState<boolean>(true);
   const [verifiedLinksMap, setVerifiedLinksMap] = useState<Record<string, boolean>>({});
 
+  // Função para importação automática das notícias da revista eletrônica do Flipboard no período de 48 horas
+  const autoImportFlipboard48h = useCallback(async (silent = false) => {
+    if (!silent) setIsFlipboardSyncing(true);
+    try {
+      const res = await fetch('/api/news/flipboard-auto-import?hours=48');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.articles) && data.articles.length > 0) {
+        const importedItems: GadgetNewsItem[] = data.articles.map((art: any, index: number) => ({
+          id: `flipboard-48h-${art.link.replace(/[^a-zA-Z0-9]/g, '-').slice(-30) || index}`,
+          category: (art.category?.toLowerCase() === 'inventions' ? 'inventions' : art.category?.toLowerCase() === 'discoveries' ? 'discoveries' : 'gadgets') as NewsCategory,
+          categoryLabel: {
+            PT: art.category || 'TechViva Flipboard',
+            EN: art.category || 'TechViva Flipboard',
+            RU: art.category || 'TechViva Flipboard',
+            HI: art.category || 'TechViva Flipboard',
+            KO: art.category || 'TechViva Flipboard'
+          },
+          author: art.author ? `${art.author} • Flipboard` : 'TechViva Flipboard',
+          pubDate: art.pubDate || new Date().toISOString(),
+          link: art.link,
+          title: {
+            PT: art.title,
+            EN: art.title,
+            RU: art.title,
+            HI: art.title,
+            KO: art.title
+          },
+          subtitle: art.lead ? {
+            PT: art.lead,
+            EN: art.lead,
+            RU: art.lead,
+            HI: art.lead,
+            KO: art.lead
+          } : undefined,
+          lead: art.lead ? {
+            PT: art.lead,
+            EN: art.lead,
+            RU: art.lead,
+            HI: art.lead,
+            KO: art.lead
+          } : undefined
+        }));
+
+        const validImported = importedItems.filter(
+          (item) => !isGameOrExcludedNews(item) && !isInvalidOrOutdatedNews(item)
+        );
+
+        setNewsList((prev) => {
+          const seen = new Set<string>();
+          const combined: GadgetNewsItem[] = [];
+          for (const item of [...validImported, ...prev]) {
+            if (!seen.has(item.link) && !isGameOrExcludedNews(item) && !isInvalidOrOutdatedNews(item)) {
+              seen.add(item.link);
+              combined.push(item);
+            }
+          }
+          return combined;
+        });
+
+        setVerifiedLinksMap((prev) => {
+          const updated = { ...prev };
+          validImported.forEach((item) => {
+            updated[item.link] = true;
+          });
+          return updated;
+        });
+
+        setFlipboardArticlesCount(validImported.length);
+        setLastSyncTime(new Date().toLocaleTimeString());
+      }
+    } catch (err) {
+      console.warn('Importação automática Flipboard falhou:', err);
+    } finally {
+      if (!silent) setIsFlipboardSyncing(false);
+    }
+  }, []);
+
+  // Dispara importação automática do Flipboard (período de 48h) ao carregar a página
+  useEffect(() => {
+    autoImportFlipboard48h();
+
+    // Sincronização periódica em background a cada 30 minutos
+    const interval = setInterval(() => {
+      autoImportFlipboard48h(true);
+    }, 30 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [autoImportFlipboard48h]);
+
   // Carrega notícias salvas localmente pelo usuário e inicializa lista
   useEffect(() => {
     try {
@@ -96,9 +230,9 @@ export const GadgetNews: React.FC = () => {
       if (saved) {
         const parsedCustom: GadgetNewsItem[] = JSON.parse(saved);
         if (Array.isArray(parsedCustom) && parsedCustom.length > 0) {
-          // Higieniza removendo trailers, filmes e links desatualizados
+          // Higieniza removendo notícias de jogos/games, trailers, filmes e links desatualizados
           const cleanedCustom = parsedCustom.filter(
-            (item) => !isTrailerOrMovieNews(item.title) && !isInvalidOrOutdatedNews(item)
+            (item) => !isGameOrExcludedNews(item) && !isInvalidOrOutdatedNews(item)
           );
           localStorage.setItem(STORAGE_KEY_CUSTOM_NEWS, JSON.stringify(cleanedCustom));
 
@@ -108,7 +242,7 @@ export const GadgetNews: React.FC = () => {
             for (const item of [...cleanedCustom, ...prev]) {
               if (
                 !seen.has(item.link) &&
-                !isTrailerOrMovieNews(item.title) &&
+                !isGameOrExcludedNews(item) &&
                 !isInvalidOrOutdatedNews(item)
               ) {
                 seen.add(item.link);
@@ -132,8 +266,8 @@ export const GadgetNews: React.FC = () => {
 
   // Adiciona nova notícia (por URL ou sugerida) à lista e persiste
   const handleAddNewItem = (newItem: GadgetNewsItem) => {
-    if (isTrailerOrMovieNews(newItem.title)) {
-      setImportStatusMessage('⚠️ Notícias de trailers ou filmes não são permitidas nesta aba.');
+    if (isGameOrExcludedNews(newItem)) {
+      setImportStatusMessage('⚠️ Notícias contendo "jogo", "jogos", "game", "games" ou trailers/filmes não são permitidas.');
       return;
     }
     if (isInvalidOrOutdatedNews(newItem)) {
@@ -151,7 +285,7 @@ export const GadgetNews: React.FC = () => {
         const savedRaw = localStorage.getItem(STORAGE_KEY_CUSTOM_NEWS);
         const existingCustom: GadgetNewsItem[] = savedRaw ? JSON.parse(savedRaw) : [];
         const customFiltered = existingCustom.filter(
-          (item) => item.link !== newItem.link && !isTrailerOrMovieNews(item.title) && !isInvalidOrOutdatedNews(item)
+          (item) => item.link !== newItem.link && !isGameOrExcludedNews(item) && !isInvalidOrOutdatedNews(item)
         );
         const newCustomList = [newItem, ...customFiltered];
         localStorage.setItem(STORAGE_KEY_CUSTOM_NEWS, JSON.stringify(newCustomList));
@@ -239,9 +373,9 @@ export const GadgetNews: React.FC = () => {
           } : undefined
         }));
 
-        // Filtra os itens importados excluindo trailers, filmes e links inválidos
+        // Filtra os itens importados excluindo jogos, games, trailers, filmes e links inválidos
         const validImportedItems = importedItems.filter(
-          (item) => !isTrailerOrMovieNews(item.title) && !isInvalidOrOutdatedNews(item)
+          (item) => !isGameOrExcludedNews(item) && !isInvalidOrOutdatedNews(item)
         );
 
         // Junta as notícias existentes com as novas importadas, sem duplicar links
@@ -250,7 +384,7 @@ export const GadgetNews: React.FC = () => {
           const combined: GadgetNewsItem[] = [];
           
           for (const item of [...validImportedItems, ...prev]) {
-            if (!seen.has(item.link) && !isTrailerOrMovieNews(item.title) && !isInvalidOrOutdatedNews(item)) {
+            if (!seen.has(item.link) && !isGameOrExcludedNews(item) && !isInvalidOrOutdatedNews(item)) {
               seen.add(item.link);
               combined.push(item);
             }
@@ -386,8 +520,8 @@ export const GadgetNews: React.FC = () => {
 
   const filteredNews = useMemo(() => {
     return newsList.filter((item) => {
-      // Exclui estritamente notícias com trailer ou filme no título, ou links inválidos
-      if (isTrailerOrMovieNews(item.title) || isInvalidOrOutdatedNews(item)) {
+      // Exclui estritamente notícias de jogos/games ("jogo", "jogos", "game", "games"), trailers, filmes ou links inválidos
+      if (isGameOrExcludedNews(item) || isInvalidOrOutdatedNews(item)) {
         return false;
       }
 
@@ -431,8 +565,23 @@ export const GadgetNews: React.FC = () => {
           </p>
         </div>
 
-        {/* Botões de Ação Compactos: RSS Importer, News sugeridas, Add news */}
+        {/* Botões de Ação: RSS Importer, Flipboard 48h Status & Add news */}
         <div className="flex items-center gap-2 flex-wrap justify-center shrink-0">
+          {/* Indicador de Importação Automática da Revista Flipboard (48h) */}
+          <button
+            type="button"
+            onClick={() => autoImportFlipboard48h(false)}
+            disabled={isFlipboardSyncing}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 hover:text-white border border-emerald-500/30 rounded-xl text-xs font-semibold shadow-sm transition-all cursor-pointer group disabled:opacity-60"
+            title="Importação automática de notícias da revista eletrônica Flipboard (período de 48 horas)"
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <RefreshCw className={`w-3.5 h-3.5 text-emerald-400 ${isFlipboardSyncing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform'}`} />
+            <span>
+              {isFlipboardSyncing ? 'Sincronizando 48h...' : `Flipboard 48h (${flipboardArticlesCount > 0 ? flipboardArticlesCount : 'Ativo'})`}
+            </span>
+          </button>
+
           {/* Botão para abrir o Modal do Importador de RSS */}
           <button
             type="button"
@@ -442,16 +591,6 @@ export const GadgetNews: React.FC = () => {
           >
             <Rss className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" />
             <span>{t('news.openRssImporter')}</span>
-          </button>
-
-          {/* Botão News sugeridas (tamanho reduzido) */}
-          <button
-            type="button"
-            onClick={() => setIsSuggestModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 hover:text-white border border-amber-500/35 rounded-xl text-xs font-semibold shadow-sm transition-all cursor-pointer group"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-amber-400 group-hover:rotate-12 transition-transform" />
-            <span>{t('news.suggestNewsBtn')}</span>
           </button>
 
           {/* Botão Add news (tamanho reduzido) */}
@@ -512,7 +651,7 @@ export const GadgetNews: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={t('smartphones.searchPlaceholder')}
+            placeholder={t('news.searchPlaceholder')}
             className="w-full bg-slate-950/60 border border-slate-700/80 rounded-xl pl-9 pr-3 py-2 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/60 transition-all"
           />
         </div>
@@ -691,13 +830,6 @@ export const GadgetNews: React.FC = () => {
       <AddNewsModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onAddNews={handleAddNewItem}
-      />
-
-      {/* Modal de Sugerir Notícia / Pautas em Alta */}
-      <SuggestNewsModal
-        isOpen={isSuggestModalOpen}
-        onClose={() => setIsSuggestModalOpen(false)}
         onAddNews={handleAddNewItem}
       />
 
