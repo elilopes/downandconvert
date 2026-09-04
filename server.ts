@@ -1059,6 +1059,13 @@ async function startServer() {
         return res.status(404).json({ error: 'NO_FORMATS', message: 'Nenhum link de download direto foi retornado para esta mídia.' });
       }
 
+      // Forçar o formato mp3 para áudio e mp4 para vídeo
+      if (mode === 'audio') {
+        extension = 'mp3';
+      } else {
+        extension = 'mp4';
+      }
+
       // Stream the media back to client with automatic retry (up to 2 retries on 500/502)
       let streamRes: Response | null = null;
       let streamError: any = null;
@@ -1506,6 +1513,26 @@ async function startServer() {
       .trim();
   }
 
+  // Função auxiliar para identificar e filtrar notícias que possuem a palavra "jogo", "jogos", "game", "games" ou termos correlatos
+  function containsGameOrExcludedContent(title: string, lead?: string, category?: string, link?: string): boolean {
+    const cleanLink = (link || '').split('?')[0].replace(/[-_./]/g, ' ');
+    const combined = `${title || ''} ${lead || ''} ${category || ''} ${cleanLink}`.toLowerCase();
+
+    // Filtro estrito: palavra "jogo", "jogos", "game", "games" e termos correlatos
+    const gamePattern = /\b(jogos?|games?|gamer|gamers|gaming|gameplay|jogabilidade|jogador|jogadores|videogames?|video\s+games?)\b/i;
+    if (gamePattern.test(combined)) {
+      return true;
+    }
+
+    // Franquias, plataformas de games ou mídias não pertinentes (trailers, filmes)
+    const otherPattern = /\b(trailer|trailers|filme|filmes|playstation|ps5|ps4|ps3|ps2|xbox|nintendo|switch|pokemon|pokémon|gta|elden ring|god of war|voxel)\b/i;
+    if (otherPattern.test(combined)) {
+      return true;
+    }
+
+    return false;
+  }
+
   // Parseador de RSS XML básico e robusto
   function parseRssFeed(xmlText: string, defaultAuthor: string) {
     const items: Array<{
@@ -1562,14 +1589,16 @@ async function startServer() {
       const author = authorMatch ? cleanXmlText(authorMatch[1]) : defaultAuthor;
 
       if (title && link) {
-        const fullText = (title + ' ' + lead + ' ' + category).toLowerCase();
+        // Excluir notícias que contêm "jogo", "jogos", "game", "games", trailers, filmes, etc.
+        if (containsGameOrExcludedContent(title, lead, category, link)) {
+          continue;
+        }
+
         const fullBlock = block.toLowerCase();
-        // Excluir notícias que possuem trailer, filme, entretenimento ou jogos/games
         if (
           fullBlock.includes('videogames') ||
           fullBlock.includes('video games') ||
-          fullBlock.includes('/topic/videogames') ||
-          /trailer|filme|série|series|game|games|jogo|jogos|videogame|playstation|xbox|nintendo|pokemon|pokémon|gta|god of war|elden ring|voxel|mouses gamer|gamer|gameplay|ps5|ps4|ps2|switch/i.test(fullText)
+          fullBlock.includes('/topic/videogames')
         ) {
           continue;
         }
@@ -1587,6 +1616,97 @@ async function startServer() {
 
     return items;
   }
+
+  // =========================================================================
+  // IMPORTAÇÃO AUTOMÁTICA FLIPBOARD (REVISTA ELETRÔNICA - ÚLTIMAS 48 HORAS)
+  // =========================================================================
+  app.get('/api/news/flipboard-auto-import', async (req, res) => {
+    try {
+      const FLIPBOARD_FEED_URL = 'https://flipboard.com/@elilopes/techviva-gadgets-e-games-brasil-79uavc9uy.rss';
+      const hoursLimit = parseInt((req.query.hours as string) || '48', 10);
+      const maxAgeMs = hoursLimit * 60 * 60 * 1000;
+      const now = Date.now();
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      const feedRes = await fetch(FLIPBOARD_FEED_URL, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+          'Accept': 'application/rss+xml, application/xml, text/xml, */*'
+        },
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (!feedRes.ok) {
+        return res.status(502).json({ success: false, error: `Falha ao carregar feed Flipboard (HTTP ${feedRes.status})` });
+      }
+
+      const xmlText = await feedRes.text();
+      const parsedItems = parseRssFeed(xmlText, 'TechViva Flipboard');
+
+      // Filtra estritamente pelo período de 48 horas e descarta itens inválidos ou cookies
+      const filtered48h = parsedItems.filter((item) => {
+        if (!item.pubDate) return false;
+        const itemTime = new Date(item.pubDate).getTime();
+        if (isNaN(itemTime)) return false;
+
+        // Limita ao período de 48 horas
+        if ((now - itemTime) > maxAgeMs) return false;
+
+        // Descarte de páginas de cookies ou links que não são artigos reais
+        if (item.title.toLowerCase().includes('perfil social') || item.link.includes('meli.la')) return false;
+        if (item.lead && item.lead.toLowerCase().includes('usamos cookies')) return false;
+
+        // Filtro estrito: não importar notícias que possuem a palavra "jogo", "jogos", "game", "games" ou derivados
+        if (containsGameOrExcludedContent(item.title, item.lead, item.category, item.link)) {
+          return false;
+        }
+
+        return true;
+      });
+
+      // Validação de links anti-404
+      const verifiedArticles: any[] = [];
+      let rejected404Count = 0;
+
+      await Promise.allSettled(
+        filtered48h.map(async (art) => {
+          try {
+            const check = await checkUrlAlive(art.link, 4500);
+            if (check.ok) {
+              verifiedArticles.push({
+                ...art,
+                httpStatus: check.status,
+                verifiedAt: new Date().toISOString(),
+                linkStatus: '200_OK'
+              });
+            } else {
+              rejected404Count++;
+            }
+          } catch {
+            verifiedArticles.push(art);
+          }
+        })
+      );
+
+      // Ordenar por data mais recente
+      verifiedArticles.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
+
+      res.json({
+        success: true,
+        source: 'Flipboard Revista Eletrônica TechViva',
+        period: `${hoursLimit}h`,
+        totalFound: filtered48h.length,
+        totalValid: verifiedArticles.length,
+        rejected404Count,
+        articles: verifiedArticles
+      });
+    } catch (err: any) {
+      console.error('Erro na importação automática do Flipboard:', err);
+      res.status(500).json({ success: false, error: err.message || 'Erro ao importar feed do Flipboard' });
+    }
+  });
 
   // Endpoint: Importar feeds RSS com Verificador Automático de Erro 404
   app.get('/api/news/feed-import', async (req, res) => {
