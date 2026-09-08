@@ -246,14 +246,14 @@ export const NotFound: React.FC<NotFoundProps> = ({ initialCode }) => {
     },
     {
       title: 'Códigos Populares',
-      href: '/popular',
+      href: '/?modal=popular',
       description: 'Os códigos USSD e atalhos mais consultados pela comunidade em tempo real',
       icon: Sparkles,
       color: 'text-purple-400 bg-purple-500/10 border-purple-500/20 group-hover:border-purple-500/40',
     },
     {
       title: 'Como funciona? (FAQ)',
-      href: '/faq',
+      href: '/?modal=faq',
       description: 'Perguntas frequentes, dicas e instruções detalhadas de utilização',
       icon: HelpCircle,
       color: 'text-blue-400 bg-blue-500/10 border-blue-500/20 group-hover:border-blue-500/40',
