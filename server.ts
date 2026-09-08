@@ -1825,158 +1825,145 @@ app.post('/api/convert-server', upload.single('file'), async (req, res) => {
   // =========================================================================
   // IMPORTAÇÃO AUTOMÁTICA GADGET NEWS (TECHVIVA FLIPBOARD & PRINCIPAIS PORTAIS DE GADGETS E INVENÇÕES)
   // =========================================================================
-  app.get('/api/news/flipboard-auto-import', async (req, res) => {
-    try {
-      const hoursLimit = parseInt((req.query.hours as string) || '72', 10);
-      const maxAgeMs = hoursLimit * 60 * 60 * 1000;
-      const now = Date.now();
+  
+  async function fetchGadgetNewsData(hoursLimit) {
+    const maxAgeMs = hoursLimit * 60 * 60 * 1000;
+    const now = Date.now();
 
-      // Fontes de notícias: Revista Digital TechViva Flipboard como principal + portais de ponta em gadgets e invenções
-      const feedSources = [
-        {
-          url: 'https://flipboard.com/@elilopes/techviva-gadgets-e-games-brasil-79uavc9uy.rss',
-          author: 'TechViva Flipboard',
-          isPrimary: true
-        },
-        {
-          url: 'https://www.inovacaotecnologica.com.br/boletim/rss.xml',
-          author: 'Inovação Tecnológica',
-          isPrimary: false
-        },
-        {
-          url: 'https://olhardigital.com.br/feed/',
-          author: 'Olhar Digital',
-          isPrimary: false
-        },
-        {
-          url: 'https://rss.tecmundo.com.br/feed',
-          author: 'TecMundo',
-          isPrimary: false
-        },
-        {
-          url: 'https://www.showmetech.com.br/feed/',
-          author: 'Showmetech',
-          isPrimary: false
-        },
-        {
-          url: 'https://gizmodo.uol.com.br/feed/',
-          author: 'Gizmodo Brasil',
-          isPrimary: false
-        }
-      ];
+    const feedSources = [
+      { url: 'https://flipboard.com/@elilopes/techviva-gadgets-e-games-brasil-79uavc9uy.rss', author: 'TechViva Flipboard', isPrimary: true },
+      { url: 'https://www.inovacaotecnologica.com.br/boletim/rss.xml', author: 'Inovação Tecnológica', isPrimary: false },
+      { url: 'https://olhardigital.com.br/feed/', author: 'Olhar Digital', isPrimary: false },
+      { url: 'https://rss.tecmundo.com.br/feed', author: 'TecMundo', isPrimary: false },
+      { url: 'https://www.showmetech.com.br/feed/', author: 'Showmetech', isPrimary: false },
+      { url: 'https://gizmodo.uol.com.br/feed/', author: 'Gizmodo Brasil', isPrimary: false }
+    ];
 
-      const rawItems: Array<{
-        title: string;
-        link: string;
-        pubDate: string;
-        lead: string;
-        author: string;
-        category: string;
-        isPrimary?: boolean;
-      }> = [];
+    const rawItems = [];
+    await Promise.allSettled(
+      feedSources.map(async (source) => {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 8000);
+          const feedRes = await fetch(source.url, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36',
+              'Accept': 'application/rss+xml, application/xml, text/xml, */*'
+            },
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
 
-      // Download de todas as fontes simultaneamente
-      await Promise.allSettled(
-        feedSources.map(async (source) => {
-          try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000);
-            const feedRes = await fetch(source.url, {
-              headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-                'Accept': 'application/rss+xml, application/xml, text/xml, */*'
-              },
-              signal: controller.signal
-            });
-            clearTimeout(timeoutId);
-
-            if (feedRes.ok) {
-              const xmlText = await feedRes.text();
-              const parsed = parseRssFeed(xmlText, source.author);
-              for (const it of parsed) {
-                rawItems.push({
-                  ...it,
-                  isPrimary: source.isPrimary
-                });
-              }
+          if (feedRes.ok) {
+            const xmlText = await feedRes.text();
+            const parsed = parseRssFeed(xmlText, source.author);
+            for (const it of parsed) {
+              rawItems.push({ ...it, isPrimary: source.isPrimary });
             }
-          } catch (e: any) {
-            console.warn(`[Gadget News] Aviso ao carregar feed ${source.url}:`, e.message);
           }
-        })
-      );
-
-      // Filtra pelo período, exclui jogos/trailers e descarta páginas de cookies / links inválidos
-      const uniqueMap = new Map<string, any>();
-
-      for (const item of rawItems) {
-        if (!item.title || !item.link) continue;
-        if (uniqueMap.has(item.link)) continue;
-
-        if (item.pubDate) {
-          const itemTime = new Date(item.pubDate).getTime();
-          if (!isNaN(itemTime) && (now - itemTime) > maxAgeMs) {
-            continue;
-          }
+        } catch (e) {
+          console.warn(`[Gadget News] Aviso ao carregar feed ${source.url}:`, e.message);
         }
+      })
+    );
 
-        // Descarte de páginas de cookies ou links que não são artigos reais
-        if (item.title.toLowerCase().includes('perfil social') || item.link.includes('meli.la')) continue;
-        if (item.lead && item.lead.toLowerCase().includes('usamos cookies')) continue;
+    const uniqueMap = new Map();
+    for (const item of rawItems) {
+      if (!item.title || !item.link) continue;
+      if (uniqueMap.has(item.link)) continue;
 
-        // Filtro estrito de jogos / trailers
-        if (containsGameOrExcludedContent(item.title, item.lead, item.category, item.link)) {
-          continue;
-        }
-
-        uniqueMap.set(item.link, item);
+      if (item.pubDate) {
+        const itemTime = new Date(item.pubDate).getTime();
+        if (!isNaN(itemTime) && (now - itemTime) > maxAgeMs) continue;
       }
 
-      const deduplicated = Array.from(uniqueMap.values());
+      if (item.title.toLowerCase().includes('perfil social') || item.link.includes('meli.la')) continue;
+      if (item.lead && item.lead.toLowerCase().includes('usamos cookies')) continue;
+      if (containsGameOrExcludedContent(item.title, item.lead, item.category, item.link)) continue;
 
-      // Validação de links anti-404
-      const verifiedArticles: any[] = [];
-      let rejected404Count = 0;
+      uniqueMap.set(item.link, item);
+    }
 
-      await Promise.allSettled(
-        deduplicated.map(async (art) => {
-          try {
-            const check = await checkUrlAlive(art.link, 4500);
-            if (check.ok) {
-              verifiedArticles.push({
-                ...art,
-                httpStatus: check.status,
-                verifiedAt: new Date().toISOString(),
-                linkStatus: '200_OK'
-              });
-            } else {
-              rejected404Count++;
-            }
-          } catch {
-            verifiedArticles.push(art);
+    const deduplicated = Array.from(uniqueMap.values());
+    const verifiedArticles = [];
+    let rejected404Count = 0;
+
+    await Promise.allSettled(
+      deduplicated.map(async (art) => {
+        try {
+          const check = await checkUrlAlive(art.link, 4500);
+          if (check.ok) {
+            verifiedArticles.push({ ...art, httpStatus: check.status, verifiedAt: new Date().toISOString(), linkStatus: '200_OK' });
+          } else {
+            rejected404Count++;
           }
-        })
-      );
+        } catch {
+          verifiedArticles.push(art);
+        }
+      })
+    );
 
-      // Ordenar: primeiro matérias da TechViva Flipboard (fonte principal), e dentro delas e demais por data mais recente
-      verifiedArticles.sort((a, b) => {
-        if (a.isPrimary && !b.isPrimary) return -1;
-        if (!a.isPrimary && b.isPrimary) return 1;
-        return new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime();
-      });
+    verifiedArticles.sort((a, b) => {
+      if (a.isPrimary && !b.isPrimary) return -1;
+      if (!a.isPrimary && b.isPrimary) return 1;
+      return new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime();
+    });
 
+    return { deduplicatedCount: deduplicated.length, verifiedArticles, rejected404Count };
+  }
+
+  app.get('/api/news/flipboard-auto-import', async (req, res) => {
+    try {
+      const hoursLimit = parseInt((req.query.hours) || '72', 10);
+      const { deduplicatedCount, verifiedArticles, rejected404Count } = await fetchGadgetNewsData(hoursLimit);
+      
       res.json({
         success: true,
         source: 'Revista TechViva Flipboard & Portais de Gadgets e Inovações',
         period: `${hoursLimit}h`,
-        totalFound: deduplicated.length,
+        totalFound: deduplicatedCount,
         totalValid: verifiedArticles.length,
         rejected404Count,
         articles: verifiedArticles
       });
-    } catch (err: any) {
+    } catch (err) {
       console.error('Erro na importação de notícias de gadgets e inovações:', err);
       res.status(500).json({ success: false, error: err.message || 'Erro ao importar notícias' });
+    }
+  });
+
+  app.get(['/api/news/rss.xml', '/rss.xml'], async (req, res) => {
+    try {
+      const hoursLimit = parseInt((req.query.hours) || '72', 10);
+      const { verifiedArticles } = await fetchGadgetNewsData(hoursLimit);
+
+      let rssXml = `<?xml version="1.0" encoding="UTF-8" ?>\n`;
+      rssXml += `<rss version="2.0">\n`;
+      rssXml += `<channel>\n`;
+      rssXml += `  <title>TechViva & Gadgets - Down&Convert</title>\n`;
+      rssXml += `  <link>https://downandconvert.onrender.com</link>\n`;
+      rssXml += `  <description>Últimas notícias sobre gadgets, inovações e tecnologia curadas automaticamente.</description>\n`;
+      rssXml += `  <language>pt-br</language>\n`;
+      
+      verifiedArticles.forEach(art => {
+        rssXml += `  <item>\n`;
+        rssXml += `    <title><![CDATA[${art.title || ''}]]></title>\n`;
+        rssXml += `    <link><![CDATA[${art.link || ''}]]></link>\n`;
+        rssXml += `    <description><![CDATA[${art.lead || ''}]]></description>\n`;
+        if (art.author) rssXml += `    <author><![CDATA[${art.author}]]></author>\n`;
+        if (art.category) rssXml += `    <category><![CDATA[${art.category}]]></category>\n`;
+        if (art.pubDate) rssXml += `    <pubDate>${new Date(art.pubDate).toUTCString()}</pubDate>\n`;
+        rssXml += `  </item>\n`;
+      });
+      
+      rssXml += `</channel>\n`;
+      rssXml += `</rss>\n`;
+
+      res.setHeader('Content-Type', 'application/rss+xml; charset=utf-8');
+      res.send(rssXml);
+    } catch (err) {
+      console.error('Erro na geração do RSS:', err);
+      res.status(500).send('Erro interno ao gerar RSS');
     }
   });
 
