@@ -629,6 +629,34 @@ const dict: Translations = {
     HI: "क्रेडिट कार्ड की जानकारी देकर अपना क्रेडिट रीचार्ज करें।",
     KO: "신용카드 정보를 입력하여 크레딧을 충전합니다."
   },
+  "ussd.code.vivo.activate52.title": {
+    PT: "Ativar Siga-me (Vivo fora de SP) (*52*...)",
+    EN: "Activate Call Forwarding (Vivo) (*52*...)",
+    RU: "Включить переадресацию (Vivo) (*52*...)",
+    HI: "कॉल अग्रेषण सक्रिय करें (वीवो) (*52*...)",
+    KO: "착신 전환 활성화 (Vivo) (*52*...)"
+  },
+  "ussd.code.vivo.activate52.desc": {
+    PT: "No Brasil, ativa o Siga-me (encaminhamento de chamadas) para clientes Vivo de regiões fora de São Paulo. Disque *52*NúmeroCelular# e ligue (desative com #52#).",
+    EN: "In Brazil, activates Call Forwarding for Vivo customers outside São Paulo. Dial *52*PhoneNumber# and press call (deactivate with #52#).",
+    RU: "В Бразилии: включает переадресацию для абонентов Vivo за пределами Сан-Паулу. Наберите *52*НомерТелефона# и вызов (отключение: #52#).",
+    HI: "ब्राज़ील में साओ पाउलो के बाहर वीवो ग्राहकों के लिए कॉल फ़ॉरवर्डिंग सक्रिय करता है। *52*फ़ोननंबर# डायल करें (निष्क्रिय: #52#)।",
+    KO: "브라질의 상파울루 외곽 Vivo 고객용 착신 전환 활성화 코드. *52*전화번호# 입력 후 통화 (비활성화: #52#)."
+  },
+  "ussd.code.vivo.deactivate52.title": {
+    PT: "Desativar Siga-me (Vivo fora de SP) (#52#)",
+    EN: "Deactivate Call Forwarding (Vivo) (#52#)",
+    RU: "Отключить переадресацию (Vivo) (#52#)",
+    HI: "कॉल अग्रेषण निष्क्रिय करें (वीवो) (#52#)",
+    KO: "착신 전환 비활성화 (Vivo) (#52#)"
+  },
+  "ussd.code.vivo.deactivate52.desc": {
+    PT: "Cancela o redirecionamento de chamadas (Siga-me) para a operadora Vivo fora de São Paulo (#52#).",
+    EN: "Cancels call forwarding for the Vivo carrier outside São Paulo (#52#).",
+    RU: "Отменяет переадресацию звонков для оператора Vivo за пределами Сан-Паулу (#52#).",
+    HI: "साओ पाउलो के बाहर वीवो कैरियर के लिए कॉल फ़ॉरवर्डिंग रद्द करता है (#52#)।",
+    KO: "상파울루 외곽 Vivo 통신사의 착신 전환을 취소합니다 (#52#)."
+  },
   "ussd.code.claro.544.title": {
     PT: "Consultar Internet Claro",
     EN: "Check Claro Internet",
@@ -973,11 +1001,39 @@ const dict: Translations = {
     KO: "착신 전환 (무응답) (*#61#)"
   },
   "ussd.code.geral.61.desc": {
-    PT: "Verifica o status e o número para onde as chamadas são encaminhadas quando você não atende.",
-    EN: "Checks the status and the number to which calls are forwarded when you do not answer.",
-    RU: "Проверяет статус и номер, на который переадресовываются звонки, если вы не отвечаете.",
-    HI: "स्थिति और उस नंबर की जांच करता है जिस पर आपके उत्तर न देने पर कॉल अग्रेषित की जाती हैं।",
-    KO: "전화를 받지 않을 때 통화가 전환되는 번호와 상태를 확인합니다."
+    PT: "Consulta o status e o número de destino para chamadas não atendidas. Atenção: este código apenas consulta o status. Para ativar, digite o número de destino: *61*NúmeroCelular# e ligue (desative com #61#).",
+    EN: "Checks forwarding status and destination number for unanswered calls. Note: this code only queries status. To activate, enter the destination phone number: dial *61*PhoneNumber# (deactivate with #61#).",
+    RU: "Проверяет статус и номер назначения для неотвеченных вызовов. Внимание: код только проверяет статус. Для активации наберите номер назначения: *61*НомерТелефона# (отключение: #61#).",
+    HI: "अनुत्तरित कॉल के लिए अग्रेषण स्थिति और गंतव्य नंबर की जांच करता है। ध्यान दें: यह कोड केवल स्थिति जांचता है। सक्रिय करने के लिए गंतव्य नंबर दर्ज करें: *61*फ़ोननंबर# (निष्क्रिय: #61#)।",
+    KO: "전화를 받지 않을 때의 착신 전환 상태와 대상 번호를 확인합니다. 주의: 이 코드는 상태만 조회합니다. 활성화하려면 대상 전화번호를 입력하세요: *61*전화번호# (비활성화: #61#)."
+  },
+  "ussd.code.geral.activate61.title": {
+    PT: "Ativar Encaminhamento (Claro) (*61*...)",
+    EN: "Activate Forwarding if No Reply (*61*...)",
+    RU: "Включить переадресацию при не ответе (*61*...)",
+    HI: "उत्तर न मिलने पर अग्रेषण सक्रिय करें (*61*...)",
+    KO: "무응답 시 착신 전환 활성화 (*61*...)"
+  },
+  "ussd.code.geral.activate61.desc": {
+    PT: "No Brasil, usado pela Claro para encaminhar chamadas não atendidas em 20s. Disque *61*NúmeroCelular# e aperte ligar. Para cancelar, disque #61#.",
+    EN: "Forwards unanswered calls to another phone number. Dial *61*PhoneNumber# and call. To cancel, dial #61#.",
+    RU: "Переадресовывает неотвеченные звонки на другой номер. Наберите *61*НомерТелефона# и вызов. Для отмены наберите #61#.",
+    HI: "अनुत्तरित कॉल किसी अन्य नंबर पर अग्रेषित करता है। *61*फ़ोननंबर# डायल करें। रद्द करने के लिए #61# डायल करें।",
+    KO: "받지 않은 전화를 다른 휴대폰 번호로 착신 전환합니다. *61*전화번호# 입력 후 통화. 취소하려면 #61#."
+  },
+  "ussd.code.geral.deactivate61.title": {
+    PT: "Desativar Encaminhamento Não Atendida (#61#)",
+    EN: "Deactivate Forwarding if No Reply (#61#)",
+    RU: "Отключить переадресацию при не ответе (#61#)",
+    HI: "उत्तर न मिलने पर अग्रेषण निष्क्रिय करें (#61#)",
+    KO: "무응답 시 착신 전환 비활성화 (#61#)"
+  },
+  "ussd.code.geral.deactivate61.desc": {
+    PT: "Desativa o redirecionamento de chamadas quando você não atende (#61# ou ##61#).",
+    EN: "Deactivates call forwarding when calls are unanswered (#61# or ##61#).",
+    RU: "Отключает переадресацию вызовов при отсутствии ответа (#61# или ##61#).",
+    HI: "कॉल का उत्तर न मिलने पर कॉल अग्रेषण को निष्क्रिय करता है (#61# या ##61#)।",
+    KO: "전화를 받지 못했을 때의 착신 전환을 비활성화합니다 (#61# 또는 ##61#)."
   },
   "ussd.code.geral.67.title": {
     PT: "Encaminhamento (Ocupado) (*#67#)",
@@ -987,11 +1043,67 @@ const dict: Translations = {
     KO: "착신 전환 (통화 중) (*#67#)"
   },
   "ussd.code.geral.67.desc": {
-    PT: "Mostra o número para o qual suas chamadas são redirecionadas quando sua linha está ocupada.",
-    EN: "Shows the number to which your calls are redirected when your line is busy.",
-    RU: "Показывает номер, на который перенаправляются ваши звонки, когда ваша линия занята.",
-    HI: "वह नंबर दिखाता है जिस पर आपकी लाइन व्यस्त होने पर आपकी कॉल पुनर्निर्देशित की जाती हैं।",
-    KO: "통화 중일 때 전화가 리디렉션되는 번호를 표시합니다."
+    PT: "Consulta se as ligações são desviadas quando você está em outra ligação ou rejeita a chamada. Para ativar, é necessário digitar o número de destino: *63*NúmeroCelular# ou *67*NúmeroCelular# (desative com #63# ou #67#).",
+    EN: "Checks if calls are forwarded when you are on another call or decline. To activate, enter the destination phone number: *63*PhoneNumber# or *67*PhoneNumber# (deactivate with #63# or #67#).",
+    RU: "Проверяет статус переадресации, когда линия занята или вызов отклонен. Для активации введите номер назначения: *63*НомерТелефона# или *67*НомерТелефона# (отключение: #63# или #67#).",
+    HI: "जांचता है कि क्या लाइन व्यस्त होने पर कॉल पुनर्निर्देशित की जाती हैं। सक्रिय करने के लिए गंतव्य नंबर दर्ज करें: *63*फ़ोननंबर# या *67*फ़ोननंबर# (निष्क्रिय: #63# या #67#)।",
+    KO: "통화 중이거나 전화를 거절했을 때의 착신 전환 상태를 확인합니다. 활성화하려면 대상 전화번호를 입력하세요: *63*전화번호# 또는 *67*전화번호# (비활성화: #63# 또는 #67#)."
+  },
+  "ussd.code.geral.activate63.title": {
+    PT: "Ativar Encaminhamento Ocupado (Claro) (*63*...)",
+    EN: "Activate Forwarding When Busy (*63*...)",
+    RU: "Включить переадресацию при занятости (*63*...)",
+    HI: "व्यस्त होने पर अग्रेषण सक्रिय करें (*63*...)",
+    KO: "통화 중 착신 전환 활성화 (*63*...)"
+  },
+  "ussd.code.geral.activate63.desc": {
+    PT: "No Brasil, usado pela Claro para encaminhar chamadas quando a linha estiver ocupada. Disque *63*NúmeroCelular# e aperte chamar (para cancelar, disque #63#).",
+    EN: "Forwards calls when your line is busy or rejected. Dial *63*PhoneNumber# and press call (to cancel, dial #63#).",
+    RU: "Переадресовывает звонки при занятости или сбросе. Наберите *63*НомерТелефона# и вызов (для отмены наберите #63#).",
+    HI: "लाइन व्यस्त होने या अस्वीकार करने पर कॉल अग्रेषित करता है। *63*फ़ोननंबर# डायल करें (रद्द करने के लिए #63#)।",
+    KO: "통화 중이거나 수신 거절 시 전화를 다른 번호로 착신 전환합니다. *63*전화번호# 입력 후 통화 (취소: #63#)."
+  },
+  "ussd.code.geral.deactivate63.title": {
+    PT: "Desativar Encaminhamento Se Ocupado (#63#)",
+    EN: "Deactivate Forwarding When Busy (#63#)",
+    RU: "Отключить переадресацию при занятости (#63#)",
+    HI: "व्यस्त होने पर अग्रेषण निष्क्रिय करें (#63#)",
+    KO: "통화 중 착신 전환 비활성화 (#63#)"
+  },
+  "ussd.code.geral.deactivate63.desc": {
+    PT: "Cancela o encaminhamento de chamadas para quando a linha estiver ocupada (#63#).",
+    EN: "Cancels call forwarding when the line is busy (#63#).",
+    RU: "Отменяет переадресацию вызовов при занятой линии (#63#).",
+    HI: "लाइन व्यस्त होने पर कॉल अग्रेषण रद्द करता है (#63#)।",
+    KO: "통화 중 착신 전환을 취소합니다 (#63#)."
+  },
+  "ussd.code.geral.activate67.title": {
+    PT: "Ativar Encaminhamento Ocupado GSM (*67*...)",
+    EN: "Activate Busy Forwarding GSM (*67*...)",
+    RU: "Включить переадресацию при занятости GSM (*67*...)",
+    HI: "व्यस्त अग्रेषण सक्रिय करें GSM (*67*...)",
+    KO: "통화 중 착신 전환 활성화 GSM (*67*...)"
+  },
+  "ussd.code.geral.activate67.desc": {
+    PT: "Padrão universal GSM para encaminhar chamadas se a linha estiver ocupada. Digite *67*NúmeroCelular# e ligue (desative com #67#).",
+    EN: "Universal GSM standard to forward calls when the line is busy. Dial *67*PhoneNumber# and call (deactivate with #67#).",
+    RU: "Универсальный стандарт GSM для переадресации при занятой линии. Наберите *67*НомерТелефона# и вызов (отключение: #67#).",
+    HI: "लाइन व्यस्त होने पर कॉल अग्रेषित करने के लिए सार्वभौमिक जीएसएम मानक। *67*फ़ोननंबर# डायल करें (निष्क्रिय: #67#)।",
+    KO: "통화 중일 때 전화를 착신 전환하는 범용 GSM 표준입니다. *67*전화번호# 입력 후 통화 (비활성화: #67#)."
+  },
+  "ussd.code.geral.deactivate67.title": {
+    PT: "Desativar Encaminhamento Ocupado GSM (#67#)",
+    EN: "Deactivate Busy Forwarding GSM (#67#)",
+    RU: "Отключить переадресацию при занятости GSM (#67#)",
+    HI: "व्यस्त अग्रेषण निष्क्रिय करें GSM (#67#)",
+    KO: "통화 중 착신 전환 비활성화 GSM (#67#)"
+  },
+  "ussd.code.geral.deactivate67.desc": {
+    PT: "Desativa o encaminhamento de chamadas da linha ocupada no padrão universal GSM (#67# ou ##67#).",
+    EN: "Deactivates busy call forwarding under universal GSM standard (#67# or ##67#).",
+    RU: "Отключает переадресацию вызовов при занятой линии по стандарту GSM (#67# или ##67#).",
+    HI: "यूनिवर्सल जीएसएम मानक के तहत व्यस्त कॉल अग्रेषण को निष्क्रिय करता है (#67# या ##67#)।",
+    KO: "범용 GSM 표준에 따른 통화 중 착신 전환을 비활성화합니다 (#67# 또는 ##67#)."
   },
   "ussd.code.geral.31.title": {
     PT: "Ocultar Identificador de Chamadas (#31#)",
@@ -1015,11 +1127,39 @@ const dict: Translations = {
     KO: "일반 착신 전환 상태 (*#21#)"
   },
   "ussd.code.geral.21.desc": {
-    PT: "Verifica se há algum tipo de encaminhamento de chamadas ativo no seu número.",
-    EN: "Checks if there is any type of call forwarding active on your number.",
-    RU: "Проверяет наличие активной переадресации вызовов на вашем номере.",
-    HI: "जांच करता है कि क्या आपके नंबर पर किसी भी प्रकार का कॉल अग्रेषण सक्रिय है।",
-    KO: "번호에 활성화된 착신 전환이 있는지 확인합니다."
+    PT: "Verifica se há encaminhamento de chamadas ativo no seu número. Atenção: este código apenas consulta o status. Para ativar, é necessário digitar o número de destino: disque *21*NúmeroCelular# e ligue (desative com #21#).",
+    EN: "Checks if there is any call forwarding active on your number. Note: this code only checks status. To activate, enter the destination phone number: dial *21*PhoneNumber# (deactivate with #21#).",
+    RU: "Проверяет наличие активной переадресации на вашем номере. Внимание: этот код только проверяет статус. Для активации введите номер назначения: наберите *21*НомерТелефона# (отключение: #21#).",
+    HI: "जांच करता है कि क्या आपके नंबर पर कोई कॉल अग्रेषण सक्रिय है। ध्यान दें: यह केवल स्थिति जांचता है। सक्रिय करने के लिए गंतव्य फ़ोन नंबर दर्ज करें: *21*फ़ोननंबर# (निष्क्रिय: #21#)।",
+    KO: "번호에 활성화된 착신 전환이 있는지 확인합니다. 주의: 이 코드는 상태만 조회합니다. 활성화하려면 대상 전화번호를 입력하세요: *21*전화번호# (비활성화: #21#)."
+  },
+  "ussd.code.geral.activate21.title": {
+    PT: "Ativar Siga-me (Claro/Oi/TIM) (*21*...)",
+    EN: "Activate All Call Forwarding (*21*...)",
+    RU: "Включить полную переадресацию (*21*...)",
+    HI: "सभी कॉल अग्रेषण सक्रिय करें (*21*...)",
+    KO: "모든 착신 전환 활성화 (*21*...)"
+  },
+  "ussd.code.geral.activate21.desc": {
+    PT: "No Brasil (Claro, Oi, TIM), ativa o Siga-me (desvio de todas as chamadas). Disque *21*NúmeroCelular# e aperte chamar. Para cancelar, disque #21#.",
+    EN: "Forwards all incoming calls unconditionally to another number. Dial *21*PhoneNumber# and press call. To cancel, dial #21#.",
+    RU: "Безусловно переадресовывает все входящие вызовы на другой номер. Наберите *21*НомерТелефона# и вызов. Для отмены наберите #21#.",
+    HI: "बिना शर्त सभी आने वाली कॉल किसी अन्य नंबर पर अग्रेषित करता है। *21*फ़ोननंबर# डायल करें। रद्द करने के लिए #21# डायल करें।",
+    KO: "수신되는 모든 전화를 조건 없이 다른 번호로 착신 전환합니다. *21*전화번호# 입력 후 통화. 취소하려면 #21#."
+  },
+  "ussd.code.geral.deactivate21.title": {
+    PT: "Desativar Encaminhamento Total (#21#)",
+    EN: "Deactivate All Call Forwarding (#21#)",
+    RU: "Отключить полную переадресацию (#21#)",
+    HI: "सभी कॉल अग्रेषण निष्क्रिय करें (#21#)",
+    KO: "모든 착신 전환 비활성화 (#21#)"
+  },
+  "ussd.code.geral.deactivate21.desc": {
+    PT: "Cancela o encaminhamento total incondicional de todas as chamadas (#21# ou ##21#), voltando a tocar diretamente no seu aparelho.",
+    EN: "Cancels unconditional call forwarding for all calls (#21# or ##21#), resuming ringing directly on your device.",
+    RU: "Отменяет безусловную переадресацию всех вызовов (#21# или ##21#), возвращая вызовы на ваш аппарат.",
+    HI: "सभी कॉल के लिए बिना शर्त कॉल अग्रेषण रद्द करता है (#21# या ##21#)।",
+    KO: "모든 통화의 무조건 착신 전환을 취소하고 (#21# 또는 ##21#) 본인 기기에서 직접 수신합니다."
   },
   "ussd.code.geral.43.title": {
     PT: "Chamada em Espera (*#43#)",
@@ -1104,6 +1244,524 @@ const dict: Translations = {
     RU: "Показывает информацию об использовании сотовых данных и тарифе (работает только у некоторых операторов).",
     HI: "सेलुलर डेटा उपयोग और योजना की जानकारी दिखाता है (केवल कुछ वाहकों पर काम करता है)।",
     KO: "셀룰러 데이터 사용량 및 요금제 정보를 표시합니다 (일부 이동통신사에서만 작동)."
+  },
+  "ussd.code.iphone.3370.title": {
+    PT: "Modo EFR - Qualidade de Voz (*3370#)",
+    EN: "EFR Mode - Voice Quality (*3370#)",
+    RU: "Режим EFR - Качество голоса (*3370#)",
+    HI: "EFR मोड - आवाज़ की गुणवत्ता (*3370#)",
+    KO: "EFR 모드 - 통화 음질 향상 (*3370#)"
+  },
+  "ussd.code.iphone.3370.desc": {
+    PT: "Ativa o modo Enhanced Full Rate (EFR) no iPhone para melhorar a nitidez e qualidade do som em chamadas celulares. Use #3370# para desativar.",
+    EN: "Enables Enhanced Full Rate (EFR) mode on iPhone to improve voice clarity and sound quality during calls. Use #3370# to disable.",
+    RU: "Включает режим Enhanced Full Rate (EFR) на iPhone для улучшения четкости речи при звонках. Используйте #3370# для отключения.",
+    HI: "कॉल के दौरान आवाज़ की स्पष्टता में सुधार के लिए iPhone पर EFR मोड सक्षम करता है। अक्षम करने के लिए #3370# का उपयोग करें।",
+    KO: "iPhone에서 통화 중 음성 선명도와 음질을 향상시키기 위해 EFR 모드를 활성화합니다. 비활성화하려면 #3370#을 사용하세요."
+  },
+  "ussd.code.iphone.activate43.title": {
+    PT: "Ativar Chamada em Espera (*43#)",
+    EN: "Activate Call Waiting (*43#)",
+    RU: "Включить ожидание вызова (*43#)",
+    HI: "कॉल प्रतीक्षा सक्रिय करें (*43#)",
+    KO: "통화 대기 활성화 (*43#)"
+  },
+  "ussd.code.iphone.activate43.desc": {
+    PT: "Ativa a chamada em espera no iPhone. Se alguém ligar enquanto você estiver em uma chamada, você ouvirá um aviso sonoro.",
+    EN: "Enables call waiting on iPhone. You will receive a tone notification if another call comes in while you are talking.",
+    RU: "Включает ожидание вызова на iPhone. Вы услышите сигнал, если поступит второй звонок.",
+    HI: "iPhone पर कॉल प्रतीक्षा सक्षम करता है। बातचीत के दौरान दूसरी कॉल आने पर आपको बीप सुनाई देगी।",
+    KO: "iPhone에서 통화 대기를 활성화합니다. 통화 중 다른 전화가 오면 알림음을 받습니다."
+  },
+  "ussd.code.iphone.deactivate43.title": {
+    PT: "Desativar Chamada em Espera (#43#)",
+    EN: "Deactivate Call Waiting (#43#)",
+    RU: "Отключить ожидание вызова (#43#)",
+    HI: "कॉल प्रतीक्षा निष्क्रिय करें (#43#)",
+    KO: "통화 대기 비활성화 (#43#)"
+  },
+  "ussd.code.iphone.deactivate43.desc": {
+    PT: "Desativa a função de chamada em espera no iPhone. Quem ligar enquanto a linha estiver ocupada ouvirá sinal de ocupado.",
+    EN: "Disables call waiting on iPhone. Callers will hear a busy tone if your line is engaged.",
+    RU: "Отключает функцию ожидания вызова на iPhone.",
+    HI: "iPhone पर कॉल प्रतीक्षा अक्षम करता है। व्यस्त होने पर कॉल करने वाले को व्यस्त टोन सुनाई देगी।",
+    KO: "iPhone에서 통화 대기를 비활성화합니다. 통화 중 전화가 걸려오면 통화 중 신호음이 들립니다."
+  },
+  "ussd.code.iphone.hide31.title": {
+    PT: "Chamada Anônima / Ocultar Número (*31# + número)",
+    EN: "Anonymous Call / Hide Number (*31# + number)",
+    RU: "Анонимный звонок / Скрыть номер (*31# + номер)",
+    HI: "अनाम कॉल / नंबर छुपाएं (*31# + नंबर)",
+    KO: "발신 번호 표시 제한 (*31# + 번호)"
+  },
+  "ussd.code.iphone.hide31.desc": {
+    PT: "Disque *31# antes do número desejado (ex: *31#11999998888) para fazer uma chamada oculta sem exibir seu identificador.",
+    EN: "Dial *31# before the destination number to make an anonymous call hiding your caller ID.",
+    RU: "Наберите *31# перед нужным номером, чтобы скрыть свой номер при звонке.",
+    HI: "अपनी कॉलर आईडी छुपाकर कॉल करने के लिए गंतव्य नंबर से पहले *31# डायल करें।",
+    KO: "발신자 번호를 숨기고 전화를 걸려면 대상 번호 앞에 *31#을 누르세요."
+  },
+  "ussd.code.iphone.imei.title": {
+    PT: "Consultar IMEI do iPhone (*#06#)",
+    EN: "Check iPhone IMEI (*#06#)",
+    RU: "Проверить IMEI iPhone (*#06#)",
+    HI: "iPhone IMEI जांचें (*#06#)",
+    KO: "iPhone IMEI 확인 (*#06#)"
+  },
+  "ussd.code.iphone.imei.desc": {
+    PT: "Exibe instantaneamente o número de série IMEI do iPhone. Essencial para verificar se o aparelho é original e para bloqueio em caso de furto.",
+    EN: "Instantly displays the iPhone's IMEI number. Essential for checking authenticity and blocking if stolen.",
+    RU: "Мгновенно отображает номер IMEI iPhone. Необходимо для проверки подлинности и блокировки при краже.",
+    HI: "iPhone का IMEI नंबर तुरंत प्रदर्शित करता है। प्रामाणिकता की जांच और चोरी होने पर ब्लॉक करने के लिए आवश्यक।",
+    KO: "iPhone의 IMEI 일련번호를 즉시 표시합니다. 정품 확인 및 분실/도난 시 기기 차단에 필수입니다."
+  },
+  "ussd.code.iphone.tests0.title": {
+    PT: "Menu de Testes de Componentes (*#0*#)",
+    EN: "Component Test Menu (*#0*#)",
+    RU: "Меню тестирования компонентов (*#0*#)",
+    HI: "घटक परीक्षण मेनू (*#0*#)",
+    KO: "부품 테스트 메뉴 (*#0*#)"
+  },
+  "ussd.code.iphone.tests0.desc": {
+    PT: "Menu de testes de hardware (tela, cores, sensores, vibração). Nota: muito comum em Android/Samsung; no iPhone o menu técnico oficial é o Field Test (*3001#12345#*).",
+    EN: "Hardware test menu (screen, colors, sensors, vibration). Note: native on Android/Samsung; on iPhone the official technical menu is Field Test (*3001#12345#*).",
+    RU: "Меню тестирования оборудования (экран, датчики, вибрация). Примечание: нативно для Android/Samsung; на iPhone официальное меню — Field Test (*3001#12345#*).",
+    HI: "हार्डवेयर परीक्षण मेनू (स्क्रीन, सेंसर, कंपन)। ध्यान दें: Android/सैमसंग पर देशी; iPhone पर आधिकारिक मेनू फील्ड टेस्ट (*3001#12345#*) है।",
+    KO: "하드웨어 테스트 메뉴(화면, 센서, 진동). 참고: Android/Samsung 기기 기본 기능이며, iPhone의 공식 엔지니어링 메뉴는 Field Test(*3001#12345#*)입니다."
+  },
+  "ussd.code.geral.646.title": {
+    PT: "Minutos Usados e Saldo (#646# / #MIN#)",
+    EN: "Used Minutes and Balance (#646# / #MIN#)",
+    RU: "Использованные минуты и баланс (#646# / #MIN#)",
+    HI: "उपयोग किए गए मिनट और शेष (#646# / #MIN#)",
+    KO: "사용된 통화 분수 및 잔액 (#646# / #MIN#)"
+  },
+  "ussd.code.geral.646.desc": {
+    PT: "Consulta o consumo de minutos do plano por SMS (646 soletra MIN no teclado). Muito comum em operadoras norte-americanas (AT&T, T-Mobile, Verizon).",
+    EN: "Checks plan minute usage via SMS (646 spells MIN on keypad). Widely used by North American carriers (AT&T, T-Mobile, Verizon).",
+    RU: "Проверяет расход минут по тарифу через SMS (646 соответствует слову MIN на клавиатуре). Популярно у операторов США (AT&T, T-Mobile, Verizon).",
+    HI: "एसएमएस के माध्यम से योजना के मिनटों के उपयोग की जांच करता है (646 कीपैड पर MIN बनाता है)।",
+    KO: "SMS로 요금제 음성 통화 사용량을 확인합니다 (키패드에서 646은 MIN). 북미 통신사(AT&T, T-Mobile, Verizon)에서 주로 사용됩니다."
+  },
+  "ussd.code.geral.100.title": {
+    PT: "Descobrir Próprio Número (*#100#)",
+    EN: "Find Own Number (*#100#)",
+    RU: "Узнать собственный номер (*#100#)",
+    HI: "अपना नंबर खोजें (*#100#)",
+    KO: "본인 휴대폰 번호 확인 (*#100#)"
+  },
+  "ussd.code.geral.100.desc": {
+    PT: "Exibe o próprio número da linha na tela em operadoras GSM compatíveis (como Vodafone UK, O2, Giffgaff, Rogers).",
+    EN: "Displays your own phone number on screen across compatible GSM carriers (such as Vodafone UK, O2, Giffgaff, Rogers).",
+    RU: "Отображает собственный номер телефона на экране в совместимых сетях GSM (Vodafone UK, O2, Giffgaff, Rogers).",
+    HI: "संगत GSM वाहकों (जैसे Vodafone UK, O2, Giffgaff, Rogers) पर स्क्रीन पर अपना फ़ोन नंबर प्रदर्शित करता है।",
+    KO: "호환되는 GSM 통신사(Vodafone UK, O2, Giffgaff, Rogers 등)에서 화면에 본인 전화번호를 표시합니다."
+  },
+  "ussd.code.geral.101.title": {
+    PT: "Número / Registro HLR (*#101#)",
+    EN: "HLR Number / Register (*#101#)",
+    RU: "Номер / Реестр HLR (*#101#)",
+    HI: "HLR नंबर / रजिस्टर (*#101#)",
+    KO: "HLR 번호 / 등록 정보 (*#101#)"
+  },
+  "ussd.code.geral.101.desc": {
+    PT: "Consulta o identificador de registro no HLR (Home Location Register) ou saldo em operadoras GSM europeias.",
+    EN: "Queries the registration identifier in the Home Location Register (HLR) or balance on European GSM networks.",
+    RU: "Запрашивает идентификатор регистрации в Home Location Register (HLR) или баланс в европейских сетях GSM.",
+    HI: "यूरोपीय GSM नेटवर्क पर होम लोकेशन रजिस्टर (HLR) या बैलेंस में पंजीकरण पहचानकर्ता की जांच करता है।",
+    KO: "유럽 GSM 네트워크에서 홈 위치 등록기(HLR) 등록 식별자 또는 잔액을 조회합니다."
+  },
+  "ussd.code.geral.102.title": {
+    PT: "Número da Central de Serviços (*#102#)",
+    EN: "Service Center Number (*#102#)",
+    RU: "Номер сервисного центра (*#102#)",
+    HI: "सेवा केंद्र नंबर (*#102#)",
+    KO: "서비스 센터 번호 (*#102#)"
+  },
+  "ussd.code.geral.102.desc": {
+    PT: "Consulta o número do centro de comutação ou central de serviços vinculado ao chip na rede celular.",
+    EN: "Queries the switching center or service center number associated with the SIM card on the cellular network.",
+    RU: "Запрашивает номер центра обслуживания или коммутации, связанного с SIM-картой в сети.",
+    HI: "सेलुलर नेटवर्क पर सिम कार्ड से जुड़े सेवा केंद्र नंबर की जांच करता है।",
+    KO: "셀룰러 네트워크에서 SIM 카드와 연결된 서비스 센터 번호를 조회합니다."
+  },
+  "ussd.code.geral.103.title": {
+    PT: "Hora Oficial da Rede Celular (*#103#)",
+    EN: "Official Cellular Network Time (*#103#)",
+    RU: "Официальное время сотовой сети (*#103#)",
+    HI: "आधिकारिक सेलुलर नेटवर्क समय (*#103#)",
+    KO: "공식 셀룰러 네트워크 시간 (*#103#)"
+  },
+  "ussd.code.geral.103.desc": {
+    PT: "Consulta a data e o horário oficiais transmitidos diretamente pelo relógio da central da rede GSM.",
+    EN: "Queries the official date and time transmitted directly from the GSM network central clock.",
+    RU: "Запрашивает официальную дату и время, передаваемые непосредственно центральными часами сети GSM.",
+    HI: "जीएसएम नेटवर्क सेंट्रल क्लॉक से सीधे प्रसारित आधिकारिक तिथि और समय की जांच करता है।",
+    KO: "GSM 네트워크 중앙 시계에서 직접 전송되는 공식 날짜 및 시간을 조회합니다."
+  },
+  "ussd.code.geral.104.title": {
+    PT: "Número da Caixa Postal / Correio de Voz (*#104#)",
+    EN: "Voicemail Center Number (*#104#)",
+    RU: "Номер центра голосовой почты (*#104#)",
+    HI: "वॉइसमेल केंद्र नंबर (*#104#)",
+    KO: "음성 사서함 센터 번호 (*#104#)"
+  },
+  "ussd.code.geral.104.desc": {
+    PT: "Mostra o número de discagem direta configurado para a caixa postal/correio de voz na sua operadora.",
+    EN: "Shows the direct dialing number configured for the voicemail center on your carrier.",
+    RU: "Показывает номер прямого набора, настроенный для голосовой почты у вашего оператора.",
+    HI: "आपके वाहक पर वॉइसमेल केंद्र के लिए कॉन्फ़िगर किया गया डायरेक्ट डायलिंग नंबर दिखाता है।",
+    KO: "통신사에 설정된 음성 사서함 센터 직통 다이얼 번호를 표시합니다."
+  },
+  "ussd.code.geral.105.title": {
+    PT: "Número de Suporte da Central (*#105#)",
+    EN: "Network Support Center Number (*#105#)",
+    RU: "Номер центра поддержки сети (*#105#)",
+    HI: "नेटवर्क सहायता केंद्र नंबर (*#105#)",
+    KO: "네트워크 고객 지원 센터 번호 (*#105#)"
+  },
+  "ussd.code.geral.105.desc": {
+    PT: "Informa o número da central de assistência técnica e suporte operacional da operadora de telefonia.",
+    EN: "Provides the technical assistance and operational support center number for the telecom carrier.",
+    RU: "Предоставляет номер центра технической помощи и поддержки оператора связи.",
+    HI: "टेलीकॉम ऑपरेटर के तकनीकी सहायता और संचालन सहायता केंद्र का नंबर प्रदान करता है।",
+    KO: "이동통신사의 기술 지원 및 운영 지원 센터 번호를 제공합니다."
+  },
+  "ussd.code.geral.147.title": {
+    PT: "Última Chamada Recebida (*#147#)",
+    EN: "Last Incoming Caller Number (*#147#)",
+    RU: "Номер последнего входящего звонка (*#147#)",
+    HI: "अंतिम आने वाली कॉल का नंबर (*#147#)",
+    KO: "최근 수신 전화번호 확인 (*#147#)"
+  },
+  "ussd.code.geral.147.desc": {
+    PT: "Informa o número da última pessoa que ligou para você (serviço 'Call Return' muito tradicional no Reino Unido e Europa, equivalente ao 1471).",
+    EN: "Returns the phone number of the last caller who dialed your phone ('Call Return' service common in the UK and Europe, similar to 1471).",
+    RU: "Показывает номер последнего звонившего абонента (услуга Call Return, популярная в Великобритании и Европе, аналог 1471).",
+    HI: "आपको कॉल करने वाले अंतिम कॉलर का नंबर बताता है (यूके और यूरोप में 1471 के समान सेवा)।",
+    KO: "최근 나에게 전화를 건 마지막 발신자의 전화번호를 안내합니다 (영국 및 유럽의 1471 통화 회신 서비스와 유사)."
+  },
+  "ussd.code.geral.activate43.title": {
+    PT: "Ativar Chamada em Espera Universal (*43#)",
+    EN: "Activate Call Waiting Universal (*43#)",
+    RU: "Включить ожидание вызова универсально (*43#)",
+    HI: "सार्वभौमिक कॉल प्रतीक्षा सक्रिय करें (*43#)",
+    KO: "통화 대기 전역 활성화 (*43#)"
+  },
+  "ussd.code.geral.activate43.desc": {
+    PT: "Padrão universal GSM (3GPP). Permite receber aviso sonoro de uma segunda chamada enquanto você conversa na linha principal.",
+    EN: "Universal GSM 3GPP standard. Enables audio tone notification for incoming second calls while you are on an active call.",
+    RU: "Универсальный стандарт GSM 3GPP. Позволяет получать звуковой сигнал о втором звонке во время разговора.",
+    HI: "सार्वभौमिक GSM 3GPP मानक। बातचीत के दौरान दूसरी इनकमिंग कॉल की टोन सूचना सक्षम करता है।",
+    KO: "범용 GSM 3GPP 표준. 통화 중에 걸려오는 두 번째 전화에 대한 신호음 알림을 활성화합니다."
+  },
+  "ussd.code.geral.deactivate43.title": {
+    PT: "Desativar Chamada em Espera Universal (#43#)",
+    EN: "Deactivate Call Waiting Universal (#43#)",
+    RU: "Отключить ожидание вызова универсально (#43#)",
+    HI: "सार्वभौमिक कॉल प्रतीक्षा निष्क्रिय करें (#43#)",
+    KO: "통화 대기 전역 비활성화 (#43#)"
+  },
+  "ussd.code.geral.deactivate43.desc": {
+    PT: "Padrão universal GSM (3GPP). Desliga a chamada em espera em qualquer celular; chamadas simultâneas ouvirão sinal de ocupado.",
+    EN: "Universal GSM 3GPP standard. Disables call waiting on any phone; simultaneous incoming calls will receive a busy signal.",
+    RU: "Универсальный стандарт GSM 3GPP. Отключает ожидание вызова на любом телефоне; занятые абоненты услышат сигнал «занято».",
+    HI: "सार्वभौमिक GSM 3GPP मानक। किसी भी फ़ोन पर कॉल प्रतीक्षा अक्षम करता है; व्यस्त होने पर कॉल करने वाले को व्यस्त टोन मिलेगी।",
+    KO: "범용 GSM 3GPP 표준. 모든 휴대폰에서 통화 대기를 끕니다. 통화 중 걸려오는 전화는 통화 중 신호음을 수신합니다."
+  },
+  "ussd.code.geral.78.title": {
+    PT: "Não Perturbe / DND (*78)",
+    EN: "Do Not Disturb / DND (*78)",
+    RU: "Не беспокоить / DND (*78)",
+    HI: "डोंट डिस्टर्ब / DND (*78)",
+    KO: "방해 금지 / DND (*78)"
+  },
+  "ussd.code.geral.78.desc": {
+    PT: "Código vertical de rede (NANP/VoIP/PBX). Ativa o modo 'Não Perturbe', direcionando ligações diretamente para a caixa postal. Para cancelar use *79.",
+    EN: "Vertical service code (NANP/VoIP/PBX). Activates 'Do Not Disturb', sending incoming calls straight to voicemail. Use *79 to cancel.",
+    RU: "Вертикальный код (NANP/VoIP/АТС). Включает режим «Не беспокоить», перенаправляя звонки прямо на голосовую почту. Для отключения наберите *79.",
+    HI: "वर्टिकल सेवा कोड। 'डू नॉट डिस्टर्ब' सक्रिय करता है, कॉलों को सीधे वॉइसमेल पर भेजता है। रद्द करने के लिए *79 का उपयोग करें।",
+    KO: "수직 서비스 코드(NANP/VoIP/PBX). '방해 금지'를 활성화하여 전화를 음성 사서함으로 바로 넘깁니다. 해제하려면 *79를 누르세요."
+  },
+  "ussd.code.vodafone.1345.title": {
+    PT: "Saldo Pré-Pago Vodafone UK (*#1345#)",
+    EN: "Vodafone UK Prepaid Balance (*#1345#)",
+    RU: "Баланс предоплаты Vodafone UK (*#1345#)",
+    HI: "वोडाफोन यूके प्रीपेड शेष (*#1345#)",
+    KO: "Vodafone 영국 선불 잔액 조회 (*#1345#)"
+  },
+  "ussd.code.vodafone.1345.desc": {
+    PT: "Exibe instantaneamente na tela o saldo de créditos e validade da linha pré-paga (Pay As You Go) da Vodafone UK.",
+    EN: "Instantly displays credit balance and validity for Vodafone Pay As You Go prepaid lines on screen.",
+    RU: "Мгновенно отображает баланс и срок действия предоплаченной линии Vodafone UK (Pay As You Go) на экране.",
+    HI: "स्क्रीन पर वोडाफोन यूके पे ऐज़ यू गो प्रीपेड लाइनों के लिए तुरंत क्रेडिट बैलेंस और वैधता प्रदर्शित करता है।",
+    KO: "Vodafone UK Pay As You Go 선불 요금제의 크레딧 잔액과 유효 기간을 화면에 즉시 표시합니다."
+  },
+  "ussd.code.vodafone.174.title": {
+    PT: "Menu de Saldo e Recargas Vodafone (*174#)",
+    EN: "Vodafone Balance & Top-Up Menu (*174#)",
+    RU: "Меню баланса и пополнения Vodafone (*174#)",
+    HI: "वोडाफोन बैलेंस और टॉप-अप मेनू (*174#)",
+    KO: "Vodafone 잔액 및 충전 메뉴 (*174#)"
+  },
+  "ussd.code.vodafone.174.desc": {
+    PT: "Menu interativo USSD da Vodafone (Irlanda, Espanha e Europa) para consultar saldo, pacotes de dados e efetuar recargas.",
+    EN: "Interactive Vodafone USSD menu (Ireland, Spain, Europe) to check balance, data packages, and perform top-ups.",
+    RU: "Интерактивное меню USSD Vodafone (Ирландия, Испания, Европа) для проверки баланса, пакетов данных и пополнения счета.",
+    HI: "शेष राशि, डेटा पैकेज की जांच करने और टॉप-अप करने के लिए वोडाफोन इंटरैक्टिव यूएसएसडी मेनू।",
+    KO: "잔액, 데이터 패키지를 확인하고 충전할 수 있는 Vodafone 대화형 USSD 메뉴(아일랜드, 스페인, 유럽 등)입니다."
+  },
+  "ussd.code.correios.225.title": {
+    PT: "Consultar Saldo e Consumo (Correios)",
+    EN: "Check Balance and Usage (Correios)",
+    RU: "Проверить баланс и использование (Correios)",
+    HI: "बैलेंस और उपयोग की जांच करें (क्रेयोस)",
+    KO: "잔액 및 사용량 확인 (Correios)"
+  },
+  "ussd.code.correios.225.desc": {
+    PT: "Consulta o saldo, consumo de dados móveis, SMS e minutos disponíveis, além da validade do plano no Correios Celular (*225#).",
+    EN: "Checks balance, mobile data usage, SMS, available minutes, and plan validity on Correios Celular (*225#).",
+    RU: "Проверяет баланс, использование мобильных данных, SMS, доступные минуты и срок действия тарифа на Correios Celular (*225#).",
+    HI: "क्रेयोस सेल्युलर (*225#) पर बैलेंस, मोबाइल डेटा उपयोग, एसएमएस, उपलब्ध मिनट और प्लान की वैधता की जांच करता है।",
+    KO: "Correios Celular(*225#)에서 잔액, 모바일 데이터 사용량, SMS, 남은 통화 시간 및 요금제 유효 기간을 확인합니다."
+  },
+  "ussd.code.correios.221.title": {
+    PT: "Descobrir o Próprio Número (Correios)",
+    EN: "Find Your Own Number (Correios)",
+    RU: "Узнать свой номер (Correios)",
+    HI: "अपना नंबर खोजें (क्रेयोस)",
+    KO: "내 번호 찾기 (Correios)"
+  },
+  "ussd.code.correios.221.desc": {
+    PT: "Exibe na tela o seu número de telefone da operadora Correios Celular (*221#).",
+    EN: "Displays your phone number for the Correios Celular carrier on the screen (*221#).",
+    RU: "Отображает на экране ваш номер телефона оператора Correios Celular (*221#).",
+    HI: "स्क्रीन पर आपके क्रेयोस सेल्युलर कैरियर का फ़ोन नंबर प्रदर्शित करता है (*221#)।",
+    KO: "Correios Celular 통신사의 전화번호를 화면에 표시합니다 (*221#)."
+  },
+  "ussd.code.correios.220.title": {
+    PT: "Ativação de Chip Correios Celular",
+    EN: "Correios Celular SIM Activation",
+    RU: "Активация SIM-карты Correios Celular",
+    HI: "क्रेयोस सेल्युलर सिम सक्रियण",
+    KO: "Correios Celular SIM 활성화"
+  },
+  "ussd.code.correios.220.desc": {
+    PT: "Menu interativo para ativação de um novo chip (SIM card) da operadora Correios Celular (*220#).",
+    EN: "Interactive menu to activate a new SIM card from the Correios Celular carrier (*220#).",
+    RU: "Интерактивное меню для активации новой SIM-карты оператора Correios Celular (*220#).",
+    HI: "क्रेयोस सेल्युलर कैरियर (*220#) से नए सिम कार्ड को सक्रिय करने के लिए इंटरैक्टिव मेनू।",
+    KO: "Correios Celular 통신사의 새 SIM 카드를 활성화하는 대화형 메뉴입니다 (*220#)."
+  },
+  "ussd.code.fintech.334.title": {
+    PT: "M-Pesa Mobile Banking (*334#)",
+    EN: "M-Pesa Mobile Banking (*334#)",
+    RU: "Мобильный банкинг M-Pesa (*334#)",
+    HI: "एम-पेसा मोबाइल बैंकिंग (*334#)",
+    KO: "M-Pesa 모바일 뱅킹 (*334#)"
+  },
+  "ussd.code.fintech.334.desc": {
+    PT: "Canal USSD do M-Pesa (maior FinTech da África) para transferências P2P, pagamentos e saques via celular sem internet.",
+    EN: "M-Pesa USSD channel (Africa's largest FinTech) for P2P transfers, payments, and withdrawals via mobile without internet.",
+    RU: "USSD-канал M-Pesa (крупнейший финтех Африки) для P2P-переводов, платежей и снятия средств с мобильного без интернета.",
+    HI: "एम-पेसा (अफ्रीका का सबसे बड़ा फिनटेक) यूएसएसडी चैनल पी2पी ट्रांसफर, भुगतान और बिना इंटरनेट के मोबाइल से निकासी के लिए।",
+    KO: "인터넷 없이 모바일을 통한 P2P 송금, 결제 및 출금을 지원하는 아프리카 최대 핀테크 M-Pesa의 USSD 채널입니다."
+  },
+  "ussd.code.fintech.151.title": {
+    PT: "EcoCash Mobile Money (*151#)",
+    EN: "EcoCash Mobile Money (*151#)",
+    RU: "Мобильные деньги EcoCash (*151#)",
+    HI: "इकोकैश मोबाइल मनी (*151#)",
+    KO: "EcoCash 모바일 머니 (*151#)"
+  },
+  "ussd.code.fintech.151.desc": {
+    PT: "Acesso rápido aos serviços financeiros móveis EcoCash (carteira digital) para pagamentos e gestão de saldo.",
+    EN: "Quick access to EcoCash mobile financial services (digital wallet) for payments and balance management.",
+    RU: "Быстрый доступ к мобильным финансовым услугам EcoCash (цифровой кошелек) для платежей и управления балансом.",
+    HI: "भुगतान और शेष प्रबंधन के लिए इकोकैश मोबाइल वित्तीय सेवाओं (डिजिटल वॉलेट) तक त्वरित पहुंच।",
+    KO: "결제 및 잔액 관리를 위한 EcoCash 모바일 금융 서비스(디지털 지갑)에 빠르게 접속합니다."
+  },
+  "ussd.code.iot.0011.title": {
+    PT: "Diagnóstico de Rede IoT / POS (*#0011#)",
+    EN: "IoT / POS Network Diagnostics (*#0011#)",
+    RU: "Диагностика сети IoT / POS (*#0011#)",
+    HI: "IoT / POS नेटवर्क डायग्नोस्टिक्स (*#0011#)",
+    KO: "IoT / POS 네트워크 진단 (*#0011#)"
+  },
+  "ussd.code.iot.0011.desc": {
+    PT: "Exibe força do sinal, banda e torre (Cell ID). Fundamental para diagnosticar falhas de conexão em Máquinas de Cartão (POS) e telemetria.",
+    EN: "Displays signal strength, band, and tower (Cell ID). Essential for diagnosing connection failures in POS machines and telemetry.",
+    RU: "Отображает уровень сигнала, диапазон и вышку (Cell ID). Важно для диагностики сбоев подключения в POS-терминалах и телеметрии.",
+    HI: "सिग्नल शक्ति, बैंड और टावर (सेल आईडी) प्रदर्शित करता है। POS मशीनों और टेलीमेट्री में कनेक्शन विफलताओं के निदान के लिए आवश्यक।",
+    KO: "신호 강도, 대역 및 기지국(Cell ID)을 표시합니다. 카드 결제기(POS) 및 원격 측정의 연결 오류 진단에 필수적입니다."
+  },
+  "ussd.code.iot.7353.title": {
+    PT: "Teste de Hardware Smart POS (*#7353#)",
+    EN: "Smart POS Hardware Test (*#7353#)",
+    RU: "Тест оборудования Smart POS (*#7353#)",
+    HI: "स्मार्ट POS हार्डवेयर टेस्ट (*#7353#)",
+    KO: "스마트 POS 하드웨어 테스트 (*#7353#)"
+  },
+  "ussd.code.iot.7353.desc": {
+    PT: "Menu de diagnóstico rápido para testar tela, câmera e áudio em terminais de pagamento Android (Smart POS) e dispositivos IoT.",
+    EN: "Quick diagnostic menu to test screen, camera, and audio on Android payment terminals (Smart POS) and IoT devices.",
+    RU: "Меню быстрой диагностики для проверки экрана, камеры и звука на платежных терминалах Android (Smart POS) и устройствах IoT.",
+    HI: "एंड्रॉइड पेमेंट टर्मिनलों (स्मार्ट POS) और IoT उपकरणों पर स्क्रीन, कैमरा और ऑडियो का परीक्षण करने के लिए त्वरित नैदानिक मेनू।",
+    KO: "Android 결제 단말기(스마트 POS) 및 IoT 기기의 화면, 카메라, 오디오를 테스트하는 빠른 진단 메뉴입니다."
+  },
+  "ussd.code.geral.pin04.title": {
+    PT: "Alterar Código PIN (**04*...)",
+    EN: "Change SIM PIN (**04*...)",
+    RU: "Сменить PIN-код SIM (**04*...)",
+    HI: "सिम पिन बदलें (**04*...)",
+    KO: "SIM PIN 변경 (**04*...)"
+  },
+  "ussd.code.geral.pin04.desc": {
+    PT: "Padrão oficial 3GPP/GSM: altera a senha PIN principal do chip SIM digitando **04*PIN_antigo*PIN_novo*PIN_novo#.",
+    EN: "Official 3GPP/GSM standard: changes the primary SIM PIN by dialing **04*oldPIN*newPIN*newPIN#.",
+    RU: "Официальный стандарт 3GPP/GSM: меняет основной PIN-код SIM-карты набором **04*старыйPIN*новыйPIN*новыйPIN#.",
+    HI: "आधिकारिक 3GPP/GSM मानक: **04*पुरानाPIN*नयाPIN*नयाPIN# डायल करके प्राथमिक सिम पिन बदलें।",
+    KO: "공식 3GPP/GSM 표준: **04*기존PIN*새PIN*새PIN#을 입력하여 기본 SIM PIN 번호를 변경합니다."
+  },
+  "ussd.code.geral.pin042.title": {
+    PT: "Alterar Código PIN2 (**042*...)",
+    EN: "Change SIM PIN2 (**042*...)",
+    RU: "Сменить PIN2 SIM (**042*...)",
+    HI: "सिम पिन 2 बदलें (**042*...)",
+    KO: "SIM PIN2 변경 (**042*...)"
+  },
+  "ussd.code.geral.pin042.desc": {
+    PT: "Padrão 3GPP (SIM Phase 2): altera a senha secundária PIN2 (usada para FDN e discagem fixa) discando **042*PIN2_antigo*PIN2_novo*PIN2_novo#.",
+    EN: "3GPP standard (Phase 2 SIM): changes secondary PIN2 (used for Fixed Dialing Numbers/FDN) by dialing **042*oldPIN2*newPIN2*newPIN2#.",
+    RU: "Стандарт 3GPP (SIM Phase 2): меняет вторичный код PIN2 (для фиксированного набора FDN) набором **042*старыйPIN2*новыйPIN2*новыйPIN2#.",
+    HI: "3GPP मानक (चरण 2 सिम): **042*पुरानाPIN2*नयाPIN2*नयाPIN2# डायल करके द्वितीयक PIN2 बदलें।",
+    KO: "3GPP 표준(Phase 2 SIM): **042*기존PIN2*새PIN2*새PIN2#을 입력하여 보조 PIN2(고정 다이얼링 FDN용)를 변경합니다."
+  },
+  "ussd.code.geral.puk05unlock.title": {
+    PT: "Desbloquear PIN por PUK (**05*...)",
+    EN: "Unlock PIN via PUK (**05*...)",
+    RU: "Разблокировка PIN через PUK (**05*...)",
+    HI: "PUK द्वारा पिन अनलॉक करें (**05*...)",
+    KO: "PUK으로 PIN 잠금 해제 (**05*...)"
+  },
+  "ussd.code.geral.puk05unlock.desc": {
+    PT: "Desbloqueia o chip travado por erro de PIN e define novo PIN usando o PUK de 8 dígitos: **05*PUK*PIN_novo*PIN_novo#.",
+    EN: "Unblocks a PIN-blocked SIM card and sets a new PIN using the 8-digit PUK: **05*PUK*newPIN*newPIN#.",
+    RU: "Разблокирует заблокированную PIN-кодом SIM-карту и задает новый PIN с помощью 8-значного PUK: **05*PUK*новыйPIN*новыйPIN#.",
+    HI: "8-अंकीय PUK का उपयोग करके अवरुद्ध सिम कार्ड को अनलॉक करें और नया पिन सेट करें: **05*PUK*नयाPIN*नयाPIN#।",
+    KO: "8자리 PUK 코드를 사용하여 잠긴 SIM을 해제하고 새 PIN을 설정합니다: **05*PUK*새PIN*새PIN#."
+  },
+  "ussd.code.geral.puk052unlock.title": {
+    PT: "Desbloquear PIN2 por PUK2 (**052*...)",
+    EN: "Unlock PIN2 via PUK2 (**052*...)",
+    RU: "Разблокировка PIN2 через PUK2 (**052*...)",
+    HI: "PUK2 द्वारा पिन 2 अनलॉक करें (**052*...)",
+    KO: "PUK2로 PIN2 잠금 해제 (**052*...)"
+  },
+  "ussd.code.geral.puk052unlock.desc": {
+    PT: "Desbloqueia a função PIN2 travada em chips Phase 2 utilizando a chave mestre PUK2: **052*PUK2*PIN2_novo*PIN2_novo#.",
+    EN: "Unblocks a locked PIN2 feature on Phase 2 SIM cards using master PUK2 key: **052*PUK2*newPIN2*newPIN2#.",
+    RU: "Разблокирует заблокированный PIN2 на SIM-картах Phase 2 с помощью ключа PUK2: **052*PUK2*новыйPIN2*новыйPIN2#.",
+    HI: "मास्टर PUK2 कुंजी का उपयोग करके फेज़ 2 सिम कार्ड पर लॉक किए गए PIN2 को अनलॉक करें: **052*PUK2*नयाPIN2*नयाPIN2#।",
+    KO: "마스터 PUK2 키를 사용하여 Phase 2 SIM 카드의 잠긴 PIN2 기능을 해제합니다: **052*PUK2*새PIN2*새PIN2#."
+  },
+  "ussd.code.geral.dolar900.title": {
+    PT: "Cotação do Dólar e Câmbio (*900*1#)",
+    EN: "USD Dollar Exchange Rate (*900*1#)",
+    RU: "Курс доллара и валют (*900*1#)",
+    HI: "अमेरिकी डॉलर विनिमय दर (*900*1#)",
+    KO: "달러 환율 및 외환 시세 (*900*1#)"
+  },
+  "ussd.code.geral.dolar900.desc": {
+    PT: "Serviço interativo de valor adicionado (VAS) para consulta rápida da cotação do dólar e taxas de câmbio na tela via USSD.",
+    EN: "Interactive Value-Added Service (VAS) to quickly query live USD exchange rates and currency quotes via USSD.",
+    RU: "Интерактивный сервис (VAS) для быстрого запроса актуального курса доллара США и котировок валют через USSD.",
+    HI: "यूएसएसडी के माध्यम से अमेरिकी डॉलर की विनिमय दरों और मुद्रा दरों को तुरंत जानने के लिए इंटरैक्टिव सेवा।",
+    KO: "USSD를 통해 미국 달러 환율 및 외환 시세를 즉시 확인하는 대화형 부가 서비스(VAS)입니다."
+  },
+  "ussd.code.geral.vvm004.title": {
+    PT: "Status Desvio Caixa Postal (*#004#)",
+    EN: "Voicemail Divert Status (*#004#)",
+    RU: "Статус переадресации на голосовую почту (*#004#)",
+    HI: "वॉइसमेल डायवर्ट स्थिति (*#004#)",
+    KO: "음성 사서함 착신 전환 상태 (*#004#)"
+  },
+  "ussd.code.geral.vvm004.desc": {
+    PT: "Padrão universal 3GPP GSM: verifica todos os desvios condicionais (ocupado, sem resposta, fora de alcance) para o correio de voz.",
+    EN: "Universal 3GPP GSM standard: checks all conditional call forwardings (busy, unanswered, unreachable) to voicemail.",
+    RU: "Универсальный стандарт 3GPP GSM: проверяет условную переадресацию (занято, нет ответа, вне зоны) на голосовую почту.",
+    HI: "सार्वभौमिक 3GPP GSM मानक: वॉइसमेल पर सभी सशर्त कॉल अग्रेषण (व्यस्त, अनुत्तरित, पहुंच से बाहर) की जांच करता है।",
+    KO: "범용 3GPP GSM 표준: 통화 중, 무응답, 연결 불가 시 음성 사서함으로의 조건부 착신 전환을 확인합니다."
+  },
+  "ussd.code.geral.voicemail555.title": {
+    PT: "Caixa Postal / Correio de Voz (*555)",
+    EN: "Voicemail Access & Messages (*555)",
+    RU: "Доступ к голосовой почте (*555)",
+    HI: "वॉइसमेल एक्सेस और संदेश (*555)",
+    KO: "음성 사서함 및 메시지 확인 (*555)"
+  },
+  "ussd.code.geral.voicemail555.desc": {
+    PT: "Acessa diretamente a caixa postal para ouvir, gerenciar e apagar recados de voz recebidos (utilizado em operadoras como Vivo e Claro).",
+    EN: "Directly accesses voicemail to listen to, manage, and delete voice messages (used by carriers such as Vivo and Claro).",
+    RU: "Прямой доступ к голосовой почте для прослушивания, управления и удаления голосовых сообщений.",
+    HI: "प्राप्त वॉइस संदेशों को सुनने, प्रबंधित करने और हटाने के लिए वॉइसमेल पर सीधा कॉल।",
+    KO: "수신된 음성 메시지를 청취, 관리 및 삭제하기 위한 음성 사서함 직접 연결 코드입니다."
+  },
+  "ussd.code.geral.bank99.title": {
+    PT: "Extrato Bancário e Mobile Banking (*99#)",
+    EN: "Bank Mini-Statement & USSD Banking (*99#)",
+    RU: "Банковская выписка и мобильный банкинг (*99#)",
+    HI: "बैंक मिनी-स्टेटमेंट और यूएसएसडी बैंकिंग (*99#)",
+    KO: "은행 명세서 및 USSD 모바일 뱅킹 (*99#)"
+  },
+  "ussd.code.geral.bank99.desc": {
+    PT: "Padrão universal de Mobile Banking sem internet (NUUP): permite consultar saldo, mini-extrato de transações e transferências bancárias via USSD.",
+    EN: "Universal offline mobile banking standard (NUUP): check account balances, mini-statements, and perform banking transactions without internet.",
+    RU: "Универсальный стандарт мобильного банкинга без интернета (NUUP): проверка баланса, мини-выписка и переводы через USSD.",
+    HI: "बिना इंटरनेट मोबाइल बैंकिंग मानक (NUUP): यूएसएसडी के जरिए बैंक बैलेंस, मिनी स्टेटमेंट और फंड ट्रांसफर की सुविधा।",
+    KO: "인터넷 없는 범용 오프라인 뱅킹 표준(NUUP): USSD로 계좌 잔액, 최근 거래 내역(미니 명세서)을 조회하고 이체합니다."
+  },
+  "ussd.code.geral.bank4004.title": {
+    PT: "Extrato e Serviços Bancários BB (*4004#)",
+    EN: "Bank Statement & Banking Menu (*4004#)",
+    RU: "Банковская выписка и меню услуг (*4004#)",
+    HI: "बैंक स्टेटमेंट और बैंकिंग सेवाएं (*4004#)",
+    KO: "은행 거래 내역 및 뱅킹 메뉴 (*4004#)"
+  },
+  "ussd.code.geral.bank4004.desc": {
+    PT: "Canal USSD interativo de mobile banking (Banco do Brasil): consulta rápida de saldo, lançamentos recentes e extrato de conta corrente.",
+    EN: "Interactive USSD mobile banking channel: quick query of balances, recent account transactions, and bank statements.",
+    RU: "Интерактивный USSD-канал мобильного банкинга: быстрая проверка баланса, последних операций и выписки по счету.",
+    HI: "इंटरैक्टिव यूएसएसडी मोबाइल बैंकिंग चैनल: शेष राशि, हाल के लेनदेन और बैंक स्टेटमेंट की त्वरित जांच।",
+    KO: "대화형 USSD 뱅킹 채널: 잔액 조회, 최근 거래 내역 및 계좌 명세서를 간편하게 확인합니다."
+  },
+  "ussd.code.geral.dir102.title": {
+    PT: "Serviço de Diretório e Auxílio à Lista (102)",
+    EN: "Directory Assistance & Enquiries (102)",
+    RU: "Справочная служба и директория (102)",
+    HI: "निर्देशिका सेवा और नंबर सहायता (102)",
+    KO: "전화번호 안내 및 디렉터리 서비스 (102)"
+  },
+  "ussd.code.geral.dir102.desc": {
+    PT: "Serviço oficial de diretório telefônico e auxílio à lista (Anatel/Telefonia): permite localizar números de telefone de assinantes e empresas.",
+    EN: "Official telephone directory assistance service: locate telephone numbers and contacts of residential subscribers and businesses.",
+    RU: "Официальная справочно-информационная служба: поиск телефонных номеров абонентов и организаций.",
+    HI: "आधिकारिक टेलीफोन निर्देशिका सेवा: ग्राहकों और कंपनियों के टेलीफोन नंबर ढूंढने में मदद करती है।",
+    KO: "공식 전화번호 안내 서비스: 개인 및 기업 가입자의 전화번호와 연락처 정보를 검색할 수 있습니다."
+  },
+  "ussd.code.geral.dir411.title": {
+    PT: "Serviço de Diretório Internacional (411)",
+    EN: "Directory Assistance Service (411)",
+    RU: "Международная справочная служба (411)",
+    HI: "अंतर्राष्ट्रीय निर्देशिका सेवा (411)",
+    KO: "국제 전화번호 디렉터리 안내 (411)"
+  },
+  "ussd.code.geral.dir411.desc": {
+    PT: "Padrão de serviço de diretório (NANP / América do Norte): assistência para busca de números comerciais, residenciais e endereços locais.",
+    EN: "Standard directory assistance code (NANP / North America): live lookups for local businesses, residential listings, and addresses.",
+    RU: "Стандартная справочная служба (NANP / Северная Америка): поиск местных предприятий, частных номеров и адресов.",
+    HI: "मानक निर्देशिका सहायता कोड (NANP): स्थानीय व्यवसायों, व्यक्तिगत नंबरों और पतों की खोज।",
+    KO: "북미 표준(NANP) 디렉터리 안내: 지역 업체, 개인 연락처 및 주소 정보를 신속하게 조회합니다."
   },
   "dropzone.extractAudio": {
     PT: "Extrair Áudio",
@@ -1556,11 +2214,11 @@ const dict: Translations = {
   
   
   "tabs.news": {
-    PT: "News gadget",
-    EN: "News gadget",
-    RU: "News gadget",
-    HI: "News gadget",
-    KO: "News gadget"
+    PT: "Gadget news",
+    EN: "Gadget news",
+    RU: "Gadget news",
+    HI: "Gadget news",
+    KO: "Gadget news"
   },
   "news.loading": {
     PT: "Buscando as últimas notícias...",
