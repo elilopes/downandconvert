@@ -1,5 +1,40 @@
 @import "tailwindcss";
 
+:root {
+  --app-filter: none;
+}
+
+:root[data-theme="light"] {
+  --app-filter: invert(1) hue-rotate(180deg);
+  background-color: #020617; /* When inverted, becomes bright */
+}
+
+:root[data-theme="colorblind"] {
+  --app-filter: contrast(1.1) saturate(1.4) hue-rotate(15deg);
+}
+
+:root[data-theme="high-contrast"] {
+  --app-filter: contrast(1.6) saturate(1.2);
+}
+
+html {
+  filter: var(--app-filter);
+  min-height: 100vh;
+}
+
+/* Invert images/videos back in light mode so they look normal */
+:root[data-theme="light"] img,
+:root[data-theme="light"] video,
+:root[data-theme="light"] canvas,
+:root[data-theme="light"] iframe {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* For some specific brand elements that shouldn't be inverted */
+:root[data-theme="light"] .keep-colors {
+  filter: invert(1) hue-rotate(180deg);
+}
+
 @keyframes rainbowLetterShift {
   0% {
     color: #ff1e56;
