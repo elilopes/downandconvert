@@ -1,1066 +1,118 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+import React from 'react';
+import { Music, ShieldCheck, Sparkles } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
-import React, { useState, useEffect, useRef } from 'react';
-import confetti from 'canvas-confetti';
-import JSZip from 'jszip';
-import {
-  Music,
-  CheckCircle2,
-  Sparkles,
-  Zap,
-  Volume2,
-  FileCheck,
-  ShieldCheck,
-  Sliders,
-  Layers,
-  Smartphone,
-  Download,
-  RefreshCw,
-  Newspaper,
-} from 'lucide-react';
-import { AudioFormat, VideoItem, ConversionOptions, CropOptions } from './types';
-import { Header } from './components/Header';
-import { Dropzone } from './components/Dropzone';
-import { VideoDownloader } from './components/VideoDownloader';
-import { BatchControls } from './components/BatchControls';
-import { VideoItemCard } from './components/VideoItemCard';
-import { AudioTrimmerModal } from './components/AudioTrimmerModal';
-import { VideoCropModal } from './components/VideoCropModal';
-import { RecordModal } from './components/RecordModal';
-import { SampleModal } from './components/SampleModal';
-import { FAQModal } from './components/FAQModal';
-import { LegalModal } from './components/LegalModal';
-import { MouseFollower } from './components/MouseFollower';
-import { Footer } from './components/Footer';
-import { BottomAdBanner } from './components/BottomAdBanner';
-import { UssdTool } from './components/UssdTool';
-import { SmartphoneSpecs } from './components/SmartphoneSpecs';
-import { GadgetNews } from './components/GadgetNews';
-import { NotFound } from './components/NotFound';
-import { CookieBanner } from './components/CookieBanner';
-import { PopularCodesModal } from './components/PopularCodesModal';
-import {
-  extractAudioBufferFromVideo,
-  extractVideoThumbnail,
-  generateWaveformPeaks,
-  processAudioBuffer,
-  encodeAudioBufferToMp3,
-  encodeAudioBufferToWav,
-} from './utils/audioEncoder';
-import { encodeWithFFmpeg } from './utils/ffmpegEncoder';
-import { encodeOnServer } from './utils/serverEncoder';
-import { useLanguage } from './contexts/LanguageContext';
+interface FooterProps {
+  onOpenTerms: () => void;
+  onOpenPrivacy: () => void;
+  onOpenContact: () => void;
+  onNavigateTab?: (tab: 'converter' | 'downloader' | 'ussd' | 'smartphones' | 'news') => void;
+}
 
-export default function App() {
+export const Footer: React.FC<FooterProps> = ({
+  onOpenTerms,
+  onOpenPrivacy,
+  onOpenContact,
+  onNavigateTab,
+}) => {
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'converter' | 'downloader' | 'ussd' | 'smartphones' | 'news'>('converter');
-  const [items, setItems] = useState<VideoItem[]>([]);
-  const [globalFormat, setGlobalFormat] = useState<AudioFormat>('mp3');
-  const [globalBitrate, setGlobalBitrate] = useState<64 | 128 | 192 | 256 | 320>(320);
 
-  const [trimmerItem, setTrimmerItem] = useState<VideoItem | null>(null);
-  const [cropItem, setCropItem] = useState<VideoItem | null>(null);
-  const [fileLimitWarning, setFileLimitWarning] = useState<string | null>(null);
-  const [isRecorderOpen, setIsRecorderOpen] = useState(false);
-  const [isSampleModalOpen, setIsSampleModalOpen] = useState(false);
-  const [isFAQOpen, setIsFAQOpen] = useState(false);
-  const [legalModalType, setLegalModalType] = useState<'terms' | 'privacy' | 'contact' | null>(null);
-  const [isPopularCodesOpen, setIsPopularCodesOpen] = useState(false);
-  const [isNotFound, setIsNotFound] = useState(false);
-  const [isProcessingAny, setIsProcessingAny] = useState(false);
-  const [isZipping, setIsZipping] = useState(false);
-
-  // Maximum allowed file size for performance & stability (250MB)
-  const MAX_FILE_SIZE_BYTES = 250 * 1024 * 1024;
-
-  // Sync URL routes/parameters with modals (supports /privacy, /terms, ?legal=privacy, #privacy, etc.)
-  useEffect(() => {
-    const parseUrlForModals = () => {
-      const path = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
-      const validPaths = ['/', '/privacy', '/terms', '/contact', '/converter', '/downloader', '/ussd', '/smartphones', '/news'];
-      if (!validPaths.includes(path)) {
-        setIsNotFound(true);
-      } else {
-        setIsNotFound(false);
-      }
-
-      const searchParams = new URLSearchParams(window.location.search);
-      const hash = window.location.hash.toLowerCase();
-      const modalParam = searchParams.get('modal')?.toLowerCase();
-      const legalParam = (searchParams.get('legal') || searchParams.get('page') || '').toLowerCase();
-      
-      // Fallback for legacy query params
-      const tabParam = searchParams.get('tab')?.toLowerCase();
-
-      // Check path first
-      if (path === '/' || path === '/converter') {
-        setActiveTab('converter');
-      } else if (path === '/downloader') {
-        setActiveTab('downloader');
-      } else if (path === '/ussd') {
-        setActiveTab('ussd');
-      } else if (path === '/smartphones') {
-        setActiveTab('smartphones');
-      } else if (path === '/news') {
-        setActiveTab('news');
-      } else if (tabParam === 'converter' || tabParam === 'downloader' || tabParam === 'ussd' || tabParam === 'smartphones' || tabParam === 'news') {
-        // Fallback for query param (so old links still work temporarily)
-        setActiveTab(tabParam);
-      }
-
-      if (path.includes('privacy') || legalParam === 'privacy' || hash === '#privacy' || hash === '#privacidade') {
-        setLegalModalType('privacy');
-      } else if (path.includes('term') || legalParam === 'terms' || hash === '#terms' || hash === '#termos') {
-        setLegalModalType('terms');
-      } else if (path.includes('contact') || legalParam === 'contact' || hash === '#contact' || hash === '#contato') {
-        setLegalModalType('contact');
-      } else if (path.includes('faq') || searchParams.get('modal') === 'faq' || hash === '#faq' || modalParam === 'faq') {
-        setIsFAQOpen(true);
-      } else if (path.includes('popular') || modalParam === 'popular') {
-        setIsPopularCodesOpen(true);
-      }
-    };
-
-    parseUrlForModals();
-
-    const handlePopState = () => {
-      parseUrlForModals();
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
-  useEffect(() => {
-    const title = t(`seo.title.${activeTab}`);
-    const description = t(`seo.desc.${activeTab}`);
-    let canonical = 'https://www.downandconvert.com';
-
-    if (activeTab !== 'converter') {
-      canonical += `/${activeTab}`;
-    }
-
-    document.title = title;
-    
-    let metaDescription = document.querySelector('meta[name="description"]');
-    if (!metaDescription) {
-      metaDescription = document.createElement('meta');
-      metaDescription.setAttribute('name', 'description');
-      document.head.appendChild(metaDescription);
-    }
-    metaDescription.setAttribute('content', description);
-
-    let linkCanonical = document.querySelector('link[rel="canonical"]');
-    if (!linkCanonical) {
-      linkCanonical = document.createElement('link');
-      linkCanonical.setAttribute('rel', 'canonical');
-      document.head.appendChild(linkCanonical);
-    }
-    linkCanonical.setAttribute('href', canonical);
-  }, [activeTab, t]);
-
-  const tabsContainerRef = useRef<HTMLDivElement>(null);
-  const activeTabRef = useRef<HTMLButtonElement>(null);
-
-  // Ensure tabs container is scrolled properly:
-  // - Starts at 0 (Conversor fully visible) on mobile/tablet
-  // - Smoothly centers selected tab into view within the tabs container only
-  useEffect(() => {
-    const container = tabsContainerRef.current;
-    const activeEl = activeTabRef.current;
-    if (!container || !activeEl) return;
-
-    if (activeTab === 'converter') {
-      container.scrollTo({ left: 0, behavior: 'smooth' });
+  const handleTabClick = (tab: 'converter' | 'downloader' | 'ussd' | 'smartphones' | 'news') => {
+    if (onNavigateTab) {
+      onNavigateTab(tab);
     } else {
-      const containerRect = container.getBoundingClientRect();
-      const elRect = activeEl.getBoundingClientRect();
-      if (elRect.left < containerRect.left || elRect.right > containerRect.right) {
-        const scrollTarget = activeEl.offsetLeft - (container.clientWidth / 2) + (activeEl.clientWidth / 2);
-        container.scrollTo({ left: Math.max(0, scrollTarget), behavior: 'smooth' });
-      }
-    }
-  }, [activeTab]);
-
-  const openLegalModal = (type: 'terms' | 'privacy' | 'contact') => {
-    setLegalModalType(type);
-    try {
-      const url = new URL(window.location.href);
-      url.searchParams.set('legal', type);
-      window.history.pushState({ modal: type }, '', url.toString());
-    } catch (e) {}
-  };
-
-  const closeLegalModal = () => {
-    setLegalModalType(null);
-    try {
-      const url = new URL(window.location.href);
-      url.searchParams.delete('legal');
-      url.searchParams.delete('modal');
-      url.searchParams.delete('page');
-      const cleanPath = url.pathname === '/privacy' || url.pathname === '/terms' || url.pathname === '/contact' ? '/' : url.pathname;
-      window.history.replaceState({}, '', cleanPath + (url.search ? url.search : ''));
-    } catch (e) {}
-  };
-
-  // Trigger celebration confetti
-  const triggerConfetti = () => {
-    try {
-      confetti({
-        particleCount: 75,
-        spread: 60,
-        origin: { y: 0.8 },
-        colors: ['#10b981', '#06b6d4', '#6366f1', '#f59e0b'],
-      });
-    } catch (e) {}
-  };
-
-  // Add files to list with file size limit validation
-  const handleFilesSelected = async (files: File[]) => {
-    const newItems: VideoItem[] = [];
-    const oversizedFiles: string[] = [];
-
-    for (const file of files) {
-      if (file.size > MAX_FILE_SIZE_BYTES) {
-        oversizedFiles.push(file.name);
-        continue;
-      }
-
-      const id = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-      const cleanTitle = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
-
-      const defaultOptions: ConversionOptions = {
-        format: globalFormat,
-        bitrate: globalBitrate,
-        sampleRate: 44100,
-        channels: 'stereo',
-        volume: 1.0,
-        trim: { enabled: false, start: 0, end: 0 },
-        fadeIn: 0,
-        fadeOut: 0,
-        equalizer: 'flat',
-        metadata: {
-          title: cleanTitle,
-          artist: '',
-          album: 'Down&Convert processing...',
-          year: new Date().getFullYear().toString(),
-          genre: 'Vários',
-          includeCover: true,
-        },
-      };
-
-      const item: VideoItem = {
-        id,
-        file,
-        name: file.name,
-        originalSize: file.size,
-        duration: 0,
-        thumbnailUrl: '',
-        status: 'idle',
-        progress: 0,
-        progressText: 'Pronto para converter',
-        options: defaultOptions,
-      };
-
-      newItems.push(item);
-    }
-
-    if (oversizedFiles.length > 0) {
-      setFileLimitWarning(
-        `O arquivo "${oversizedFiles.join(', ')}" excede o limite máximo permitido de 250MB para garantir estabilidade e velocidade. Por favor, envie vídeos menores.`
-      );
-    } else {
-      setFileLimitWarning(null);
-    }
-
-    if (newItems.length > 0) {
-      setItems((prev) => [...prev, ...newItems]);
-
-      // Asynchronously extract thumbnails & metadata for each item
-      for (const item of newItems) {
-        extractVideoThumbnail(item.file, 1.5).then(({ thumbnailUrl, duration }) => {
-          setItems((prev) =>
-            prev.map((it) =>
-              it.id === item.id
-                ? {
-                    ...it,
-                    thumbnailUrl,
-                    duration: duration || it.duration,
-                    options: {
-                      ...it.options,
-                      trim: {
-                        ...it.options.trim,
-                        end: duration || it.options.trim.end,
-                      },
-                    },
-                  }
-                : it
-            )
-          );
-        });
-      }
-    }
-  };
-
-  const handleSaveCrop = (itemId: string, crop: CropOptions) => {
-    setItems((prev) =>
-      prev.map((it) =>
-        it.id === itemId
-          ? {
-              ...it,
-              options: {
-                ...it.options,
-                crop,
-              },
-            }
-          : it
-      )
-    );
-  };
-
-  // Convert a single item
-  const handleConvertItem = async (itemId: string) => {
-    const currentItem = items.find((it) => it.id === itemId);
-    if (!currentItem) return;
-
-    // Update status to reading/decoding
-    setItems((prev) =>
-      prev.map((it) =>
-        it.id === itemId
-          ? {
-              ...it,
-              status: 'decoding',
-              progress: 15,
-              progressText: 'Extraindo áudio do vídeo...',
-              error: undefined,
-            }
-          : it
-      )
-    );
-
-    try {
-      const format = currentItem.options.format;
-      const isVideoOutput = ['mp4', 'webm', 'avi', 'mov', 'mkv'].includes(format);
-
-      let audioBuf = currentItem.audioBuffer;
-      let peaks = currentItem.waveformPeaks;
-      let processedBuf: AudioBuffer | null = null;
-      let coverBlob: Blob | null = null;
-
-      if (!isVideoOutput) {
-        // 1. Extract AudioBuffer
-        if (!audioBuf) {
-          audioBuf = await extractAudioBufferFromVideo(currentItem.file, (stage, progress) => {
-            setItems((prev) =>
-              prev.map((it) =>
-                it.id === itemId ? { ...it, progress, progressText: stage } : it
-              )
-            );
-          });
-        }
-
-        // Generate Peaks if not present
-        peaks = peaks || generateWaveformPeaks(audioBuf, 120);
-
-        // 2. Process DSP (Trim, Volume, EQ, Fade)
-        processedBuf = await processAudioBuffer(
-          audioBuf,
-          currentItem.options,
-          (stage, progress) => {
-            setItems((prev) =>
-              prev.map((it) =>
-                it.id === itemId ? { ...it, progress, progressText: stage } : it
-              )
-            );
-          }
-        );
-
-        // 3. Extract cover image thumbnail blob if enabled
-        if (currentItem.options.metadata.includeCover) {
-          const thumbResult = await extractVideoThumbnail(currentItem.file, 1.5);
-          coverBlob = thumbResult.blob;
-        }
-      }
-
-      // 4. Encode to Target Format
-      let outputBlob: Blob;
-
-      setItems((prev) =>
-        prev.map((it) =>
-          it.id === itemId
-            ? {
-                ...it,
-                status: 'encoding',
-                progress: 70,
-                progressText: `Codificando para ${format.toUpperCase()}...`,
-              }
-            : it
-        )
-      );
-
-      if (isVideoOutput) {
-        const isLargeFile = currentItem.file.size > 25 * 1024 * 1024; // > 25MB
-
-        if (isLargeFile) {
-          // Send directly to high-performance Server-Side FFmpeg
-          setItems((prev) =>
-            prev.map((it) =>
-              it.id === itemId
-                ? {
-                    ...it,
-                    progress: 15,
-                    progressText: 'Arquivo grande: convertendo no servidor em alta performance...',
-                  }
-                : it
-            )
-          );
-
-          outputBlob = await encodeOnServer(
-            currentItem.file,
-            currentItem.options,
-            (progress, stage) => {
-              setItems((prev) =>
-                prev.map((it) =>
-                  it.id === itemId
-                    ? {
-                        ...it,
-                        progress,
-                        progressText: stage,
-                      }
-                    : it
-                )
-              );
-            }
-          );
-        } else {
-          // Client-side WebAssembly with automatic Server-Side fallback
-          try {
-            outputBlob = await encodeWithFFmpeg(
-              currentItem.file,
-              currentItem.options,
-              (progress) => {
-                setItems((prev) =>
-                  prev.map((it) =>
-                    it.id === itemId
-                      ? {
-                          ...it,
-                          progress,
-                          progressText: `Codificando Vídeo ${format.toUpperCase()} (${progress}%)...`,
-                        }
-                      : it
-                  )
-                );
-              },
-              true // isVideo
-            );
-          } catch (wasmErr) {
-            console.warn('WASM falhou ou limite de memória excedido. Acionando conversor do servidor...', wasmErr);
-            setItems((prev) =>
-              prev.map((it) =>
-                it.id === itemId
-                  ? {
-                      ...it,
-                      progress: 25,
-                      progressText: 'Recorrendo ao conversor do servidor...',
-                    }
-                  : it
-              )
-            );
-            outputBlob = await encodeOnServer(
-              currentItem.file,
-              currentItem.options,
-              (progress, stage) => {
-                setItems((prev) =>
-                  prev.map((it) =>
-                    it.id === itemId
-                      ? {
-                          ...it,
-                          progress,
-                          progressText: stage,
-                        }
-                      : it
-                  )
-                );
-              }
-            );
-          }
-        }
-      } else if (processedBuf) {
-        if (format === 'mp3') {
-          outputBlob = await encodeAudioBufferToMp3(
-            processedBuf,
-            currentItem.options,
-            coverBlob,
-            (progress) => {
-              setItems((prev) =>
-                prev.map((it) =>
-                  it.id === itemId
-                    ? {
-                        ...it,
-                        progress,
-                        progressText: `Codificando MP3 (${currentItem.options.bitrate} kbps)...`,
-                      }
-                    : it
-                )
-              );
-            }
-          );
-        } else if (format === 'wav') {
-          outputBlob = encodeAudioBufferToWav(processedBuf);
-        } else {
-          // Fallback to FFmpeg.wasm for AAC, M4A, FLAC, WMA, OGG, AIFF
-          const wavTempBlob = encodeAudioBufferToWav(processedBuf);
-          try {
-            outputBlob = await encodeWithFFmpeg(
-              wavTempBlob,
-              currentItem.options,
-              (progress) => {
-                setItems((prev) =>
-                  prev.map((it) =>
-                    it.id === itemId
-                      ? {
-                          ...it,
-                          progress,
-                          progressText: `Codificando ${format.toUpperCase()} (${progress}%)...`,
-                        }
-                      : it
-                  )
-                );
-              },
-              false
-            );
-          } catch (wasmErr) {
-            console.warn('WASM falhou no áudio. Acionando conversor do servidor...', wasmErr);
-            setItems((prev) =>
-              prev.map((it) =>
-                it.id === itemId
-                  ? {
-                      ...it,
-                      progress: 25,
-                      progressText: 'Recorrendo ao conversor do servidor...',
-                    }
-                  : it
-              )
-            );
-            outputBlob = await encodeOnServer(
-              currentItem.file,
-              currentItem.options,
-              (progress, stage) => {
-                setItems((prev) =>
-                  prev.map((it) =>
-                    it.id === itemId
-                      ? {
-                          ...it,
-                          progress,
-                          progressText: stage,
-                        }
-                      : it
-                  )
-                );
-              }
-            );
-          }
-        }
-      } else {
-        throw new Error('Processed buffer is null');
-      }
-
-      const outputUrl = URL.createObjectURL(outputBlob);
-      const outputSize = outputBlob.size;
-
-      setItems((prev) =>
-        prev.map((it) =>
-          it.id === itemId
-            ? {
-                ...it,
-                status: 'completed',
-                progress: 100,
-                progressText: 'Conversão concluída!',
-                audioBuffer: audioBuf,
-                waveformPeaks: peaks,
-                outputBlob,
-                outputUrl,
-                outputSize,
-                duration: processedBuf ? processedBuf.duration : (currentItem.duration || 0),
-              }
-            : it
-        )
-      );
-
-      triggerConfetti();
-    } catch (err: unknown) {
-      console.error('Conversion failed for item:', itemId, err);
-      const msg = err instanceof Error ? err.message : 'Erro ao decodificar ou codificar áudio.';
-      setItems((prev) =>
-        prev.map((it) =>
-          it.id === itemId
-            ? {
-                ...it,
-                status: 'error',
-                progress: 0,
-                progressText: 'Falha na conversão',
-                error: msg,
-              }
-            : it
-        )
-      );
-    }
-  };
-
-  // Convert all pending items
-  const handleConvertAll = async () => {
-    setIsProcessingAny(true);
-    const pending = items.filter((it) => it.status !== 'completed');
-
-    for (const item of pending) {
-      await handleConvertItem(item.id);
-    }
-
-    setIsProcessingAny(false);
-  };
-
-  // Download a single converted item
-  const handleDownloadItem = (item: VideoItem) => {
-    if (!item.outputUrl || !item.outputBlob) return;
-
-    const extension = item.options.format;
-    const cleanName = (item.options.metadata.title || item.name)
-      .replace(/\.[^/.]+$/, '')
-      .replace(/[^a-zA-Z0-9_\-áàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ ]/g, '_');
-
-    const fileName = `${cleanName}.${extension}`;
-
-    const a = document.createElement('a');
-    a.href = item.outputUrl;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-
-  // Download all completed items as a single ZIP
-  const handleDownloadAllZip = async () => {
-    const completedItems = items.filter((it) => it.status === 'completed' && it.outputBlob);
-    if (completedItems.length === 0) return;
-
-    setIsZipping(true);
-    try {
-      const zip = new JSZip();
-
-      for (const it of completedItems) {
-        if (!it.outputBlob) continue;
-        const extension = it.options.format;
-        const cleanName = (it.options.metadata.title || it.name)
-          .replace(/\.[^/.]+$/, '')
-          .replace(/[^a-zA-Z0-9_\-áàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ ]/g, '_');
-        const fileName = `${cleanName}.${extension}`;
-
-        zip.file(fileName, it.outputBlob);
-      }
-
-      const zipBlob = await zip.generateAsync({ type: 'blob' });
-      const zipUrl = URL.createObjectURL(zipBlob);
-
-      const a = document.createElement('a');
-      a.href = zipUrl;
-      a.download = `AudioMorph_MP3_Convertidos_${new Date().toISOString().slice(0, 10)}.zip`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(zipUrl);
-    } catch (e) {
-      console.error('Failed to create ZIP:', e);
-    } finally {
-      setIsZipping(false);
-    }
-  };
-
-  // Remove single item
-  const handleRemoveItem = (id: string) => {
-    setItems((prev) => {
-      const toRemove = prev.find((it) => it.id === id);
-      if (toRemove?.outputUrl) {
-        URL.revokeObjectURL(toRemove.outputUrl);
-      }
-      return prev.filter((it) => it.id !== id);
-    });
-  };
-
-  // Clear all items
-  const handleClearAll = () => {
-    items.forEach((it) => {
-      if (it.outputUrl) URL.revokeObjectURL(it.outputUrl);
-    });
-    setItems([]);
-  };
-
-  // Apply updated options from Trimmer Modal
-  const handleSaveTrimmer = (updatedItem: VideoItem, shouldReconvert: boolean) => {
-    setItems((prev) =>
-      prev.map((it) => (it.id === updatedItem.id ? updatedItem : it))
-    );
-
-    if (shouldReconvert) {
-      setTimeout(() => {
-        handleConvertItem(updatedItem.id);
-      }, 50);
-    }
-  };
-
-  // Add split parts generated from Trimmer Modal
-  const handleAddSplitItems = (newSplitItems: VideoItem[]) => {
-    setItems((prev) => [...prev, ...newSplitItems]);
-  };
-
-  const handleUpdateItemOptions = (id: string, newOptions: ConversionOptions) => {
-    setItems((prev) =>
-      prev.map((it) => (it.id === id ? { ...it, options: newOptions } : it))
-    );
-  };
-
-  // Sync global format and bitrate changes to items that haven't customized them
-  const handleGlobalFormatChange = (fmt: AudioFormat) => {
-    setGlobalFormat(fmt);
-    setItems((prev) =>
-      prev.map((it) => ({
-        ...it,
-        options: { ...it.options, format: fmt },
-        status: it.status === 'completed' ? 'idle' : it.status,
-      }))
-    );
-  };
-
-  const handleGlobalBitrateChange = (bitrate: 64 | 128 | 192 | 256 | 320) => {
-    setGlobalBitrate(bitrate);
-    setItems((prev) =>
-      prev.map((it) => ({
-        ...it,
-        options: { ...it.options, bitrate },
-        status: it.status === 'completed' ? 'idle' : it.status,
-      }))
-    );
-  };
-
-  const handleTabSelect = (tab: 'converter' | 'downloader' | 'ussd' | 'smartphones' | 'news') => {
-    setActiveTab(tab);
-    try {
-      const url = new URL(window.location.href);
-      if (tab === 'converter') {
-        url.pathname = '/';
-      } else {
-        url.pathname = `/${tab}`;
-      }
-      url.searchParams.delete('tab');
-      window.history.pushState({}, '', url.toString());
-    } catch (e) {
-      // ignore
+      window.location.href = tab === 'converter' ? '/' : `/${tab}`;
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950">
-      {/* Background Decorative Glow */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-emerald-600/15 via-cyan-600/10 to-transparent blur-3xl opacity-70" />
-        <div className="absolute top-[30%] -right-40 w-[500px] h-[500px] bg-indigo-600/10 blur-3xl rounded-full" />
-        <div className="absolute bottom-10 -left-40 w-[500px] h-[500px] bg-emerald-600/10 blur-3xl rounded-full" />
-      </div>
-
-      {/* Header Bar */}
-      <Header darkMode={true} setDarkMode={() => {}} onOpenFAQ={() => setIsFAQOpen(true)} onNavigateToUssd={() => handleTabSelect('ussd')} />
-
-      {/* Navigation Tabs Bar */}
-      <nav aria-label="Navegação de abas" className="w-full bg-slate-900/90 border-b border-slate-800/80 sticky top-20 z-30 shadow-md backdrop-blur-md">
-        <div
-          ref={tabsContainerRef}
-          className="max-w-7xl mx-auto overflow-x-auto tabs-scrollbar overscroll-x-contain"
-        >
-          <div className="flex items-center justify-start lg:justify-center gap-2 sm:gap-3 py-3 px-4 sm:px-6 lg:px-8 w-max min-w-full">
-            {/* Tab 1: Conversor */}
+    <footer className="w-full border-t border-slate-800/80 bg-slate-950/90 py-10 mt-16 text-slate-400">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col items-center justify-center gap-6 pt-6 border-t border-slate-900">
+          <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 text-xs text-slate-400">
             <button
-              id="tab-btn-converter"
-              ref={activeTab === 'converter' ? activeTabRef : undefined}
-              onClick={() => handleTabSelect('converter')}
-              className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
-                activeTab === 'converter'
-                  ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20'
-                  : 'bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-700/50'
-              }`}
+              onClick={onOpenTerms}
+              className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors"
             >
-              <RefreshCw className="w-4 h-4" />
-              <span>{t('tabs.converter')}</span>
+              {t('footer.terms')}
             </button>
-
-            {/* Tab 2: Downloader */}
+            <span className="hidden md:inline">•</span>
             <button
-              id="tab-btn-downloader"
-              ref={activeTab === 'downloader' ? activeTabRef : undefined}
-              onClick={() => handleTabSelect('downloader')}
-              className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
-                activeTab === 'downloader'
-                  ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20'
-                  : 'bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-700/50'
-              }`}
+              onClick={onOpenPrivacy}
+              className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors"
             >
-              <Download className="w-4 h-4" />
-              <span>{t('tabs.downloader')}</span>
+              {t('footer.privacy')}
             </button>
-
-            {/* Tab 3: Códigos USSD/MMI */}
+            <span className="hidden md:inline">•</span>
             <button
-              id="tab-btn-ussd"
-              ref={activeTab === 'ussd' ? activeTabRef : undefined}
-              onClick={() => handleTabSelect('ussd')}
-              className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
-                activeTab === 'ussd'
-                  ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20'
-                  : 'bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-700/50'
-              }`}
+              onClick={onOpenContact}
+              className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors"
             >
-              <Smartphone className="w-4 h-4" />
-              <span>{t('tabs.ussd')}</span>
+              {t('footer.contact')}
             </button>
-
-            {/* Tab 4: Smartphones */}
+            <span className="hidden md:inline">•</span>
             <button
-              id="tab-btn-smartphones"
-              ref={activeTab === 'smartphones' ? activeTabRef : undefined}
-              onClick={() => handleTabSelect('smartphones')}
-              className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
-                activeTab === 'smartphones'
-                  ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20'
-                  : 'bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-700/50'
-              }`}
+              onClick={() => window.location.href = '/?modal=popular'}
+              className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors"
             >
-              <Smartphone className="w-4 h-4" />
-              <span>{t('tabs.smartphones')}</span>
+              {t('footer.popular')}
             </button>
-
-            {/* Tab 5: News */}
+            <span className="hidden md:inline">•</span>
             <button
-              id="tab-btn-news"
-              ref={activeTab === 'news' ? activeTabRef : undefined}
-              onClick={() => handleTabSelect('news')}
-              className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
-                activeTab === 'news'
-                  ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20'
-                  : 'bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-700/50'
-              }`}
+              onClick={() => window.location.href = '/?modal=faq'}
+              className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors"
             >
-              <Newspaper className="w-4 h-4" />
-              <span>{t('tabs.news')}</span>
+              {t('footer.howItWorks')}
+            </button>
+            <span className="hidden md:inline">•</span>
+            <button
+              onClick={() => handleTabClick('converter')}
+              className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors"
+            >
+              {t('tabs.converter')}
+            </button>
+            <span className="hidden md:inline">•</span>
+            <button
+              onClick={() => handleTabClick('downloader')}
+              className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors"
+            >
+              {t('tabs.downloader')}
+            </button>
+            <span className="hidden md:inline">•</span>
+            <button
+              onClick={() => handleTabClick('ussd')}
+              className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors"
+            >
+              USSD/MMI
+            </button>
+            <span className="hidden md:inline">•</span>
+            <button
+              onClick={() => handleTabClick('smartphones')}
+              className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors font-medium"
+            >
+              {t('tabs.smartphones')}
+            </button>
+            <span className="hidden md:inline">•</span>
+            <button
+              onClick={() => handleTabClick('news')}
+              className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors font-medium"
+            >
+              {t('tabs.news')}
+            </button>
+            <span className="hidden md:inline">•</span>
+            <button
+              onClick={() => window.location.href = '/sitemap.html'}
+              className="flex items-center gap-1.5 text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors"
+            >
+              Sitemap
             </button>
           </div>
+
+          {/* Footer content structure */}
         </div>
-      </nav>
-
-      {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        {isNotFound ? (
-          <NotFound />
-        ) : activeTab === 'ussd' ? (
-          <UssdTool />
-        ) : activeTab === 'smartphones' ? (
-          <SmartphoneSpecs />
-        ) : activeTab === 'news' ? (
-          <GadgetNews />
-        ) : activeTab === 'downloader' ? (
-          <VideoDownloader
-            onFilesSelected={(files) => {
-              handleFilesSelected(files);
-              handleTabSelect('converter');
-            }}
-            onOpenRecorder={() => setIsRecorderOpen(true)}
-            onOpenSampleModal={() => setIsSampleModalOpen(true)}
-            onNavigateToConverter={() => handleTabSelect('converter')}
-            isProcessing={isProcessingAny}
-          />
-        ) : (
-          <>
-            {/* Hero Section for Converter */}
-            <div className="text-center max-w-3xl mx-auto mb-10">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight leading-tight mb-4">
-                {t('hero.converter.title')}
-              </h1>
-
-              <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
-                {t('hero.converter.desc')}
-              </p>
-            </div>
-
-            {/* Dropzone Upload Area */}
-            <div className="max-w-4xl mx-auto mb-8">
-              {fileLimitWarning && (
-                <div className="mb-4 p-4 rounded-2xl bg-amber-500/15 border border-amber-500/40 text-amber-200 text-sm flex items-start gap-3 shadow-lg">
-                  <div className="w-2 h-2 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <strong className="block text-amber-300 font-semibold mb-0.5">Limite de Tamanho Excedido (Máx 250MB)</strong>
-                    <span>{fileLimitWarning}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setFileLimitWarning(null)}
-                    className="text-xs text-amber-400 hover:text-white underline ml-2 shrink-0 cursor-pointer"
-                  >
-                    Fechar
-                  </button>
-                </div>
-              )}
-
-              <Dropzone
-                onFilesSelected={handleFilesSelected}
-                onOpenRecorder={() => setIsRecorderOpen(true)}
-                onOpenSampleModal={() => setIsSampleModalOpen(true)}
-                isProcessing={isProcessingAny}
-              />
-            </div>
-
-            {/* Video List & Batch Operations */}
-            {items.length > 0 && (
-              <div className="max-w-4xl mx-auto space-y-4 mb-14">
-                {/* Batch Controls Bar */}
-                <BatchControls
-                  items={items}
-                  globalFormat={globalFormat}
-                  setGlobalFormat={handleGlobalFormatChange}
-                  globalBitrate={globalBitrate}
-                  setGlobalBitrate={handleGlobalBitrateChange}
-                  onConvertAll={handleConvertAll}
-                  onDownloadAllZip={handleDownloadAllZip}
-                  onClearAll={handleClearAll}
-                  isProcessingAny={isProcessingAny}
-                  isZipping={isZipping}
-                />
-
-                {/* Individual Video Cards */}
-                <div className="space-y-3">
-                  {items.map((item) => (
-                    <VideoItemCard
-                      key={item.id}
-                      item={item}
-                      onConvert={handleConvertItem}
-                      onDownload={handleDownloadItem}
-                      onRemove={handleRemoveItem}
-                      onOpenTrimmer={(it) => setTrimmerItem(it)}
-                      onOpenCrop={(it) => setCropItem(it)}
-                      onUpdateOptions={handleUpdateItemOptions}
-                      isProcessing={isProcessingAny}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Editorial Guide Section for AdSense Policy Compliance */}
-            <section className="mt-16 max-w-4xl mx-auto bg-slate-900/70 border border-slate-800/80 rounded-3xl p-8 shadow-xl">
-              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-emerald-400" />
-                {t('editorial.media.title')}
-              </h2>
-              <div className="space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
-                <p>
-                  {t('editorial.media.p1')}
-                </p>
-                <h3 className="text-sm font-bold text-emerald-300 mt-4">{t('editorial.media.h2')}</h3>
-                <p>
-                  {t('editorial.media.p2')}
-                </p>
-                <h3 className="text-sm font-bold text-emerald-300 mt-4">{t('editorial.media.h3')}</h3>
-                <p>
-                  {t('editorial.media.p3')}
-                </p>
-              </div>
-            </section>
-          </>
-        )}
-      </main>
-
-      {/* Footer */}
-      <Footer
-        onOpenTerms={() => openLegalModal('terms')}
-        onOpenPrivacy={() => openLegalModal('privacy')}
-        onOpenContact={() => openLegalModal('contact')}
-        onNavigateTab={(tab) => {
-          handleTabSelect(tab);
-        }}
-      />
-
-      {/* Video Crop Modal */}
-      {cropItem && (
-        <VideoCropModal
-          item={cropItem}
-          isOpen={!!cropItem}
-          onClose={() => setCropItem(null)}
-          onSaveCrop={handleSaveCrop}
-        />
-      )}
-
-      {/* Audio Trimmer & EQ & Tags Modal */}
-      {trimmerItem && (
-        <AudioTrimmerModal
-          item={trimmerItem}
-          onClose={() => setTrimmerItem(null)}
-          onSave={handleSaveTrimmer}
-          onAddSplitItems={handleAddSplitItems}
-        />
-      )}
-
-      {/* Camera / Screen Recorder Modal */}
-      {isRecorderOpen && (
-        <RecordModal
-          onClose={() => setIsRecorderOpen(false)}
-          onVideoRecorded={(file) => {
-            handleFilesSelected([file]);
-            setIsRecorderOpen(false);
-          }}
-        />
-      )}
-
-      {/* Built-in Sample Generator Modal */}
-      {isSampleModalOpen && (
-        <SampleModal
-          onClose={() => setIsSampleModalOpen(false)}
-          onSampleGenerated={(file) => {
-            handleFilesSelected([file]);
-            setIsSampleModalOpen(false);
-          }}
-        />
-      )}
-
-      {/* FAQ Modal */}
-      {isFAQOpen && (
-        <FAQModal onClose={() => setIsFAQOpen(false)} />
-      )}
-
-      {/* Popular Codes Modal */}
-      {isPopularCodesOpen && (
-        <PopularCodesModal
-          isOpen={isPopularCodesOpen}
-          onClose={() => setIsPopularCodesOpen(false)}
-          onNavigateToUssd={() => {
-            handleTabSelect('ussd');
-            setIsPopularCodesOpen(false);
-          }}
-        />
-      )}
-
-      {/* Legal & Contact Modal */}
-      {legalModalType && (
-        <LegalModal
-          type={legalModalType}
-          onClose={closeLegalModal}
-        />
-      )}
-
-      {/* Floating Bottom Ad Banner */}
-      <BottomAdBanner />
-
-      {/* Floating Rainbow Mouse Follower */}
-      <MouseFollower />
-      <CookieBanner />
-    </div>
+      </div>
+    </footer>
   );
-}
+};
+
+
