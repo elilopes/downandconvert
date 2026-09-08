@@ -22,7 +22,10 @@ import {
   MessageSquare,
   Zap,
   BrainCircuit,
-  DownloadCloud
+  DownloadCloud,
+  Copy,
+  Check,
+  FileText
 } from 'lucide-react';
 import { VideoItem } from '../types';
 import { formatBytes, formatTime } from '../utils/audioEncoder';
@@ -59,6 +62,7 @@ export const VideoItemCard: React.FC<VideoItemCardProps> = ({
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcriptionText, setTranscriptionText] = useState<string | null>(null);
   const [transcriptionError, setTranscriptionError] = useState<string | null>(null);
+  const [copiedTranscription, setCopiedTranscription] = useState(false);
 
   const handleTranscribe = async () => {
     setIsTranscribing(true);
@@ -69,8 +73,8 @@ export const VideoItemCard: React.FC<VideoItemCardProps> = ({
       const formData = new FormData();
       formData.append('file', item.file);
       formData.append('mode', transcriptionMode);
-      if (transcriptionMode === 'slow' && transcriptionKey) {
-        formData.append('apiKey', transcriptionKey);
+      if (transcriptionMode === 'slow' && transcriptionKey.trim()) {
+        formData.append('apiKey', transcriptionKey.trim());
       }
 
       const response = await fetch('/api/transcribe', {
@@ -91,12 +95,20 @@ export const VideoItemCard: React.FC<VideoItemCardProps> = ({
     }
   };
 
+  const handleCopyTranscription = () => {
+    if (!transcriptionText) return;
+    navigator.clipboard.writeText(transcriptionText);
+    setCopiedTranscription(true);
+    setTimeout(() => setCopiedTranscription(false), 2000);
+  };
+
   const handleDownloadTranscription = () => {
     if (!transcriptionText) return;
     const element = document.createElement("a");
-    const file = new Blob([transcriptionText], {type: 'text/plain'});
+    const file = new Blob([transcriptionText], {type: 'text/plain;charset=utf-8'});
     element.href = URL.createObjectURL(file);
-    element.download = `Transcricao-${item.name}.txt`;
+    const baseName = item.name.replace(/\.[^/.]+$/, '');
+    element.download = `transcricao_${baseName}.txt`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
@@ -493,78 +505,178 @@ return () => {
             <button
               type="button"
               onClick={() => setShowTranscription(!showTranscription)}
-              className="flex items-center gap-2 text-sm font-medium text-slate-300 hover:text-cyan-400 transition-colors w-full p-2 bg-slate-900/50 rounded-xl border border-slate-800"
+              className="flex items-center justify-between text-sm font-medium text-slate-300 hover:text-cyan-400 transition-colors w-full p-2.5 bg-slate-900/60 hover:bg-slate-900 rounded-xl border border-slate-800"
             >
-              <MessageSquare className="w-4 h-4" />
-              <span>Transcrever Áudio/Vídeo</span>
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-cyan-400" />
+                <span className="font-semibold text-white">Transcrever Áudio ou Vídeo para Texto</span>
+                {item.name.toLowerCase().endsWith('.ogg') && (
+                  <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                    Áudio WhatsApp .OGG
+                  </span>
+                )}
+              </div>
+              <span className="text-xs text-slate-400">{showTranscription ? '▲ Recolher' : '▼ Expandir opções'}</span>
             </button>
             
             {showTranscription && (
-              <div className="mt-3 p-4 bg-slate-950/50 border border-slate-800 rounded-xl space-y-4 animate-fadeIn">
-                <p className="text-xs text-slate-400">Excelente para áudios do WhatsApp (ogg, mp3, mp4).</p>
+              <div className="mt-3 p-4 bg-slate-950/70 border border-slate-800/90 rounded-2xl space-y-4 animate-fadeIn">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-slate-300 font-medium">
+                    Escolha o modo de transcrição desejado para <span className="text-cyan-300 font-semibold">{item.name}</span>:
+                  </p>
+                  {item.name.toLowerCase().endsWith('.ogg') && (
+                    <span className="text-[11px] text-emerald-400 flex items-center gap-1 font-medium">
+                      ✓ Compatível com mensagem de voz do WhatsApp
+                    </span>
+                  )}
+                </div>
                 
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <label className={`flex-1 relative cursor-pointer flex items-start gap-3 p-3 rounded-xl border transition-all ${transcriptionMode === 'fast' ? 'bg-cyan-950/30 border-cyan-500/50' : 'bg-slate-900 border-slate-800 hover:border-slate-700'}`}>
-                    <input type="radio" name="tMode" checked={transcriptionMode === 'fast'} onChange={() => setTranscriptionMode('fast')} className="mt-1" />
+                {/* As duas opções solicitadas pelo usuário */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Opção 1: Rápida sem usar chave do gemini */}
+                  <label className={`relative cursor-pointer flex items-start gap-3 p-3.5 rounded-xl border transition-all ${transcriptionMode === 'fast' ? 'bg-cyan-950/40 border-cyan-400 shadow-md shadow-cyan-500/10' : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'}`}>
+                    <input type="radio" name={`tMode-${item.id}`} checked={transcriptionMode === 'fast'} onChange={() => setTranscriptionMode('fast')} className="mt-1 accent-cyan-400" />
                     <div>
-                      <p className="text-sm font-bold text-slate-200 flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-cyan-400" /> Rápida (Grátis)</p>
-                      <p className="text-xs text-slate-400 mt-0.5">Usa o modelo rápido, sem precisar da sua chave Gemini.</p>
+                      <p className="text-sm font-bold text-white flex items-center gap-1.5">
+                        <Zap className="w-4 h-4 text-cyan-400" /> Transcrição Rápida
+                      </p>
+                      <span className="inline-block mt-0.5 px-2 py-0.5 text-[10px] font-bold rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                        sem usar chave do gemini
+                      </span>
+                      <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                        Processamento rápido nativo sem gastar créditos de IA ou chave de API.
+                      </p>
                     </div>
                   </label>
                   
-                  <label className={`flex-1 relative cursor-pointer flex items-start gap-3 p-3 rounded-xl border transition-all ${transcriptionMode === 'slow' ? 'bg-emerald-950/30 border-emerald-500/50' : 'bg-slate-900 border-slate-800 hover:border-slate-700'}`}>
-                    <input type="radio" name="tMode" checked={transcriptionMode === 'slow'} onChange={() => setTranscriptionMode('slow')} className="mt-1" />
+                  {/* Opção 2: Lenta com maior qualidade usando a chave do gemini */}
+                  <label className={`relative cursor-pointer flex items-start gap-3 p-3.5 rounded-xl border transition-all ${transcriptionMode === 'slow' ? 'bg-emerald-950/40 border-emerald-400 shadow-md shadow-emerald-500/10' : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'}`}>
+                    <input type="radio" name={`tMode-${item.id}`} checked={transcriptionMode === 'slow'} onChange={() => setTranscriptionMode('slow')} className="mt-1 accent-emerald-400" />
                     <div>
-                      <p className="text-sm font-bold text-slate-200 flex items-center gap-1.5"><BrainCircuit className="w-3.5 h-3.5 text-emerald-400" /> Alta Qualidade (API Key)</p>
-                      <p className="text-xs text-slate-400 mt-0.5">Usa o modelo avançado. Requer sua chave do Gemini.</p>
+                      <p className="text-sm font-bold text-white flex items-center gap-1.5">
+                        <BrainCircuit className="w-4 h-4 text-emerald-400" /> Transcrição Lenta
+                      </p>
+                      <span className="inline-block mt-0.5 px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        com maior qualidade usando a chave do gemini
+                      </span>
+                      <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                        Pontuação exata, remoção de ruídos e alta precisão (ideal para áudios do WhatsApp).
+                      </p>
                     </div>
                   </label>
                 </div>
 
                 {transcriptionMode === 'slow' && (
-                  <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">Sua Chave do Gemini (API Key)</label>
+                  <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800 space-y-1.5">
+                    <label className="block text-xs font-semibold text-slate-300">
+                      Chave da API Gemini (Opcional se já configurada no servidor):
+                    </label>
                     <input 
                       type="password" 
                       value={transcriptionKey} 
                       onChange={(e) => setTranscriptionKey(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-emerald-500 outline-none"
-                      placeholder="AIzaSy..."
+                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:border-emerald-500 outline-none"
+                      placeholder="Deixe em branco para usar a chave do servidor ou cole sua AIzaSy..."
                     />
+                    <p className="text-[11px] text-slate-400">
+                      Se deixar em branco, o sistema tentará utilizar a chave de ambiente do servidor automaticamente.
+                    </p>
                   </div>
                 )}
 
                 {transcriptionError && (
-                  <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-lg text-rose-300 text-xs">
-                    {transcriptionError}
+                  <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+                    <div>
+                      <p className="font-semibold">Erro na transcrição:</p>
+                      <p>{transcriptionError}</p>
+                    </div>
                   </div>
                 )}
 
+                {/* Resultado da Transcrição exibido no site */}
                 {transcriptionText && (
-                  <div className="p-3 bg-slate-900 border border-slate-700 rounded-lg text-slate-300 text-sm max-h-60 overflow-y-auto tabs-scrollbar whitespace-pre-wrap">
-                    {transcriptionText}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs text-slate-400">
+                      <span className="font-semibold text-slate-200 flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Texto Transcrito:
+                      </span>
+                      <div className="flex items-center gap-2 text-[11px]">
+                        <span>{transcriptionText.trim().split(/\s+/).filter(Boolean).length} palavras</span>
+                        <span>•</span>
+                        <span>{transcriptionText.length} caracteres</span>
+                      </div>
+                    </div>
+                    
+                    <div className="p-3.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-200 text-sm max-h-64 overflow-y-auto tabs-scrollbar whitespace-pre-wrap font-sans leading-relaxed select-text shadow-inner">
+                      {transcriptionText}
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={handleCopyTranscription}
+                        className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        {copiedTranscription ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-emerald-400" />
+                            <span className="text-emerald-400">Copiado!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5 text-slate-400" />
+                            <span>Copiar Texto</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleDownloadTranscription}
+                        className="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/20 transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Baixar Transcrição (.txt)</span>
+                      </button>
+                    </div>
                   </div>
                 )}
 
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2 pt-1">
                   <button
                     type="button"
                     onClick={handleTranscribe}
-                    disabled={isTranscribing || (transcriptionMode === 'slow' && !transcriptionKey.trim())}
-                    className="flex-1 px-4 py-2 text-xs font-bold rounded-xl text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+                    disabled={isTranscribing}
+                    className="flex-1 px-4 py-2.5 text-xs font-bold rounded-xl text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 transition-all flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20 disabled:opacity-50 cursor-pointer"
                   >
-                    {isTranscribing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />}
-                    <span>{isTranscribing ? 'Transcrevendo...' : 'Iniciar Transcrição'}</span>
+                    {isTranscribing ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin text-slate-950" />
+                        <span>Transcrevendo áudio... aguarde</span>
+                      </>
+                    ) : (
+                      <>
+                        <MessageSquare className="w-4 h-4 text-slate-950" />
+                        <span>
+                          {transcriptionMode === 'fast' 
+                            ? 'Iniciar Transcrição Rápida (sem chave)' 
+                            : 'Iniciar Transcrição Lenta (com IA Gemini)'}
+                        </span>
+                      </>
+                    )}
                   </button>
-                  
+
                   {transcriptionText && (
                     <button
                       type="button"
                       onClick={handleDownloadTranscription}
-                      className="px-4 py-2 text-xs font-bold rounded-xl text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-all flex items-center gap-1.5"
+                      className="px-4 py-2.5 text-xs font-bold rounded-xl text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer"
+                      title="Baixar arquivo de texto .txt"
                     >
-                      <DownloadCloud className="w-4 h-4" />
-                      <span>Baixar .txt</span>
+                      <DownloadCloud className="w-4 h-4 text-emerald-400" />
+                      <span className="hidden sm:inline">Baixar .txt</span>
                     </button>
                   )}
                 </div>
