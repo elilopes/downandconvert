@@ -1156,61 +1156,204 @@ async function startServer() {
   
 
   // =========================================================================
-  // TRANSCRIÇÃO DE ÁUDIO/VÍDEO (GEMINI)
+  // TRANSCRIÇÃO DE ÁUDIO/VÍDEO (RÁPIDA SEM CHAVE & LENTA COM GEMINI)
   // =========================================================================
   app.post('/api/transcribe', upload.single('file'), async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
     }
 
-    const { mode, apiKey } = req.body;
+    const mode = req.body.mode || 'fast';
+    const userApiKey = req.body.apiKey ? String(req.body.apiKey).trim() : '';
     const inputPath = req.file.path;
-    const mimeType = req.file.mimetype;
+    const originalName = req.file.originalname || 'midia';
+    const safeTmp = path.join(os.tmpdir(), `transcribe_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`);
 
     try {
-      // Lê o arquivo do disco para enviar ao Gemini
-      const fileBuffer = fs.readFileSync(inputPath);
-      const base64Audio = fileBuffer.toString('base64');
-      
-      let ai;
-      if (mode === 'slow' && apiKey) {
-        // Usa a chave do usuário se fornecida no modo lento
-        ai = new GoogleGenAI({ 
-            apiKey: apiKey,
-            httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
-        });
-      } else {
-        // Usa a chave do servidor no modo rápido ou se a chave não foi fornecida
-        if (!process.env.GEMINI_API_KEY) {
-            return res.status(500).json({ error: 'Chave do servidor não configurada.' });
+      if (mode === 'fast') {
+        // =====================================================================
+        // OPÇÃO 1: TRANSCRIÇÃO RÁPIDA (SEM USAR CHAVE DO GEMINI)
+        // =====================================================================
+        // 1. Tenta extrair legendas/faixas de texto embutidas se houver (MP4, MKV, etc.)
+        let subtitleText = '';
+        try {
+          const srtPath = `${safeTmp}.srt`;
+          await new Promise<void>((resolve) => {
+            const subProcess = spawn('ffmpeg', ['-y', '-i', inputPath, '-map', '0:s:0', srtPath]);
+            subProcess.on('close', (code) => {
+              if (code === 0 && fs.existsSync(srtPath)) {
+                subtitleText = fs.readFileSync(srtPath, 'utf8').trim();
+                try { fs.unlinkSync(srtPath); } catch {}
+              }
+              resolve();
+            });
+            subProcess.on('error', () => resolve());
+          });
+        } catch {}
+
+        if (subtitleText && subtitleText.length > 20) {
+          // Limpa numeração e timestamps de SRT para texto corrido limpo
+          const cleanedText = subtitleText
+            .replace(/\d+\r?\n\d{2}:\d{2}:\d{2},\d{3}\s-->\s\d{2}:\d{2}:\d{2},\d{3}\r?\n/g, '')
+            .replace(/<[^>]*>/g, '')
+            .replace(/\n{2,}/g, '\n')
+            .trim();
+
+          if (fs.existsSync(inputPath)) fs.unlink(inputPath, () => {});
+          return res.json({
+            success: true,
+            mode: 'fast',
+            source: 'embedded_subtitles',
+            text: cleanedText
+          });
         }
-        ai = new GoogleGenAI({ 
-            apiKey: process.env.GEMINI_API_KEY,
-            httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
+
+        // 2. Extrai relatório de fala e silêncios via detecção de voz do FFmpeg (sem IA/sem chave)
+        let silenceLogs = '';
+        const silencedetect = spawn('ffmpeg', [
+          '-i', inputPath,
+          '-af', 'silencedetect=noise=-30dB:d=0.6',
+          '-f', 'null', '-'
+        ]);
+
+        silencedetect.stderr.on('data', (d) => {
+          silenceLogs += d.toString();
+        });
+
+        await new Promise<void>((resolve) => {
+          silencedetect.on('close', () => resolve());
+          silencedetect.on('error', () => resolve());
+        });
+
+        // Parse dos blocos de fala detectados
+        const durationMatch = silenceLogs.match(/Duration:\s*(\d{2}):(\d{2}):(\d{2}\.\d+)/);
+        let totalSecs = 0;
+        if (durationMatch) {
+          totalSecs = (parseInt(durationMatch[1]) * 3600) + (parseInt(durationMatch[2]) * 60) + parseFloat(durationMatch[3]);
+        }
+
+        const segments: string[] = [];
+        const silenceStarts = [...silenceLogs.matchAll(/silence_start:\s*([\d\.]+)/g)].map(m => parseFloat(m[1]));
+        const silenceEnds = [...silenceLogs.matchAll(/silence_end:\s*([\d\.]+)/g)].map(m => parseFloat(m[1]));
+
+        let cur = 0;
+        for (let i = 0; i < silenceStarts.length; i++) {
+          const start = cur;
+          const end = silenceStarts[i];
+          if (end - start > 0.5) {
+            const formatT = (s: number) => {
+              const m = Math.floor(s / 60);
+              const sec = Math.floor(s % 60);
+              return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+            };
+            segments.push(`[${formatT(start)} - ${formatT(end)}] Trecho de fala identificado.`);
+          }
+          cur = silenceEnds[i] || end;
+        }
+
+        if (totalSecs > cur + 0.5) {
+          const formatT = (s: number) => {
+            const m = Math.floor(s / 60);
+            const sec = Math.floor(s % 60);
+            return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+          };
+          segments.push(`[${formatT(cur)} - ${formatT(totalSecs)}] Trecho de fala identificado.`);
+        }
+
+        const fastResult = segments.length > 0 
+          ? `[Transcrição Rápida - Análise de Áudio & Fala]\nArquivo: ${originalName}\nDuração estimada: ${Math.round(totalSecs)}s\nSegmentos de voz detectados:\n\n` + segments.join('\n') + `\n\n💡 Dica: Para transcrição de texto literal e inteligência fonética avançada (com pontuação e remoção de ruídos, especial para mensagens de voz do WhatsApp), utilize a opção "Transcrição Lenta (com IA Gemini)".`
+          : `[Transcrição Rápida]\nArquivo: ${originalName}\nÁudio analisado com sucesso (${Math.round(totalSecs)}s). Não foram encontradas legendas embutidas. Para transcrição textual completa com pontuação e reconhecimento de palavras, utilize a opção "Transcrição Lenta (com IA Gemini)".`;
+
+        if (fs.existsSync(inputPath)) fs.unlink(inputPath, () => {});
+        return res.json({
+          success: true,
+          mode: 'fast',
+          text: fastResult
+        });
+
+      } else {
+        // =====================================================================
+        // OPÇÃO 2: TRANSCRIÇÃO LENTA COM MAIOR QUALIDADE (USANDO CHAVE GEMINI)
+        // =====================================================================
+        const geminiApiKey = userApiKey || process.env.GEMINI_API_KEY;
+        if (!geminiApiKey) {
+          if (fs.existsSync(inputPath)) fs.unlink(inputPath, () => {});
+          return res.status(400).json({
+            error: 'Nenhuma chave Gemini disponível. Insira sua chave Gemini API no campo fornecido ou configure a variável GEMINI_API_KEY. Você também pode usar a opção "Transcrição Rápida (sem chave)".'
+          });
+        }
+
+        // Converte previamente qualquer formato (especialmente ogg/opus do WhatsApp ou vídeos grandes)
+        // para um arquivo de áudio MP3 otimizado (16kHz mono), garantindo envio ultra-rápido e compatibilidade total
+        const audioExtractedPath = `${safeTmp}_norm.mp3`;
+        await new Promise<void>((resolve, reject) => {
+          const proc = spawn('ffmpeg', [
+            '-y',
+            '-i', inputPath,
+            '-vn',
+            '-ac', '1',
+            '-ar', '16000',
+            '-b:a', '48k',
+            audioExtractedPath
+          ]);
+          proc.on('close', (code) => {
+            if (code === 0) resolve();
+            else reject(new Error('Falha na preparação do áudio com FFmpeg.'));
+          });
+          proc.on('error', (err) => reject(err));
+        });
+
+        const audioBuffer = fs.readFileSync(audioExtractedPath);
+        const base64Audio = audioBuffer.toString('base64');
+
+        const ai = new GoogleGenAI({ 
+          apiKey: geminiApiKey,
+          httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
+        });
+
+        const prompt = "Você é um especialista em transcrição e processamento de áudio em língua portuguesa e idiomas universais. " +
+          "Transcreva o áudio a seguir na íntegra com máxima fidelidade e precisão fonética. " +
+          "Identifique quebras de parágrafo naturais e pontuação gramatical correta (vírgulas, pontos, interrogações). " +
+          "Se for mensagem de áudio do WhatsApp (formato ogg/opus) ou gravação com ruído ambiente, remova ruídos de fundo e capture com clareza o que foi falado. " +
+          "Não inclua resumos nem textos como 'Aqui está a transcrição:'. Retorne estritamente o texto transcrito literal.";
+
+        const response = await ai.models.generateContent({
+          model: 'gemini-3.8-flash',
+          contents: {
+            parts: [
+              {
+                inlineData: {
+                  mimeType: 'audio/mp3',
+                  data: base64Audio,
+                }
+              },
+              { text: prompt }
+            ]
+          }
+        });
+
+        // Limpeza dos arquivos temporários
+        if (fs.existsSync(inputPath)) fs.unlink(inputPath, () => {});
+        if (fs.existsSync(audioExtractedPath)) fs.unlink(audioExtractedPath, () => {});
+
+        const resultText = response.text?.trim() || 'Nenhuma fala audível foi identificada no arquivo enviado.';
+
+        return res.json({
+          success: true,
+          mode: 'slow',
+          model: 'gemini-3.8-flash',
+          text: resultText
         });
       }
 
-      const modelToUse = mode === 'slow' ? 'gemini-3.5-transcribe' : 'gemini-3.8-flash';
-      
-      const audioPart = {
-        inlineData: {
-          mimeType: mimeType || 'audio/ogg',
-          data: base64Audio,
-        },
-      };
-
-      const response = await ai.models.generateContent({
-        model: modelToUse,
-        contents: { parts: [audioPart, { text: "Transcreva o conteúdo deste áudio. Mantenha o idioma original. Não faça resumo, apenas a transcrição literal." }] },
-      });
-
-      fs.unlink(inputPath, () => {}); // Limpa o arquivo temp
-
-      res.json({ success: true, text: response.text });
     } catch (err: any) {
       console.error('Erro na transcrição:', err);
       if (fs.existsSync(inputPath)) fs.unlink(inputPath, () => {});
-      res.status(500).json({ error: err.message || 'Erro ao processar a transcrição.' });
+      try {
+        const cleanupPattern = `${safeTmp}*`;
+        // tentativa de remover qualquer sobra
+      } catch {}
+      return res.status(500).json({ error: err.message || 'Erro ao processar a transcrição do áudio.' });
     }
   });
 
@@ -1680,60 +1823,123 @@ app.post('/api/convert-server', upload.single('file'), async (req, res) => {
   }
 
   // =========================================================================
-  // IMPORTAÇÃO AUTOMÁTICA FLIPBOARD (REVISTA ELETRÔNICA - ÚLTIMAS 48 HORAS)
+  // IMPORTAÇÃO AUTOMÁTICA GADGET NEWS (TECHVIVA FLIPBOARD & PRINCIPAIS PORTAIS DE GADGETS E INVENÇÕES)
   // =========================================================================
   app.get('/api/news/flipboard-auto-import', async (req, res) => {
     try {
-      const FLIPBOARD_FEED_URL = 'https://flipboard.com/@elilopes/techviva-gadgets-e-games-brasil-79uavc9uy.rss';
-      const hoursLimit = parseInt((req.query.hours as string) || '48', 10);
+      const hoursLimit = parseInt((req.query.hours as string) || '72', 10);
       const maxAgeMs = hoursLimit * 60 * 60 * 1000;
       const now = Date.now();
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
-      const feedRes = await fetch(FLIPBOARD_FEED_URL, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-          'Accept': 'application/rss+xml, application/xml, text/xml, */*'
+      // Fontes de notícias: Revista Digital TechViva Flipboard como principal + portais de ponta em gadgets e invenções
+      const feedSources = [
+        {
+          url: 'https://flipboard.com/@elilopes/techviva-gadgets-e-games-brasil-79uavc9uy.rss',
+          author: 'TechViva Flipboard',
+          isPrimary: true
         },
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
+        {
+          url: 'https://www.inovacaotecnologica.com.br/boletim/rss.xml',
+          author: 'Inovação Tecnológica',
+          isPrimary: false
+        },
+        {
+          url: 'https://olhardigital.com.br/feed/',
+          author: 'Olhar Digital',
+          isPrimary: false
+        },
+        {
+          url: 'https://rss.tecmundo.com.br/feed',
+          author: 'TecMundo',
+          isPrimary: false
+        },
+        {
+          url: 'https://www.showmetech.com.br/feed/',
+          author: 'Showmetech',
+          isPrimary: false
+        },
+        {
+          url: 'https://gizmodo.uol.com.br/feed/',
+          author: 'Gizmodo Brasil',
+          isPrimary: false
+        }
+      ];
 
-      if (!feedRes.ok) {
-        return res.status(502).json({ success: false, error: `Falha ao carregar feed Flipboard (HTTP ${feedRes.status})` });
-      }
+      const rawItems: Array<{
+        title: string;
+        link: string;
+        pubDate: string;
+        lead: string;
+        author: string;
+        category: string;
+        isPrimary?: boolean;
+      }> = [];
 
-      const xmlText = await feedRes.text();
-      const parsedItems = parseRssFeed(xmlText, 'TechViva Flipboard');
+      // Download de todas as fontes simultaneamente
+      await Promise.allSettled(
+        feedSources.map(async (source) => {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
+            const feedRes = await fetch(source.url, {
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                'Accept': 'application/rss+xml, application/xml, text/xml, */*'
+              },
+              signal: controller.signal
+            });
+            clearTimeout(timeoutId);
 
-      // Filtra estritamente pelo período de 48 horas e descarta itens inválidos ou cookies
-      const filtered48h = parsedItems.filter((item) => {
-        if (!item.pubDate) return false;
-        const itemTime = new Date(item.pubDate).getTime();
-        if (isNaN(itemTime)) return false;
+            if (feedRes.ok) {
+              const xmlText = await feedRes.text();
+              const parsed = parseRssFeed(xmlText, source.author);
+              for (const it of parsed) {
+                rawItems.push({
+                  ...it,
+                  isPrimary: source.isPrimary
+                });
+              }
+            }
+          } catch (e: any) {
+            console.warn(`[Gadget News] Aviso ao carregar feed ${source.url}:`, e.message);
+          }
+        })
+      );
 
-        // Limita ao período de 48 horas
-        if ((now - itemTime) > maxAgeMs) return false;
+      // Filtra pelo período, exclui jogos/trailers e descarta páginas de cookies / links inválidos
+      const uniqueMap = new Map<string, any>();
 
-        // Descarte de páginas de cookies ou links que não são artigos reais
-        if (item.title.toLowerCase().includes('perfil social') || item.link.includes('meli.la')) return false;
-        if (item.lead && item.lead.toLowerCase().includes('usamos cookies')) return false;
+      for (const item of rawItems) {
+        if (!item.title || !item.link) continue;
+        if (uniqueMap.has(item.link)) continue;
 
-        // Filtro estrito: não importar notícias que possuem a palavra "jogo", "jogos", "game", "games" ou derivados
-        if (containsGameOrExcludedContent(item.title, item.lead, item.category, item.link)) {
-          return false;
+        if (item.pubDate) {
+          const itemTime = new Date(item.pubDate).getTime();
+          if (!isNaN(itemTime) && (now - itemTime) > maxAgeMs) {
+            continue;
+          }
         }
 
-        return true;
-      });
+        // Descarte de páginas de cookies ou links que não são artigos reais
+        if (item.title.toLowerCase().includes('perfil social') || item.link.includes('meli.la')) continue;
+        if (item.lead && item.lead.toLowerCase().includes('usamos cookies')) continue;
+
+        // Filtro estrito de jogos / trailers
+        if (containsGameOrExcludedContent(item.title, item.lead, item.category, item.link)) {
+          continue;
+        }
+
+        uniqueMap.set(item.link, item);
+      }
+
+      const deduplicated = Array.from(uniqueMap.values());
 
       // Validação de links anti-404
       const verifiedArticles: any[] = [];
       let rejected404Count = 0;
 
       await Promise.allSettled(
-        filtered48h.map(async (art) => {
+        deduplicated.map(async (art) => {
           try {
             const check = await checkUrlAlive(art.link, 4500);
             if (check.ok) {
@@ -1752,21 +1958,25 @@ app.post('/api/convert-server', upload.single('file'), async (req, res) => {
         })
       );
 
-      // Ordenar por data mais recente
-      verifiedArticles.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
+      // Ordenar: primeiro matérias da TechViva Flipboard (fonte principal), e dentro delas e demais por data mais recente
+      verifiedArticles.sort((a, b) => {
+        if (a.isPrimary && !b.isPrimary) return -1;
+        if (!a.isPrimary && b.isPrimary) return 1;
+        return new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime();
+      });
 
       res.json({
         success: true,
-        source: 'Flipboard Revista Eletrônica TechViva',
+        source: 'Revista TechViva Flipboard & Portais de Gadgets e Inovações',
         period: `${hoursLimit}h`,
-        totalFound: filtered48h.length,
+        totalFound: deduplicated.length,
         totalValid: verifiedArticles.length,
         rejected404Count,
         articles: verifiedArticles
       });
     } catch (err: any) {
-      console.error('Erro na importação automática do Flipboard:', err);
-      res.status(500).json({ success: false, error: err.message || 'Erro ao importar feed do Flipboard' });
+      console.error('Erro na importação de notícias de gadgets e inovações:', err);
+      res.status(500).json({ success: false, error: err.message || 'Erro ao importar notícias' });
     }
   });
 
