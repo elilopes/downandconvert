@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Music, ShieldCheck, Sparkles, Flame, Globe, ChevronDown, Smartphone } from 'lucide-react';
+import { Music, ShieldCheck, Sparkles, Flame, Globe, ChevronDown, Smartphone, Palette, Moon, Sun, Eye, Contrast } from 'lucide-react';
 import { useLanguage, Language } from '../contexts/LanguageContext';
+import { useTheme, Theme } from '../contexts/ThemeContext';
 import { PopularCodesModal } from './PopularCodesModal';
 
 interface HeaderProps {
@@ -12,9 +13,13 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ darkMode, setDarkMode, onOpenFAQ, onNavigateToUssd }) => {
   const { lang, setLang, t } = useLanguage();
+  const { theme, setTheme } = useTheme();
   const [langOpen, setLangOpen] = useState(false);
+  const [themeOpen, setThemeOpen] = useState(false);
   const [isPopularModalOpen, setIsPopularModalOpen] = useState(false);
+  
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const themeDropdownRef = useRef<HTMLDivElement>(null);
 
   const languages = [
     { code: 'PT', name: 'Português' },
@@ -28,6 +33,9 @@ export const Header: React.FC<HeaderProps> = ({ darkMode, setDarkMode, onOpenFAQ
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setLangOpen(false);
+      }
+      if (themeDropdownRef.current && !themeDropdownRef.current.contains(event.target as Node)) {
+        setThemeOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -91,6 +99,48 @@ export const Header: React.FC<HeaderProps> = ({ darkMode, setDarkMode, onOpenFAQ
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
               {t('header.how')}
             </button>
+
+            {/* Theme Selector */}
+            <div className="relative" ref={themeDropdownRef}>
+              <button
+                onClick={() => setThemeOpen(!themeOpen)}
+                className="flex items-center justify-center p-2 rounded-xl bg-slate-800/80 border border-slate-700/60 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
+                title="Aparência"
+              >
+                <Palette className="w-4 h-4 text-slate-400" />
+              </button>
+              
+              {themeOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-slate-800 border border-slate-700 rounded-xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="py-1">
+                    <button
+                      onClick={() => { setTheme('dark'); setThemeOpen(false); }}
+                      className={`w-full text-left px-4 py-2 text-xs transition-colors flex items-center gap-2 ${theme === 'dark' ? 'bg-emerald-500/10 text-emerald-400 font-bold' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+                    >
+                      <Moon className="w-3.5 h-3.5" /> {t('theme.dark')}
+                    </button>
+                    <button
+                      onClick={() => { setTheme('light'); setThemeOpen(false); }}
+                      className={`w-full text-left px-4 py-2 text-xs transition-colors flex items-center gap-2 ${theme === 'light' ? 'bg-emerald-500/10 text-emerald-400 font-bold' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+                    >
+                      <Sun className="w-3.5 h-3.5" /> {t('theme.light')}
+                    </button>
+                    <button
+                      onClick={() => { setTheme('colorblind'); setThemeOpen(false); }}
+                      className={`w-full text-left px-4 py-2 text-xs transition-colors flex items-center gap-2 ${theme === 'colorblind' ? 'bg-emerald-500/10 text-emerald-400 font-bold' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+                    >
+                      <Eye className="w-3.5 h-3.5" /> {t('theme.colorblind')}
+                    </button>
+                    <button
+                      onClick={() => { setTheme('high-contrast'); setThemeOpen(false); }}
+                      className={`w-full text-left px-4 py-2 text-xs transition-colors flex items-center gap-2 ${theme === 'high-contrast' ? 'bg-emerald-500/10 text-emerald-400 font-bold' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+                    >
+                      <Contrast className="w-3.5 h-3.5" /> {t('theme.highContrast')}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Language Selector */}
             <div className="relative" ref={dropdownRef}>
