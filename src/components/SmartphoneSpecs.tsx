@@ -235,6 +235,7 @@ export const SmartphoneSpecs: React.FC = () => {
   const [fingerprint, setFingerprint] = useState<boolean>(false);
   const [hasGps, setHasGps] = useState<boolean>(false);
   const [supportsWhatsApp, setSupportsWhatsApp] = useState<boolean>(false);
+  const [onlyWithoutWhatsApp, setOnlyWithoutWhatsApp] = useState<boolean>(false);
   const [minBattery, setMinBattery] = useState<number>(0);
   const [selectedSimTypes, setSelectedSimTypes] = useState<string[]>([]);
   const [selectedChargingTypes, setSelectedChargingTypes] = useState<string[]>([]);
@@ -293,6 +294,7 @@ export const SmartphoneSpecs: React.FC = () => {
     setFingerprint(false);
     setHasGps(false);
     setSupportsWhatsApp(false);
+    setOnlyWithoutWhatsApp(false);
     setMinBattery(0);
     setSelectedSimTypes([]);
     setSelectedChargingTypes([]);
@@ -375,6 +377,7 @@ export const SmartphoneSpecs: React.FC = () => {
     if (fingerprint) count++;
     if (hasGps) count++;
     if (supportsWhatsApp) count++;
+    if (onlyWithoutWhatsApp) count++;
     if (minBattery > 0) count++;
     count += selectedSimTypes.length;
     count += selectedChargingTypes.length;
@@ -384,7 +387,7 @@ export const SmartphoneSpecs: React.FC = () => {
     if (slowMotion) count++;
     if (searchTerm.trim().length > 0) count++;
     return count;
-  }, [selectedBrands, selectedOS, selectedCpuBrands, selectedGpuBrands, minRam, minStorage, minCores, minScreenSize, minFrontCamera, recResIndex, architecture, simCards, networkIndex, digitalTv, physicalKeyboard, foldable, expandableMemory, opticalZoom, stabilization, faceDetection, fingerprint, hasGps, supportsWhatsApp, minBattery, selectedSimTypes, selectedChargingTypes, hasCompass, hasUsbOtg, hasNfc, slowMotion, searchTerm]);
+  }, [selectedBrands, selectedOS, selectedCpuBrands, selectedGpuBrands, minRam, minStorage, minCores, minScreenSize, minFrontCamera, recResIndex, architecture, simCards, networkIndex, digitalTv, physicalKeyboard, foldable, expandableMemory, opticalZoom, stabilization, faceDetection, fingerprint, hasGps, supportsWhatsApp, onlyWithoutWhatsApp, minBattery, selectedSimTypes, selectedChargingTypes, hasCompass, hasUsbOtg, hasNfc, slowMotion, searchTerm]);
 
   const filteredPhones = useMemo(() => {
     return mockedSmartphones.filter(phone => {
@@ -418,7 +421,8 @@ export const SmartphoneSpecs: React.FC = () => {
       const matchesStabilization = !stabilization || p.camera.stabilization;
       const matchesFaceDetection = !faceDetection || p.camera.faceDetection;
       const matchesFingerprint = !fingerprint || p.features.hasFingerprint;
-      const matchesWhatsApp = !supportsWhatsApp || p.features.supportsWhatsApp;
+      const matchesWhatsApp = (!supportsWhatsApp || p.features.supportsWhatsApp) &&
+                            (!onlyWithoutWhatsApp || !p.features.supportsWhatsApp);
       
       // Resolução de gravação em slider hierárquico
       const phoneResRank = RES_RANK_MAP[p.camera.recordingResolution] || 0;
@@ -433,7 +437,7 @@ export const SmartphoneSpecs: React.FC = () => {
              matchesOpticalZoom && matchesStabilization && matchesFaceDetection && matchesFingerprint &&
              matchesRecRes && matchesGps && matchesWhatsApp && matchesBattery && matchesSimTypes && matchesChargingTypes && matchesCompass && matchesUsbOtg && matchesNfc && matchesSlowMotion;
     });
-  }, [searchTerm, selectedBrands, selectedOS, selectedCpuBrands, selectedGpuBrands, minRam, minStorage, minCores, architecture, simCards, digitalTv, physicalKeyboard, foldable, networkIndex, expandableMemory, minScreenSize, minFrontCamera, opticalZoom, stabilization, faceDetection, fingerprint, recResIndex, hasGps, supportsWhatsApp, minBattery, selectedSimTypes, selectedChargingTypes, hasCompass, hasUsbOtg, hasNfc, slowMotion]);
+  }, [searchTerm, selectedBrands, selectedOS, selectedCpuBrands, selectedGpuBrands, minRam, minStorage, minCores, architecture, simCards, digitalTv, physicalKeyboard, foldable, networkIndex, expandableMemory, minScreenSize, minFrontCamera, opticalZoom, stabilization, faceDetection, fingerprint, recResIndex, hasGps, supportsWhatsApp, onlyWithoutWhatsApp, minBattery, selectedSimTypes, selectedChargingTypes, hasCompass, hasUsbOtg, hasNfc, slowMotion]);
 
   const CheckboxFilter: React.FC<{ label: string, checked: boolean, onChange: (c: boolean) => void, textSize?: string }> = ({ label, checked, onChange, textSize = "text-sm" }) => (
     <label className="flex items-center gap-2 cursor-pointer group select-none">
@@ -989,7 +993,22 @@ export const SmartphoneSpecs: React.FC = () => {
             <div>
               <h4 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">{t('smartphones.features')}</h4>
               <div className="flex flex-col gap-3">
-                <CheckboxFilter label={t('smartphones.supportsWhatsApp')} checked={supportsWhatsApp} onChange={setSupportsWhatsApp} />
+                <CheckboxFilter
+                  label={t('smartphones.supportsWhatsApp')}
+                  checked={supportsWhatsApp}
+                  onChange={(v) => {
+                    setSupportsWhatsApp(v);
+                    if (v) setOnlyWithoutWhatsApp(false);
+                  }}
+                />
+                <CheckboxFilter
+                  label="Sem WhatsApp"
+                  checked={onlyWithoutWhatsApp}
+                  onChange={(v) => {
+                    setOnlyWithoutWhatsApp(v);
+                    if (v) setSupportsWhatsApp(false);
+                  }}
+                />
                 <CheckboxFilter label="GPS" checked={hasGps} onChange={setHasGps} />
                 <CheckboxFilter label={t('smartphones.biometric')} checked={fingerprint} onChange={setFingerprint} />
                 <CheckboxFilter label={t('smartphones.nfc')} checked={hasNfc} onChange={setHasNfc} />
@@ -1132,11 +1151,7 @@ export const SmartphoneSpecs: React.FC = () => {
                   {/* Badges Extras */}
                   <div className="col-span-2 pt-2 border-t border-slate-800/60 mt-1">
                     <div className="flex flex-wrap gap-1.5 text-[10px] font-bold uppercase tracking-wider items-center">
-                      {p.features.supportsWhatsApp ? (
-                        <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md flex items-center gap-1">
-                          <MessageSquare className="w-3 h-3 text-emerald-400" /> WhatsApp OK
-                        </span>
-                      ) : (
+                      {(!p.features.supportsWhatsApp || (phone.os === 'Android' && (phone.osVersion?.includes('5.0') || phone.osVersion?.includes('5.1')))) && (
                         <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded-md flex items-center gap-1">
                           <MessageSquare className="w-3 h-3 text-rose-400" /> Sem WhatsApp
                         </span>
