@@ -1855,7 +1855,22 @@ app.post('/api/convert-server', upload.single('file'), async (req, res) => {
           clearTimeout(timeoutId);
 
           if (feedRes.ok) {
-            const xmlText = await feedRes.text();
+            const buf = Buffer.from(await feedRes.arrayBuffer());
+            const contentType = (feedRes.headers.get('content-type') || '').toLowerCase();
+            let isLatin = contentType.includes('8859') || contentType.includes('latin') || source.url.includes('inovacaotecnologica');
+            if (!isLatin) {
+              const preview = buf.subarray(0, 150).toString('latin1');
+              if (/encoding=["'](iso-8859-1|latin1)/i.test(preview)) {
+                isLatin = true;
+              }
+            }
+            let xmlText = '';
+            try {
+              const decoder = new TextDecoder(isLatin ? 'iso-8859-1' : 'utf-8');
+              xmlText = decoder.decode(buf);
+            } catch {
+              xmlText = buf.toString('utf-8');
+            }
             const parsed = parseRssFeed(xmlText, source.author);
             for (const it of parsed) {
               rawItems.push({ ...it, isPrimary: source.isPrimary });
@@ -1934,25 +1949,61 @@ app.post('/api/convert-server', upload.single('file'), async (req, res) => {
 
   app.get(['/api/news/rss.xml', '/rss.xml'], async (req, res) => {
     try {
-      const hoursLimit = parseInt((req.query.hours) || '72', 10);
+      const hoursLimit = parseInt((req.query.hours as string) || '72', 10);
       const { verifiedArticles } = await fetchGadgetNewsData(hoursLimit);
 
-      let rssXml = `<?xml version="1.0" encoding="UTF-8" ?>\n`;
-      rssXml += `<rss version="2.0">\n`;
+      const escapeXml = (str: string) => {
+        if (!str) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&apos;');
+      };
+
+      const cleanCdata = (str: string) => {
+        if (!str) return '';
+        // Remove caracteres de controle proibidos na especificação XML 1.0
+        const cleaned = String(str).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+        return cleaned.replace(/]]>/g, ']]]]><![CDATA[>');
+      };
+
+      const nowUtc = new Date().toUTCString();
+
+      let rssXml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+      rssXml += `<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n`;
       rssXml += `<channel>\n`;
-      rssXml += `  <title>TechViva & Gadgets - Down&Convert</title>\n`;
+      rssXml += `  <title>TechViva &amp; Gadgets - Down&amp;Convert</title>\n`;
       rssXml += `  <link>https://downandconvert.onrender.com</link>\n`;
-      rssXml += `  <description>Últimas notícias sobre gadgets, inovações e tecnologia curadas automaticamente.</description>\n`;
-      rssXml += `  <language>pt-br</language>\n`;
+      rssXml += `  <atom:link href="https://downandconvert.onrender.com/rss.xml" rel="self" type="application/rss+xml" />\n`;
+      rssXml += `  <description><![CDATA[Últimas notícias sobre gadgets, inovações e tecnologia curadas automaticamente.]]></description>\n`;
+      rssXml += `  <language>pt-BR</language>\n`;
+      rssXml += `  <lastBuildDate>${nowUtc}</lastBuildDate>\n`;
       
       verifiedArticles.forEach(art => {
+        const itemTitle = cleanCdata(art.title || '');
+        const itemLink = escapeXml(art.link || '');
+        const itemLead = cleanCdata(art.lead || '');
+        const itemAuthor = cleanCdata(art.author || '');
+        const itemCategory = cleanCdata(art.category || '');
+
+        let itemPubDate = nowUtc;
+        if (art.pubDate) {
+          const d = new Date(art.pubDate);
+          if (!isNaN(d.getTime())) {
+            itemPubDate = d.toUTCString();
+          }
+        }
+
         rssXml += `  <item>\n`;
-        rssXml += `    <title><![CDATA[${art.title || ''}]]></title>\n`;
-        rssXml += `    <link><![CDATA[${art.link || ''}]]></link>\n`;
-        rssXml += `    <description><![CDATA[${art.lead || ''}]]></description>\n`;
-        if (art.author) rssXml += `    <author><![CDATA[${art.author}]]></author>\n`;
-        if (art.category) rssXml += `    <category><![CDATA[${art.category}]]></category>\n`;
-        if (art.pubDate) rssXml += `    <pubDate>${new Date(art.pubDate).toUTCString()}</pubDate>\n`;
+        rssXml += `    <title><![CDATA[${itemTitle}]]></title>\n`;
+        rssXml += `    <link>${itemLink}</link>\n`;
+        rssXml += `    <guid isPermaLink="${(art.link && art.link.startsWith('http')) ? 'true' : 'false'}">${itemLink}</guid>\n`;
+        rssXml += `    <description><![CDATA[${itemLead}]]></description>\n`;
+        if (itemAuthor) rssXml += `    <author><![CDATA[${itemAuthor}]]></author>\n`;
+        if (itemCategory) rssXml += `    <category><![CDATA[${itemCategory}]]></category>\n`;
+        rssXml += `    <pubDate>${itemPubDate}</pubDate>\n`;
         rssXml += `  </item>\n`;
       });
       
