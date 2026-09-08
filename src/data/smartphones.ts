@@ -3,6 +3,7 @@ export interface Smartphone {
   brand: string;
   model: string;
   os: string;
+  osVersion?: string;
   releaseYear: number;
   specs: {
     screen: {
@@ -357,6 +358,7 @@ export const mockedSmartphones: Smartphone[] = [
     brand: "Acer",
     model: "Liquid E700 (Triple SIM)",
     os: "Android",
+    osVersion: "Android 4.4 KitKat",
     releaseYear: 2014,
     specs: {
       screen: { type: "IPS LCD", size: 5.0, resolution: "720 x 1280", refreshRate: 60, isFoldable: false },
@@ -375,6 +377,7 @@ export const mockedSmartphones: Smartphone[] = [
     brand: "Nokia",
     model: "3310 3G Classic",
     os: "Feature OS",
+    osVersion: "Series 30+",
     releaseYear: 2017,
     specs: {
       screen: { type: "TFT Color", size: 2.4, resolution: "240 x 320", refreshRate: 30, isFoldable: false },
@@ -393,6 +396,7 @@ export const mockedSmartphones: Smartphone[] = [
     brand: "Samsung",
     model: "Galaxy Pocket Neo 3G",
     os: "Android",
+    osVersion: "Android 4.1.2 Jelly Bean",
     releaseYear: 2014,
     specs: {
       screen: { type: "TFT", size: 3.0, resolution: "240 x 320", refreshRate: 60, isFoldable: false },
@@ -411,6 +415,7 @@ export const mockedSmartphones: Smartphone[] = [
     brand: "Apple",
     model: "iPhone 4S (iOS 9)",
     os: "iOS",
+    osVersion: "iOS 9.3.6",
     releaseYear: 2011,
     specs: {
       screen: { type: "IPS Retina", size: 3.5, resolution: "640 x 960", refreshRate: 60, isFoldable: false },
@@ -422,6 +427,161 @@ export const mockedSmartphones: Smartphone[] = [
       battery: { capacity: 1432, chargingTypes: ['30 pinos'] },
       performance: { antutu: 25000, geekbench: '100/200', tdMark: 500 },
       features: { hasGps: true, hasNfc: false, network: '3G', simCards: 1, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: false, supportsWhatsApp: false, simTypes: ['Micro-SIM (3FF)'], hasCompass: true, hasUsbOtg: false }
+    }
+  },
+  // =========================================================================
+  // APARELHOS COM ANDROID 5.0 E 5.1 (LOLLIPOP)
+  // =========================================================================
+  {
+    id: "galaxy-s4-lollipop",
+    brand: "Samsung",
+    model: "Galaxy S4 (Lollipop 5.0.1)",
+    os: "Android",
+    osVersion: "Android 5.0.1 Lollipop",
+    releaseYear: 2013,
+    specs: {
+      screen: { type: "Super AMOLED", size: 5.0, resolution: "1080 x 1920", refreshRate: 60, isFoldable: false },
+      processor: { chipset: "Snapdragon 600", cpuBrand: "Qualcomm", cores: 4, architecture: 32 },
+      gpu: { model: "Adreno 320", brand: "Adreno" },
+      ram: [2],
+      storage: { options: [16, 32, 64], expandable: true },
+      camera: { rear: 13, front: 2, opticalZoom: 0, stabilization: false, faceDetection: true, recordingResolution: 'FHD', slowMotion: false, maxFocusAngle: 85, touchFocus: true },
+      battery: { capacity: 2600, chargingTypes: ['USB/V8'] },
+      performance: { antutu: 42000, geekbench: '280/850', tdMark: 850 },
+      features: { hasGps: true, hasNfc: true, network: '4G', simCards: 1, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: false, supportsWhatsApp: false, simTypes: ['Micro-SIM (3FF)'], hasCompass: true, hasUsbOtg: true }
+    }
+  },
+  {
+    id: "galaxy-note3-lollipop",
+    brand: "Samsung",
+    model: "Galaxy Note 3 (Lollipop 5.0)",
+    os: "Android",
+    osVersion: "Android 5.0 Lollipop",
+    releaseYear: 2013,
+    specs: {
+      screen: { type: "Super AMOLED", size: 5.7, resolution: "1080 x 1920", refreshRate: 60, isFoldable: false },
+      processor: { chipset: "Snapdragon 800", cpuBrand: "Qualcomm", cores: 4, architecture: 32 },
+      gpu: { model: "Adreno 330", brand: "Adreno" },
+      ram: [3],
+      storage: { options: [32, 64], expandable: true },
+      camera: { rear: 13, front: 2, opticalZoom: 0, stabilization: true, faceDetection: true, recordingResolution: '4K', slowMotion: true, maxFocusAngle: 85, touchFocus: true },
+      battery: { capacity: 3200, chargingTypes: ['USB/V8'] },
+      performance: { antutu: 55000, geekbench: '350/1100', tdMark: 1200 },
+      features: { hasGps: true, hasNfc: true, network: '4G', simCards: 1, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: false, supportsWhatsApp: false, simTypes: ['Micro-SIM (3FF)'], hasCompass: true, hasUsbOtg: true }
+    }
+  },
+  {
+    id: "galaxy-gran-prime-lollipop",
+    brand: "Samsung",
+    model: "Galaxy Gran Prime Duos TV (Lollipop 5.0.2)",
+    os: "Android",
+    osVersion: "Android 5.0.2 Lollipop",
+    releaseYear: 2014,
+    specs: {
+      screen: { type: "TFT", size: 5.0, resolution: "540 x 960", refreshRate: 60, isFoldable: false },
+      processor: { chipset: "Snapdragon 410", cpuBrand: "Qualcomm", cores: 4, architecture: 64 },
+      gpu: { model: "Adreno 306", brand: "Adreno" },
+      ram: [1],
+      storage: { options: [8], expandable: true },
+      camera: { rear: 8, front: 5, opticalZoom: 0, stabilization: false, faceDetection: true, recordingResolution: 'FHD', slowMotion: false, maxFocusAngle: 85, touchFocus: true },
+      battery: { capacity: 2600, chargingTypes: ['USB/V8'] },
+      performance: { antutu: 28000, geekbench: '150/450', tdMark: 400 },
+      features: { hasGps: true, hasNfc: false, network: '4G', simCards: 2, hasDigitalTv: true, hasPhysicalKeyboard: false, hasFingerprint: false, supportsWhatsApp: false, simTypes: ['Micro-SIM (3FF)'], hasCompass: true, hasUsbOtg: false }
+    }
+  },
+  {
+    id: "moto-g2-lollipop",
+    brand: "Motorola",
+    model: "Moto G (2ª Geração DTV - Lollipop 5.0.2)",
+    os: "Android",
+    osVersion: "Android 5.0.2 Lollipop",
+    releaseYear: 2014,
+    specs: {
+      screen: { type: "IPS LCD", size: 5.0, resolution: "720 x 1280", refreshRate: 60, isFoldable: false },
+      processor: { chipset: "Snapdragon 400", cpuBrand: "Qualcomm", cores: 4, architecture: 32 },
+      gpu: { model: "Adreno 305", brand: "Adreno" },
+      ram: [1],
+      storage: { options: [8, 16], expandable: true },
+      camera: { rear: 8, front: 2, opticalZoom: 0, stabilization: false, faceDetection: true, recordingResolution: 'HD', slowMotion: true, maxFocusAngle: 80, touchFocus: true },
+      battery: { capacity: 2070, chargingTypes: ['USB/V8'] },
+      performance: { antutu: 24000, geekbench: '140/480', tdMark: 350 },
+      features: { hasGps: true, hasNfc: false, network: '3G', simCards: 2, hasDigitalTv: true, hasPhysicalKeyboard: false, hasFingerprint: false, supportsWhatsApp: false, simTypes: ['Micro-SIM (3FF)'], hasCompass: true, hasUsbOtg: true }
+    }
+  },
+  {
+    id: "moto-g1-lollipop",
+    brand: "Motorola",
+    model: "Moto G (1ª Geração - Lollipop 5.1)",
+    os: "Android",
+    osVersion: "Android 5.1 Lollipop",
+    releaseYear: 2013,
+    specs: {
+      screen: { type: "IPS LCD", size: 4.5, resolution: "720 x 1280", refreshRate: 60, isFoldable: false },
+      processor: { chipset: "Snapdragon 400", cpuBrand: "Qualcomm", cores: 4, architecture: 32 },
+      gpu: { model: "Adreno 305", brand: "Adreno" },
+      ram: [1],
+      storage: { options: [8, 16], expandable: false },
+      camera: { rear: 5, front: 1.3, opticalZoom: 0, stabilization: false, faceDetection: true, recordingResolution: 'HD', slowMotion: true, maxFocusAngle: 75, touchFocus: true },
+      battery: { capacity: 2070, chargingTypes: ['USB/V8'] },
+      performance: { antutu: 21000, geekbench: '130/430', tdMark: 320 },
+      features: { hasGps: true, hasNfc: false, network: '3G', simCards: 2, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: false, supportsWhatsApp: false, simTypes: ['Micro-SIM (3FF)'], hasCompass: true, hasUsbOtg: true }
+    }
+  },
+  {
+    id: "moto-e2-lollipop",
+    brand: "Motorola",
+    model: "Moto E (2ª Geração 3G - Lollipop 5.0.2)",
+    os: "Android",
+    osVersion: "Android 5.0.2 Lollipop",
+    releaseYear: 2015,
+    specs: {
+      screen: { type: "IPS LCD", size: 4.5, resolution: "540 x 960", refreshRate: 60, isFoldable: false },
+      processor: { chipset: "Snapdragon 200", cpuBrand: "Qualcomm", cores: 4, architecture: 32 },
+      gpu: { model: "Adreno 302", brand: "Adreno" },
+      ram: [1],
+      storage: { options: [8], expandable: true },
+      camera: { rear: 5, front: 0.3, opticalZoom: 0, stabilization: false, faceDetection: true, recordingResolution: 'HD', slowMotion: false, maxFocusAngle: 75, touchFocus: true },
+      battery: { capacity: 2390, chargingTypes: ['USB/V8'] },
+      performance: { antutu: 18000, geekbench: '100/310', tdMark: 220 },
+      features: { hasGps: true, hasNfc: false, network: '3G', simCards: 2, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: false, supportsWhatsApp: false, simTypes: ['Micro-SIM (3FF)'], hasCompass: true, hasUsbOtg: true }
+    }
+  },
+  {
+    id: "lg-g3-lollipop",
+    brand: "LG",
+    model: "LG G3 (Lollipop 5.0)",
+    os: "Android",
+    osVersion: "Android 5.0 Lollipop",
+    releaseYear: 2014,
+    specs: {
+      screen: { type: "True HD-IPS LCD", size: 5.5, resolution: "1440 x 2560", refreshRate: 60, isFoldable: false },
+      processor: { chipset: "Snapdragon 801", cpuBrand: "Qualcomm", cores: 4, architecture: 32 },
+      gpu: { model: "Adreno 330", brand: "Adreno" },
+      ram: [2, 3],
+      storage: { options: [16, 32], expandable: true },
+      camera: { rear: 13, front: 2.1, opticalZoom: 0, stabilization: true, faceDetection: true, recordingResolution: '4K', slowMotion: true, maxFocusAngle: 85, touchFocus: true },
+      battery: { capacity: 3000, chargingTypes: ['USB/V8', 'Sem fio'] },
+      performance: { antutu: 52000, geekbench: '340/1050', tdMark: 1100 },
+      features: { hasGps: true, hasNfc: true, network: '4G', simCards: 1, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: false, supportsWhatsApp: false, simTypes: ['Micro-SIM (3FF)'], hasCompass: true, hasUsbOtg: true }
+    }
+  },
+  {
+    id: "sony-xperia-z1-lollipop",
+    brand: "Sony",
+    model: "Xperia Z1 (Lollipop 5.1.1)",
+    os: "Android",
+    osVersion: "Android 5.1.1 Lollipop",
+    releaseYear: 2013,
+    specs: {
+      screen: { type: "Triluminos TFT", size: 5.0, resolution: "1080 x 1920", refreshRate: 60, isFoldable: false },
+      processor: { chipset: "Snapdragon 800", cpuBrand: "Qualcomm", cores: 4, architecture: 32 },
+      gpu: { model: "Adreno 330", brand: "Adreno" },
+      ram: [2],
+      storage: { options: [16], expandable: true },
+      camera: { rear: 20.7, front: 2, opticalZoom: 0, stabilization: true, faceDetection: true, recordingResolution: 'FHD', slowMotion: false, maxFocusAngle: 85, touchFocus: true },
+      battery: { capacity: 3000, chargingTypes: ['USB/V8'] },
+      performance: { antutu: 54000, geekbench: '350/1150', tdMark: 1180 },
+      features: { hasGps: true, hasNfc: true, network: '4G', simCards: 1, hasDigitalTv: true, hasPhysicalKeyboard: false, hasFingerprint: false, supportsWhatsApp: false, simTypes: ['Micro-SIM (3FF)'], hasCompass: true, hasUsbOtg: true }
     }
   }
 ];
