@@ -105,6 +105,26 @@ export const isInvalidOrOutdatedNews = (item: { link?: string; title?: Localized
   return false;
 };
 
+// Helper para gerar identificadores únicos e estáveis para cada notícia sem colisão de slugs
+export const generateNewsItemId = (prefix: string, link: string = '', title?: string, index?: number): string => {
+  // Extrai o slug limpo do link sem parâmetros de rastreamento (como UTM do Flipboard)
+  const cleanUrl = link.split('?')[0].replace(/\/+$/, '');
+  const urlParts = cleanUrl.split('/').filter(Boolean);
+  const slug = urlParts.length > 0
+    ? urlParts[urlParts.length - 1].replace(/[^a-zA-Z0-9]/g, '-').slice(0, 35)
+    : 'item';
+
+  // Hash determinístico baseado no link e no título
+  let hash = 0;
+  const seed = `${link}###${title || ''}`;
+  for (let i = 0; i < seed.length; i++) {
+    hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+    hash |= 0;
+  }
+  const hashHex = Math.abs(hash).toString(36);
+  return `${prefix}-${slug}-${hashHex}-${index ?? 0}`;
+};
+
 export const GadgetNews: React.FC = () => {
   const { t, lang } = useLanguage();
   const [newsList, setNewsList] = useState<GadgetNewsItem[]>(() =>
@@ -142,7 +162,7 @@ export const GadgetNews: React.FC = () => {
       const data = await res.json();
       if (data.success && Array.isArray(data.articles) && data.articles.length > 0) {
         const importedItems: GadgetNewsItem[] = data.articles.map((art: any, index: number) => ({
-          id: `flipboard-48h-${art.link.replace(/[^a-zA-Z0-9]/g, '-').slice(-30) || index}`,
+          id: generateNewsItemId('flipboard-48h', art.link, art.title, index),
           category: (art.category?.toLowerCase() === 'inventions' ? 'inventions' : art.category?.toLowerCase() === 'discoveries' ? 'discoveries' : 'gadgets') as NewsCategory,
           categoryLabel: {
             PT: art.category || 'TechViva Flipboard',
@@ -151,7 +171,7 @@ export const GadgetNews: React.FC = () => {
             HI: art.category || 'TechViva Flipboard',
             KO: art.category || 'TechViva Flipboard'
           },
-          author: art.author ? `${art.author} • Flipboard` : 'TechViva Flipboard',
+          author: art.author || 'TechViva Flipboard',
           pubDate: art.pubDate || new Date().toISOString(),
           link: art.link,
           title: {
@@ -182,12 +202,18 @@ export const GadgetNews: React.FC = () => {
         );
 
         setNewsList((prev) => {
-          const seen = new Set<string>();
+          const seenLinks = new Set<string>();
+          const seenIds = new Set<string>();
           const combined: GadgetNewsItem[] = [];
           for (const item of [...validImported, ...prev]) {
-            if (!seen.has(item.link) && !isGameOrExcludedNews(item) && !isInvalidOrOutdatedNews(item)) {
-              seen.add(item.link);
-              combined.push(item);
+            if (!seenLinks.has(item.link) && !isGameOrExcludedNews(item) && !isInvalidOrOutdatedNews(item)) {
+              seenLinks.add(item.link);
+              let finalId = item.id;
+              if (seenIds.has(finalId)) {
+                finalId = `${item.id}-${combined.length}`;
+              }
+              seenIds.add(finalId);
+              combined.push({ ...item, id: finalId });
             }
           }
           return combined;
@@ -230,23 +256,38 @@ export const GadgetNews: React.FC = () => {
       if (saved) {
         const parsedCustom: GadgetNewsItem[] = JSON.parse(saved);
         if (Array.isArray(parsedCustom) && parsedCustom.length > 0) {
-          // Higieniza removendo notícias de jogos/games, trailers, filmes e links desatualizados
-          const cleanedCustom = parsedCustom.filter(
-            (item) => !isGameOrExcludedNews(item) && !isInvalidOrOutdatedNews(item)
-          );
+          // Higieniza removendo notícias de jogos/games, trailers, filmes e links desatualizados e saneia IDs antigos/duplicados
+          const seenStoredIds = new Set<string>();
+          const cleanedCustom: GadgetNewsItem[] = [];
+          parsedCustom.forEach((item, idx) => {
+            if (!isGameOrExcludedNews(item) && !isInvalidOrOutdatedNews(item)) {
+              let safeId = item.id;
+              if (!safeId || seenStoredIds.has(safeId) || safeId === 'flipboard-48h-echViva-Gadgets-e-Games-Brasil') {
+                safeId = generateNewsItemId('custom-saved', item.link, item.title?.PT || '', idx);
+              }
+              seenStoredIds.add(safeId);
+              cleanedCustom.push({ ...item, id: safeId });
+            }
+          });
           localStorage.setItem(STORAGE_KEY_CUSTOM_NEWS, JSON.stringify(cleanedCustom));
 
           setNewsList((prev) => {
-            const seen = new Set<string>();
+            const seenLinks = new Set<string>();
+            const seenIds = new Set<string>();
             const combined: GadgetNewsItem[] = [];
             for (const item of [...cleanedCustom, ...prev]) {
               if (
-                !seen.has(item.link) &&
+                !seenLinks.has(item.link) &&
                 !isGameOrExcludedNews(item) &&
                 !isInvalidOrOutdatedNews(item)
               ) {
-                seen.add(item.link);
-                combined.push(item);
+                seenLinks.add(item.link);
+                let finalId = item.id;
+                if (seenIds.has(finalId)) {
+                  finalId = `${item.id}-${combined.length}`;
+                }
+                seenIds.add(finalId);
+                combined.push({ ...item, id: finalId });
               }
             }
             return combined;
@@ -338,7 +379,7 @@ export const GadgetNews: React.FC = () => {
       if (data.success && Array.isArray(data.articles)) {
         // Converte os artigos importados para o modelo GadgetNewsItem com dados localizados
         const importedItems: GadgetNewsItem[] = data.articles.map((art: any, index: number) => ({
-          id: `feed-import-${Date.now()}-${index}`,
+          id: generateNewsItemId('feed-import', art.link, art.title, index),
           category: (art.category?.toLowerCase() === 'inventions' ? 'inventions' : art.category?.toLowerCase() === 'discoveries' ? 'discoveries' : 'gadgets') as NewsCategory,
           categoryLabel: {
             PT: art.category || 'Tecnologia',
@@ -378,15 +419,21 @@ export const GadgetNews: React.FC = () => {
           (item) => !isGameOrExcludedNews(item) && !isInvalidOrOutdatedNews(item)
         );
 
-        // Junta as notícias existentes com as novas importadas, sem duplicar links
+        // Junta as notícias existentes com as novas importadas, sem duplicar links nem IDs
         setNewsList((prev) => {
-          const seen = new Set<string>();
+          const seenLinks = new Set<string>();
+          const seenIds = new Set<string>();
           const combined: GadgetNewsItem[] = [];
           
           for (const item of [...validImportedItems, ...prev]) {
-            if (!seen.has(item.link) && !isGameOrExcludedNews(item) && !isInvalidOrOutdatedNews(item)) {
-              seen.add(item.link);
-              combined.push(item);
+            if (!seenLinks.has(item.link) && !isGameOrExcludedNews(item) && !isInvalidOrOutdatedNews(item)) {
+              seenLinks.add(item.link);
+              let finalId = item.id;
+              if (seenIds.has(finalId)) {
+                finalId = `${item.id}-${combined.length}`;
+              }
+              seenIds.add(finalId);
+              combined.push({ ...item, id: finalId });
             }
           }
           return combined;
@@ -519,11 +566,18 @@ export const GadgetNews: React.FC = () => {
   };
 
   const filteredNews = useMemo(() => {
+    const seenIds = new Set<string>();
     return newsList.filter((item) => {
       // Exclui estritamente notícias de jogos/games ("jogo", "jogos", "game", "games"), trailers, filmes ou links inválidos
       if (isGameOrExcludedNews(item) || isInvalidOrOutdatedNews(item)) {
         return false;
       }
+
+      // Previne rigorosamente qualquer duplicação de chave no React
+      if (seenIds.has(item.id)) {
+        return false;
+      }
+      seenIds.add(item.id);
 
       const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
       if (!matchesCategory) return false;
@@ -567,18 +621,18 @@ export const GadgetNews: React.FC = () => {
 
         {/* Botões de Ação: RSS Importer, Flipboard 48h Status & Add news */}
         <div className="flex items-center gap-2 flex-wrap justify-center shrink-0">
-          {/* Indicador de Importação Automática da Revista Flipboard (48h) */}
+          {/* Botão de Atualizar Notícias (Revista Digital TechViva Flipboard & Portais de Tecnologia) */}
           <button
             type="button"
             onClick={() => autoImportFlipboard48h(false)}
             disabled={isFlipboardSyncing}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 hover:text-white border border-emerald-500/30 rounded-xl text-xs font-semibold shadow-sm transition-all cursor-pointer group disabled:opacity-60"
-            title="Importação automática de notícias da revista eletrônica Flipboard (período de 48 horas)"
+            title="Atualizar notícias da revista digital TechViva Flipboard e principais portais de gadgets e invenções tecnológicas"
           >
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <RefreshCw className={`w-3.5 h-3.5 text-emerald-400 ${isFlipboardSyncing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform'}`} />
             <span>
-              {isFlipboardSyncing ? 'Sincronizando 48h...' : `Flipboard 48h (${flipboardArticlesCount > 0 ? flipboardArticlesCount : 'Ativo'})`}
+              {isFlipboardSyncing ? 'Atualizando...' : 'Atualizar'}
             </span>
           </button>
 
@@ -659,7 +713,7 @@ export const GadgetNews: React.FC = () => {
 
       {/* News Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {filteredNews.map((item) => {
+        {filteredNews.map((item, index) => {
           const mainTitle = getLocalizedText(item.title);
           const subTitle = getLocalizedText(item.subtitle);
           const leadContent = getLocalizedText(item.lead);
@@ -669,7 +723,7 @@ export const GadgetNews: React.FC = () => {
 
           return (
             <article
-              key={item.id}
+              key={item.id || `news-card-${index}`}
               className={`flex flex-col bg-slate-900/60 border rounded-2xl p-6 transition-all hover:shadow-xl relative overflow-hidden group ${
                 isCustom
                   ? 'border-cyan-500/40 hover:border-cyan-400 hover:shadow-cyan-500/10 bg-slate-900/80'
