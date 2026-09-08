@@ -21,7 +21,7 @@ export const Footer: React.FC<FooterProps> = ({
     if (onNavigateTab) {
       onNavigateTab(tab);
     } else {
-      window.location.href = `/?tab=${tab}`;
+      window.location.href = tab === 'converter' ? '/' : `/${tab}`;
     }
   };
 
