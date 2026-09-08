@@ -132,6 +132,34 @@ const dict: Translations = {
     HI: "यह कैसे काम करता है?",
     KO: "이용 방법"
   },
+  "theme.dark": {
+    PT: "Modo Escuro",
+    EN: "Dark Mode",
+    RU: "Тёмный режим",
+    HI: "डार्क मोड",
+    KO: "다크 모드"
+  },
+  "theme.light": {
+    PT: "Modo Claro",
+    EN: "Light Mode",
+    RU: "Светлый режим",
+    HI: "लाइट मोड",
+    KO: "라이트 모드"
+  },
+  "theme.colorblind": {
+    PT: "Modo Daltônico",
+    EN: "Colorblind Mode",
+    RU: "Режим для дальтоников",
+    HI: "कलरब्लाइंड मोड",
+    KO: "색맹 모드"
+  },
+  "theme.highContrast": {
+    PT: "Super Contraste",
+    EN: "High Contrast",
+    RU: "Супер контраст",
+    HI: "उच्च कंट्रास्ट",
+    KO: "고대비 모드"
+  },
   "dropzone.urlHint": {
     PT: "Baixar a mídia usando a URL (tiktok, instagram, facebook, vimeo e youtube)",
     EN: "Download media using URL (tiktok, instagram, facebook, vimeo and youtube)",
