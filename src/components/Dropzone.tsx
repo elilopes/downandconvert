@@ -52,7 +52,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
         file.type.startsWith('video/') ||
         file.type.startsWith('audio/') ||
         file.type === 'image/gif' ||
-        /\.(mp4|mkv|webm|mov|avi|flv|3gp|m4v|ts|wmv|mpg|mpeg|mp3|wav|ogg|aac|m4a|gif)$/i.test(file.name)
+        /\.(mp4|mkv|webm|mov|avi|flv|3gp|m4v|ts|wmv|mpg|mpeg|mp3|wav|ogg|opus|aac|m4a|flac|gif)$/i.test(file.name)
       );
     });
 
@@ -75,7 +75,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
         ref={fileInputRef}
         type="file"
         multiple
-        accept="video/*,audio/*,image/gif,.mp4,.mkv,.webm,.mov,.avi,.flv,.3gp,.m4v,.ts,.wmv,.mpg,.mpeg,.gif"
+        accept="video/*,audio/*,image/gif,.mp4,.mkv,.webm,.mov,.avi,.flv,.3gp,.m4v,.ts,.wmv,.mpg,.mpeg,.gif,.ogg,.opus,.mp3,.wav,.m4a,.aac,.flac"
         onChange={handleFileInputChange}
         className="hidden"
       />
@@ -125,7 +125,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
               .{fmt.toLowerCase()}
             </span>
           ))}
-          {['MP3', 'WAV', 'AAC', 'FLAC', 'OGG'].map((fmt) => (
+          {['MP3', 'WAV', 'AAC', 'FLAC', 'OGG (WhatsApp)', 'OPUS'].map((fmt) => (
             <span
               key={fmt}
               className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm"
@@ -139,7 +139,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
         <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
           <div className="inline-flex items-center gap-2 text-slate-400 bg-slate-800/60 px-4 py-1.5 rounded-full border border-slate-700/50">
             <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-            Conversão 100% no navegador • Máx. 250MB por arquivo • Sem envio para servidores
+            Conversão & Transcrição de áudio e vídeo • Suporte especial para áudios do WhatsApp (.ogg)
           </div>
         </div>
       </div>
