@@ -79,19 +79,35 @@ export default function App() {
   // Sync URL routes/parameters with modals (supports /privacy, /terms, ?legal=privacy, #privacy, etc.)
   useEffect(() => {
     const parseUrlForModals = () => {
-      const path = window.location.pathname.toLowerCase();
-      const validPaths = ['/', '/privacy', '/terms', '/contact'];
+      const path = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
+      const validPaths = ['/', '/privacy', '/terms', '/contact', '/converter', '/downloader', '/ussd', '/smartphones', '/news'];
       if (!validPaths.includes(path)) {
         setIsNotFound(true);
+      } else {
+        setIsNotFound(false);
       }
 
       const searchParams = new URLSearchParams(window.location.search);
       const hash = window.location.hash.toLowerCase();
       const modalParam = searchParams.get('modal')?.toLowerCase();
       const legalParam = (searchParams.get('legal') || searchParams.get('page') || '').toLowerCase();
+      
+      // Fallback for legacy query params
       const tabParam = searchParams.get('tab')?.toLowerCase();
 
-      if (tabParam === 'converter' || tabParam === 'downloader' || tabParam === 'ussd' || tabParam === 'smartphones' || tabParam === 'news' ) {
+      // Check path first
+      if (path === '/' || path === '/converter') {
+        setActiveTab('converter');
+      } else if (path === '/downloader') {
+        setActiveTab('downloader');
+      } else if (path === '/ussd') {
+        setActiveTab('ussd');
+      } else if (path === '/smartphones') {
+        setActiveTab('smartphones');
+      } else if (path === '/news') {
+        setActiveTab('news');
+      } else if (tabParam === 'converter' || tabParam === 'downloader' || tabParam === 'ussd' || tabParam === 'smartphones' || tabParam === 'news') {
+        // Fallback for query param (so old links still work temporarily)
         setActiveTab(tabParam);
       }
 
@@ -124,7 +140,7 @@ export default function App() {
     let canonical = 'https://www.downandconvert.com';
 
     if (activeTab !== 'converter') {
-      canonical += `?tab=${activeTab}`;
+      canonical += `/${activeTab}`;
     }
 
     document.title = title;
@@ -732,7 +748,12 @@ export default function App() {
     setActiveTab(tab);
     try {
       const url = new URL(window.location.href);
-      url.searchParams.set('tab', tab);
+      if (tab === 'converter') {
+        url.pathname = '/';
+      } else {
+        url.pathname = `/${tab}`;
+      }
+      url.searchParams.delete('tab');
       window.history.pushState({}, '', url.toString());
     } catch (e) {
       // ignore
@@ -850,11 +871,11 @@ export default function App() {
           <VideoDownloader
             onFilesSelected={(files) => {
               handleFilesSelected(files);
-              setActiveTab('converter');
+              handleTabSelect('converter');
             }}
             onOpenRecorder={() => setIsRecorderOpen(true)}
             onOpenSampleModal={() => setIsSampleModalOpen(true)}
-            onNavigateToConverter={() => setActiveTab('converter')}
+            onNavigateToConverter={() => handleTabSelect('converter')}
             isProcessing={isProcessingAny}
           />
         ) : (
@@ -963,10 +984,7 @@ export default function App() {
         onOpenPrivacy={() => openLegalModal('privacy')}
         onOpenContact={() => openLegalModal('contact')}
         onNavigateTab={(tab) => {
-          setActiveTab(tab);
-          const url = new URL(window.location.href);
-          url.searchParams.set('tab', tab);
-          window.history.pushState({}, '', url.toString());
+          handleTabSelect(tab);
         }}
       />
 
@@ -1023,7 +1041,7 @@ export default function App() {
           isOpen={isPopularCodesOpen}
           onClose={() => setIsPopularCodesOpen(false)}
           onNavigateToUssd={() => {
-            setActiveTab('ussd');
+            handleTabSelect('ussd');
             setIsPopularCodesOpen(false);
           }}
         />
