@@ -2107,18 +2107,18 @@ const dict: Translations = {
     KO: "스마트폰 사양"
   },
   "smartphones.title": {
-    PT: "Pesquise especificações de smartphones",
-    EN: "Search smartphone specifications",
-    RU: "Поиск характеристик смартфонов",
-    HI: "स्मार्टफोन विनिर्देश खोजें",
-    KO: "스마트폰 사양 검색"
+    PT: "Pesquise as especificações dos dispositivos móveis",
+    EN: "Search mobile device specifications",
+    RU: "Поиск характеристик мобильных устройств",
+    HI: "मोबाइल डिवाइस विनिर्देश खोजें",
+    KO: "모바일 기기 사양 검색"
   },
   "smartphones.subtitle": {
-    PT: "Consulte, compare e filtre fichas técnicas completas de celulares e smartphones",
-    EN: "Search, compare, and filter complete technical specifications of smartphones and mobile devices",
-    RU: "Поиск, сравнение и фильтрация полных технических характеристик смартфонов",
-    HI: "स्मार्टफोन और मोबाइल उपकरणों के पूर्ण तकनीकी विनिर्देश खोजें और तुलना करें",
-    KO: "스마트폰 및 모바일 기기의 상세 기술 사양을 검색, 비교 및 필터링하세요"
+    PT: "Consulte, compare e filtre fichas técnicas completas de smartphones e de smartwatches",
+    EN: "Search, compare, and filter complete technical specifications of smartphones and smartwatches",
+    RU: "Поиск, сравнение и фильтрация полных технических характеристик смартфонов и смарт-часов",
+    HI: "स्मार्टफोन और स्मार्टवॉच के पूर्ण तकनीकी विनिर्देश खोजें और तुलना करें",
+    KO: "스마트폰 및 스마트워치의 상세 기술 사양을 검색, 비교 및 필터링하세요"
   },
   "smartphones.filters": {
     PT: "Filtros e Categorias",
