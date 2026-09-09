@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Smartphone, Cpu, Camera, Battery, Monitor, HardDrive, Search, Filter, Check, MapPin, Wifi, Fingerprint, Maximize2, RotateCcw, Share2, CheckCheck, Layers, MessageSquare, MessageSquareShare, ChevronUp, ChevronDown, Menu, Gamepad2, X } from 'lucide-react';
+import { Smartphone, Watch, Tablet, Cpu, Camera, Battery, Monitor, HardDrive, Search, Filter, Check, MapPin, Wifi, Fingerprint, Maximize2, RotateCcw, Share2, CheckCheck, Layers, MessageSquare, MessageSquareShare, ChevronUp, ChevronDown, Menu, Gamepad2, X, FileDown } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { mockedSmartphones, Smartphone as SmartphoneType } from '../data/smartphones';
 
@@ -190,15 +190,20 @@ const getCompatibleGamesForPhone = (phone: SmartphoneType): GameCompatibility[] 
   return games;
 };
 
-const NETWORK_STEPS = ['any', '3G', '4G', '5G'];
-const STORAGE_STEPS = [0, 32, 64, 128, 256, 512, 1024];
+const NETWORK_STEPS = ['any', '3G', '4G', '5G', 'Wi-Fi'];
+const STORAGE_STEPS = [0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048];
 const SELFIE_STEPS = [0, 8, 12, 16, 32, 50, 60];
-const SCREEN_STEPS = [0, 3, 4, 5, 6, 7, 8];
-  const BATTERY_STEPS = [0, 1000, 2000, 3000, 4000, 5000, 6000];
+const SCREEN_STEPS = [0, 3, 4, 5, 6, 7, 8, 10, 11, 12, 14];
+const BATTERY_STEPS = [0, 150, 300, 500, 1000, 2000, 3000, 4000, 5000, 6000, 8000, 10000];
+const RAM_STEPS = [0, 0.5, 1, 1.5, 2, 4, 6, 8, 12, 16];
 const RECORDING_RES_STEPS = ['any', 'HD', 'FHD', '2K', '4K', '8K'] as const;
 const RES_RANK_MAP: Record<string, number> = { 'HD': 1, 'FHD': 2, '2K': 3, '4K': 4, '8K': 5 };
 
-export const SmartphoneSpecs: React.FC = () => {
+interface SmartphoneSpecsProps {
+  focusedDeviceId?: string | null;
+}
+
+export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceId }) => {
   const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [copiedPhoneId, setCopiedPhoneId] = useState<string | null>(null);
@@ -212,7 +217,8 @@ export const SmartphoneSpecs: React.FC = () => {
   const [selectedGpuBrands, setSelectedGpuBrands] = useState<string[]>([]);
   
   // Specs Filters
-  const [minRam, setMinRam] = useState<number>(0);
+  const [ramStepIndex, setRamStepIndex] = useState<number>(0);
+  const minRam = RAM_STEPS[ramStepIndex] || 0;
   const [storageStepIndex, setStorageStepIndex] = useState<number>(0);
   const [minCores, setMinCores] = useState<number>(0);
   const [minScreenSize, setMinScreenSize] = useState<number>(0);
@@ -221,7 +227,7 @@ export const SmartphoneSpecs: React.FC = () => {
   
   // Select Filters
   const [architecture, setArchitecture] = useState<'any' | '32' | '64'>('any');
-  const [simCards, setSimCards] = useState<'any' | '1' | '2' | '3'>('any');
+  const [simCards, setSimCards] = useState<'any' | '0' | '1' | '2' | '3'>('any');
   const [networkIndex, setNetworkIndex] = useState<number>(0);
   
   // Boolean Filters
@@ -246,7 +252,7 @@ export const SmartphoneSpecs: React.FC = () => {
 
   const allBrands = useMemo(() => Array.from(new Set(mockedSmartphones.map(s => s.brand))).sort(), []);
   const allOS = useMemo(() => Array.from(new Set(mockedSmartphones.map(s => s.os))).sort(), []);
-  const allSimTypes = useMemo(() => ['Padrão (1FF)', 'Mini-SIM (2FF)', 'Micro-SIM (3FF)', 'Nano-SIM (4FF)', 'eSIM'], []);
+  const allSimTypes = useMemo(() => ['Padrão (1FF)', 'Mini-SIM (2FF)', 'Micro-SIM (3FF)', 'Nano-SIM (4FF)', 'eSIM', 'Sem suporte'], []);
   const allChargingTypes = useMemo(() => ['USB/V8', 'USB tipo C', 'Sem fio', '30 pinos', 'Lightning', 'Turbo'], []);
   const allCpuBrands = useMemo(() => Array.from(new Set(mockedSmartphones.map(s => s.specs.processor.cpuBrand).filter(Boolean))).sort(), []);
   const allGpuBrands = useMemo(() => Array.from(new Set(mockedSmartphones.map(s => s.specs.gpu.brand).filter(Boolean))).sort(), []);
@@ -275,7 +281,7 @@ export const SmartphoneSpecs: React.FC = () => {
     setSelectedOS([]);
     setSelectedCpuBrands([]);
     setSelectedGpuBrands([]);
-    setMinRam(0);
+    setRamStepIndex(0);
     setStorageStepIndex(0);
     setMinCores(0);
     setMinScreenSize(0);
@@ -309,6 +315,7 @@ export const SmartphoneSpecs: React.FC = () => {
     const p = phone.specs;
     const ramText = p.ram.join('/') + 'GB';
     const romText = Math.max(...p.storage.options) + 'GB' + (p.storage.expandable ? ' (Expansível)' : '');
+    const deviceUrl = `${window.location.origin}/${phone.id}`;
     const text = `📱 *${phone.brand} ${phone.model}* (${phone.releaseYear} • ${phone.os})\n\n` +
       `• 📺 Tela: ${p.screen.size}" ${p.screen.type} (${p.screen.resolution} • ${p.screen.refreshRate}Hz)\n` +
       `• ⚙️ Processador: ${p.processor.chipset} (${p.processor.cpuBrand} ${p.processor.cores} cores)\n` +
@@ -317,13 +324,15 @@ export const SmartphoneSpecs: React.FC = () => {
       `• 📸 Câmeras: ${p.camera.rear}MP Traseira • ${p.camera.front}MP Frontal (${p.camera.recordingResolution})\n` +
       `• 🔋 Bateria: ${p.battery.capacity} mAh\n` +
       `• 📶 Rede: ${p.features.network} • ${p.features.simCards} SIM${p.features.hasNfc ? ' • NFC' : ''}${p.features.hasGps ? ' • GPS' : ''}\n` +
-      `• 💬 WhatsApp: ${p.features.supportsWhatsApp ? 'Compatível ✅' : 'Sem suporte ❌'}`;
+      `• 💬 WhatsApp: ${p.features.supportsWhatsApp ? 'Compatível ✅' : 'Sem suporte ❌'}\n\n` +
+      `🔗 *Ver ficha técnica completa:*\n${deviceUrl}`;
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `${phone.brand} ${phone.model} - Ficha Técnica`,
-          text: text
+          title: `${phone.brand} ${phone.model} - Especificações (Down&Convert)`,
+          text: text,
+          url: deviceUrl
         });
         setCopiedPhoneId(phone.id);
         setTimeout(() => setCopiedPhoneId(null), 2500);
@@ -389,7 +398,35 @@ export const SmartphoneSpecs: React.FC = () => {
     return count;
   }, [selectedBrands, selectedOS, selectedCpuBrands, selectedGpuBrands, minRam, minStorage, minCores, minScreenSize, minFrontCamera, recResIndex, architecture, simCards, networkIndex, digitalTv, physicalKeyboard, foldable, expandableMemory, opticalZoom, stabilization, faceDetection, fingerprint, hasGps, supportsWhatsApp, onlyWithoutWhatsApp, minBattery, selectedSimTypes, selectedChargingTypes, hasCompass, hasUsbOtg, hasNfc, slowMotion, searchTerm]);
 
+  // Handle SEO Meta Tags for Dynamic Routes
+  React.useEffect(() => {
+    if (focusedDeviceId) {
+      const device = mockedSmartphones.find(s => s.id === focusedDeviceId);
+      if (device) {
+        document.title = `Detalhes técnicos do ${device.model} - Down&Convert`;
+        const metaDesc = document.querySelector('meta[name="description"]');
+        if (metaDesc) {
+          metaDesc.setAttribute('content', `Ficha técnica completa, especificações e detalhes do ${device.brand} ${device.model}. Descubra tudo sobre este dispositivo.`);
+        } else {
+          const newMetaDesc = document.createElement('meta');
+          newMetaDesc.name = 'description';
+          newMetaDesc.content = `Ficha técnica completa, especificações e detalhes do ${device.brand} ${device.model}. Descubra tudo sobre este dispositivo.`;
+          document.head.appendChild(newMetaDesc);
+        }
+      }
+    } else {
+      document.title = 'Pesquise as especificações dos dispositivos móveis - Down&Convert';
+      const metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) {
+        metaDesc.setAttribute('content', 'Consulte, compare e filtre fichas técnicas completas de smartphones e de smartwatches.');
+      }
+    }
+  }, [focusedDeviceId]);
+
   const filteredPhones = useMemo(() => {
+    if (focusedDeviceId) {
+      return mockedSmartphones.filter(phone => phone.id === focusedDeviceId);
+    }
     return mockedSmartphones.filter(phone => {
       const p = phone.specs;
       const matchesSearch = phone.model.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -398,8 +435,8 @@ export const SmartphoneSpecs: React.FC = () => {
       const matchesOS = selectedOS.length === 0 || selectedOS.includes(phone.os);
       const matchesCpuBrand = selectedCpuBrands.length === 0 || selectedCpuBrands.includes(p.processor.cpuBrand);
       const matchesGpuBrand = selectedGpuBrands.length === 0 || selectedGpuBrands.includes(p.gpu.brand);
-      const matchesRam = minRam === 0 || Math.max(...p.ram) === minRam;
-      const matchesStorage = minStorage === 0 || Math.max(...p.storage.options) === minStorage;
+      const matchesRam = minRam === 0 || Math.max(...p.ram) >= minRam;
+      const matchesStorage = minStorage === 0 || Math.max(...p.storage.options) >= minStorage;
       const matchesMinCores = minCores === 0 || p.processor.cores === minCores;
       const matchesArchitecture = architecture === 'any' || String(p.processor.architecture) === architecture;
       const matchesSimCards = simCards === 'any' || String(p.features.simCards) === simCards;
@@ -408,10 +445,15 @@ export const SmartphoneSpecs: React.FC = () => {
       const matchesFoldable = !foldable || p.screen.isFoldable;
       const matchesNetwork = networkIndex === 0 || p.features.network === NETWORK_STEPS[networkIndex];
       const matchesExpandable = !expandableMemory || p.storage.expandable;
-      const matchesMinScreen = minScreenSize === 0 || Math.floor(p.screen.size) === minScreenSize;
+      const matchesMinScreen = minScreenSize === 0 || p.screen.size >= minScreenSize;
       const matchesMinFrontCam = minFrontCamera === 0 || p.camera.front === minFrontCamera;
-      const matchesBattery = minBattery === 0 || p.battery.capacity === minBattery;
-      const matchesSimTypes = selectedSimTypes.length === 0 || selectedSimTypes.every(st => p.features.simTypes.includes(st));
+      const matchesBattery = minBattery === 0 || p.battery.capacity >= minBattery;
+      const matchesSimTypes = selectedSimTypes.length === 0 || selectedSimTypes.every(st => {
+        if (st === 'Sem suporte') {
+          return p.features.simTypes.includes('Sem suporte') || p.features.simCards === 0;
+        }
+        return p.features.simTypes.includes(st);
+      });
       const matchesChargingTypes = selectedChargingTypes.length === 0 || selectedChargingTypes.every(ct => p.battery.chargingTypes.includes(ct));
       const matchesCompass = !hasCompass || p.features.hasCompass;
       const matchesUsbOtg = !hasUsbOtg || p.features.hasUsbOtg;
@@ -452,42 +494,61 @@ export const SmartphoneSpecs: React.FC = () => {
   return (
     <div className="w-full max-w-[1400px] mx-auto py-6 sm:py-8 px-4 flex flex-col gap-6 animate-in fade-in duration-300">
       
+      {focusedDeviceId && (
+        <div className="max-w-3xl mx-auto w-full flex justify-start mb-2">
+          <button 
+            onClick={() => {
+              window.history.pushState({}, '', '/smartphones');
+              window.dispatchEvent(new PopStateEvent('popstate'));
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700 text-cyan-400 font-medium rounded-xl border border-slate-700/50 transition-all cursor-pointer print:hidden"
+          >
+            Ver todos os dispositivos
+          </button>
+        </div>
+      )}
+
       {/* Header Section - Padrão limpo sem fundo e sem borda como nas outras abas */}
-      <div className="text-center max-w-3xl mx-auto mb-2 sm:mb-4">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-3">
-          {t('smartphones.title')}
-        </h1>
-        <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
-          {t('smartphones.subtitle')}
-        </p>
-      </div>
+      {!focusedDeviceId && (
+        <div className="text-center max-w-3xl mx-auto mb-2 sm:mb-4">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-3">
+            {t('smartphones.title')}
+          </h1>
+          <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
+            {t('smartphones.subtitle')}
+          </p>
+        </div>
+      )}
 
       {/* Barra de Pesquisa - Abaixo do cabeçalho e acima da seção Filtros e Categorias */}
-      <div className="w-full max-w-3xl mx-auto relative mb-2">
-        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-          <Search className="w-5 h-5 text-slate-500" />
+      {!focusedDeviceId && (
+        <div className="w-full max-w-3xl mx-auto relative mb-2">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <Search className="w-5 h-5 text-slate-500" />
+          </div>
+          <input
+            type="text"
+            placeholder={t('smartphones.searchPlaceholder')}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full bg-slate-900/80 border border-slate-700/80 rounded-2xl pl-11 pr-11 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all text-sm shadow-sm"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-white cursor-pointer"
+              title="Limpar pesquisa"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
-        <input
-          type="text"
-          placeholder={t('smartphones.searchPlaceholder')}
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full bg-slate-900/80 border border-slate-700/80 rounded-2xl pl-11 pr-11 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all text-sm shadow-sm"
-        />
-        {searchTerm && (
-          <button
-            onClick={() => setSearchTerm('')}
-            className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-white cursor-pointer"
-            title="Limpar pesquisa"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        )}
-      </div>
+      )}
 
       <div className="flex flex-col lg:flex-row gap-6 items-start">
         {/* Sidebar Filters */}
-        <aside className={`w-full ${isFiltersMinimized ? 'lg:w-20' : 'lg:w-80'} shrink-0 flex flex-col gap-6 transition-all duration-300`}>
+        {!focusedDeviceId && (
+          <aside className={`w-full ${isFiltersMinimized ? 'lg:w-20' : 'lg:w-80'} shrink-0 flex flex-col gap-6 transition-all duration-300`}>
         <div className={`bg-slate-900/60 border border-slate-800 rounded-2xl ${isFiltersMinimized ? 'p-3 lg:p-3 lg:h-auto overflow-hidden' : 'p-5 lg:h-[84vh] overflow-y-auto custom-scrollbar'} shadow-lg transition-all`}>
           <div className={`flex ${isFiltersMinimized ? 'lg:flex-col lg:items-center' : 'items-center justify-between'} gap-2 mb-3 lg:mb-5 sticky top-0 bg-slate-900/95 py-2.5 z-10 backdrop-blur-md border-b border-slate-800`}>
             <div 
@@ -572,7 +633,7 @@ export const SmartphoneSpecs: React.FC = () => {
                         onClick={() => setMinBattery(val)}
                         className={`hover:text-cyan-400 cursor-pointer transition-colors ${minBattery === val ? 'text-cyan-400 font-extrabold scale-110' : ''}`}
                       >
-                        {val === 0 ? t('smartphones.any') : `${val/1000}k`}
+                        {val === 0 ? t('smartphones.any') : (val < 1000 ? val : `${val/1000}k`)}
                       </button>
                     ))}
                   </div>
@@ -589,7 +650,7 @@ export const SmartphoneSpecs: React.FC = () => {
                   <input
                     type="range"
                     min="0"
-                    max="3"
+                    max={NETWORK_STEPS.length - 1}
                     step="1"
                     value={networkIndex}
                     onChange={(e) => setNetworkIndex(Number(e.target.value))}
@@ -648,19 +709,19 @@ export const SmartphoneSpecs: React.FC = () => {
                 {/* SIM Cards Buttons */}
                 <div className="flex flex-col gap-1.5 mt-2">
                   <span className="text-xs font-medium text-slate-400">{t('smartphones.simCards')}</span>
-                  <div className="grid grid-cols-4 gap-1">
-                    {(['any', '1', '2', '3'] as const).map(simOpt => (
+                  <div className="grid grid-cols-5 gap-1">
+                    {(['any', '0', '1', '2', '3'] as const).map(simOpt => (
                       <button
                         key={simOpt}
                         type="button"
                         onClick={() => setSimCards(simOpt)}
-                        className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all text-center cursor-pointer ${
+                        className={`py-1.5 px-1 rounded-lg text-xs font-bold transition-all text-center cursor-pointer ${
                           simCards === simOpt
                             ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
                             : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700/60'
                         }`}
                       >
-                        {simOpt === 'any' ? t('smartphones.any') : `${simOpt} SIM`}
+                        {simOpt === 'any' ? t('smartphones.any') : simOpt === '0' ? 'Sem SIM' : `${simOpt} SIM`}
                       </button>
                     ))}
                   </div>
@@ -719,28 +780,10 @@ export const SmartphoneSpecs: React.FC = () => {
                     <span>{t('smartphones.minRam')}</span>
                     <span className="text-cyan-400 font-bold">{minRam === 0 ? t('smartphones.any') : `${minRam}GB`}</span>
                   </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="16"
-                    step="2"
-                    value={minRam}
-                    onChange={(e) => setMinRam(Number(e.target.value))}
-                    className="w-full accent-cyan-500 cursor-pointer"
-                  />
+                  <input type="range" min="0" max={RAM_STEPS.length - 1} step="1" value={ramStepIndex} onChange={(e) => setRamStepIndex(Number(e.target.value))} className="w-full accent-cyan-500 cursor-pointer" />
                   {/* Números padrões embaixo do slide de RAM */}
                   <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono mt-1 px-0.5 select-none">
-                    {[0, 2, 4, 6, 8, 12, 16].map(ramVal => (
-                      <button
-                        key={ramVal}
-                        type="button"
-                        onClick={() => setMinRam(ramVal)}
-                        className={`hover:text-cyan-400 cursor-pointer transition-colors ${minRam === ramVal ? 'text-cyan-400 font-bold scale-110' : ''}`}
-                        title={`${ramVal}GB`}
-                      >
-                        {ramVal}
-                      </button>
-                    ))}
+                    {RAM_STEPS.map((ramVal, idx) => ( <button key={ramVal} type="button" onClick={() => setRamStepIndex(idx)} className={`hover:text-cyan-400 cursor-pointer transition-colors ${ramStepIndex === idx ? 'text-cyan-400 font-bold scale-110' : ''}`} title={`${ramVal}GB`}> {ramVal} </button> ))}
                   </div>
                 </div>
 
@@ -769,7 +812,7 @@ export const SmartphoneSpecs: React.FC = () => {
                         className={`hover:text-cyan-400 cursor-pointer transition-colors ${storageStepIndex === idx ? 'text-cyan-400 font-bold scale-110' : ''}`}
                         title={`${stVal}GB`}
                       >
-                        {stVal === 1024 ? '1T' : stVal}
+                        {stVal === 2048 ? '2T' : stVal === 1024 ? '1T' : stVal}
                       </button>
                     ))}
                   </div>
@@ -1022,6 +1065,7 @@ export const SmartphoneSpecs: React.FC = () => {
           )}
         </div>
       </aside>
+      )}
 
       {/* Main Content */}
       <div className="flex-1 w-full min-w-0 flex flex-col gap-6">
@@ -1044,12 +1088,31 @@ export const SmartphoneSpecs: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
                 {/* Header */}
-                <div className="mb-5 pb-4 border-b border-slate-800/80 flex justify-between items-start">
-                  <div>
-                    <span className="text-[10px] font-extrabold uppercase tracking-widest text-cyan-500">{phone.brand}</span>
-                    <h3 className="text-xl sm:text-2xl font-black text-white leading-tight mt-0.5">{phone.model}</h3>
+                <div className="mb-5 pb-4 border-b border-slate-800/80 flex justify-between items-start gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-cyan-400 shrink-0">
+                      {phone.deviceType === 'smartwatch' ? (
+                        <Watch className="w-5 h-5 text-amber-400" />
+                      ) : phone.deviceType === 'tablet' ? (
+                        <Tablet className="w-5 h-5 text-purple-400" />
+                      ) : (
+                        <Smartphone className="w-5 h-5" />
+                      )}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-extrabold uppercase tracking-widest text-cyan-500">{phone.brand}</span>
+                        {phone.deviceType === 'tablet' && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">TABLET</span>
+                        )}
+                        {phone.deviceType === 'smartwatch' && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">SMARTWATCH</span>
+                        )}
+                      </div>
+                      <h3 className="text-xl sm:text-2xl font-black text-white leading-tight mt-0.5">{phone.model}</h3>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2.5 py-1">
+                  <div className="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2.5 py-1 shrink-0">
                     <span className="text-[10px] font-bold text-slate-300">{phone.releaseYear}</span>
                     <span className="text-[10px] text-slate-600">•</span>
                     <span className="text-[10px] font-bold text-slate-300">{phone.os}</span>
@@ -1111,11 +1174,18 @@ export const SmartphoneSpecs: React.FC = () => {
                   <div className="flex items-start gap-3">
                     <Wifi className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
                     <div className="min-w-0">
-                      <div className="text-sm text-slate-200 font-bold">{p.features.simCards} SIM Card{p.features.simCards > 1 ? 's' : ''}</div>
-                      <div className="text-[11px] text-slate-400 font-medium leading-tight mt-1 flex flex-wrap gap-1.5">
-                        {p.features.hasNfc && <span>NFC</span>}
-                        {p.features.hasGps && <span>GPS</span>}
-                        {p.features.hasDigitalTv && <span className="text-amber-400 font-semibold">TV Digital</span>}
+                      <div className="text-sm text-slate-200 font-bold">
+                        {p.features.simCards === 0 ? 'Sem suporte a SIM Card' : `${p.features.simCards} SIM Card${p.features.simCards > 1 ? 's' : ''}`}
+                      </div>
+                      <div className="text-[11px] text-slate-400 font-medium leading-tight mt-1 flex flex-wrap gap-1.5 items-center">
+                        {p.features.simTypes && p.features.simTypes.length > 0 && (
+                          <span className={p.features.simTypes.includes('Sem suporte') ? 'text-amber-400/90 font-semibold' : 'text-cyan-300 font-semibold'}>
+                            {p.features.simTypes.join(', ')}
+                          </span>
+                        )}
+                        {p.features.hasNfc && <span>• NFC</span>}
+                        {p.features.hasGps && <span>• GPS</span>}
+                        {p.features.hasDigitalTv && <span className="text-amber-400 font-semibold">• TV Digital</span>}
                       </div>
                     </div>
                   </div>
@@ -1186,7 +1256,7 @@ export const SmartphoneSpecs: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleSharePhone(phone)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer print:hidden ${
                         copiedPhoneId === phone.id
                           ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
                           : 'bg-slate-800 hover:bg-slate-700 text-cyan-300 hover:text-white border border-slate-700'
@@ -1206,11 +1276,22 @@ export const SmartphoneSpecs: React.FC = () => {
                       )}
                     </button>
 
+                    {/* Save as PDF Button */}
+                    <button
+                      type="button"
+                      onClick={() => window.print()}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/20 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm print:hidden"
+                      title="Salvar em PDF"
+                    >
+                      <FileDown className="w-3.5 h-3.5 text-rose-400" />
+                      <span>PDF</span>
+                    </button>
+
                     {/* Game Compatibility Button */}
                     <button
                       type="button"
                       onClick={() => setSelectedPhoneForGames(phone)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm print:hidden"
                       title="Jogos pesados suportados com fluidez"
                     >
                       <Gamepad2 className="w-3.5 h-3.5 text-purple-400" />
