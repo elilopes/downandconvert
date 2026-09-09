@@ -8,6 +8,7 @@ import ytSearch from 'yt-search';
 import { Readable } from 'stream';
 import ytdl from '@distube/ytdl-core';
 import multer from 'multer';
+import { mockedSmartphones } from './src/data/smartphones';
 import os from 'os';
 import fs from 'fs';
 import { spawn } from 'child_process';
@@ -2306,12 +2307,6 @@ app.post('/api/convert-server', upload.single('file'), async (req, res) => {
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     
-    // Rota explícita para o sitemap.xml para garantir que seja reconhecido pelos motores de busca (como Google Cloud Run / Search Console)
-    app.get('/sitemap.xml', (req, res) => {
-      res.setHeader('Content-Type', 'application/xml');
-      res.sendFile(path.join(distPath, 'sitemap.xml'));
-    });
-
     app.get('/robots.txt', (req, res) => {
       res.setHeader('Content-Type', 'text/plain');
       res.sendFile(path.join(distPath, 'robots.txt'));
