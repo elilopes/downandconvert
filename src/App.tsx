@@ -39,6 +39,7 @@ import { BottomAdBanner } from './components/BottomAdBanner';
 import { UssdTool } from './components/UssdTool';
 import { SmartphoneSpecs } from './components/SmartphoneSpecs';
 import { GadgetNews } from './components/GadgetNews';
+import { mockedSmartphones } from './data/smartphones';
 import { NotFound } from './components/NotFound';
 import { CookieBanner } from './components/CookieBanner';
 import { PopularCodesModal } from './components/PopularCodesModal';
@@ -72,6 +73,7 @@ export default function App() {
   const [isNotFound, setIsNotFound] = useState(false);
   const [isProcessingAny, setIsProcessingAny] = useState(false);
   const [isZipping, setIsZipping] = useState(false);
+  const [focusedDeviceId, setFocusedDeviceId] = useState<string | null>(null);
 
   // Maximum allowed file size for performance & stability (250MB)
   const MAX_FILE_SIZE_BYTES = 250 * 1024 * 1024;
@@ -80,8 +82,11 @@ export default function App() {
   useEffect(() => {
     const parseUrlForModals = () => {
       const path = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
+      const pathSlug = path.substring(1);
+      const isDeviceUrl = mockedSmartphones.some(s => s.id === pathSlug);
+      
       const validPaths = ['/', '/privacy', '/terms', '/contact', '/converter', '/downloader', '/ussd', '/smartphones', '/news'];
-      if (!validPaths.includes(path)) {
+      if (!validPaths.includes(path) && !isDeviceUrl) {
         setIsNotFound(true);
       } else {
         setIsNotFound(false);
@@ -98,17 +103,28 @@ export default function App() {
       // Check path first
       if (path === '/' || path === '/converter') {
         setActiveTab('converter');
+        setFocusedDeviceId(null);
       } else if (path === '/downloader') {
         setActiveTab('downloader');
+        setFocusedDeviceId(null);
       } else if (path === '/ussd') {
         setActiveTab('ussd');
+        setFocusedDeviceId(null);
       } else if (path === '/smartphones') {
         setActiveTab('smartphones');
+        setFocusedDeviceId(null);
       } else if (path === '/news') {
         setActiveTab('news');
+        setFocusedDeviceId(null);
+      } else if (isDeviceUrl) {
+        setActiveTab('smartphones');
+        setFocusedDeviceId(pathSlug);
       } else if (tabParam === 'converter' || tabParam === 'downloader' || tabParam === 'ussd' || tabParam === 'smartphones' || tabParam === 'news') {
         // Fallback for query param (so old links still work temporarily)
         setActiveTab(tabParam);
+        setFocusedDeviceId(null);
+      } else {
+        setFocusedDeviceId(null);
       }
 
       if (path.includes('privacy') || legalParam === 'privacy' || hash === '#privacy' || hash === '#privacidade') {
@@ -770,10 +786,12 @@ export default function App() {
       </div>
 
       {/* Header Bar */}
-      <Header darkMode={true} setDarkMode={() => {}} onOpenFAQ={() => setIsFAQOpen(true)} onNavigateToUssd={() => handleTabSelect('ussd')} />
+      <div className="print:hidden">
+        <Header darkMode={true} setDarkMode={() => {}} onOpenFAQ={() => setIsFAQOpen(true)} onNavigateToUssd={() => handleTabSelect('ussd')} />
+      </div>
 
       {/* Navigation Tabs Bar */}
-      <nav aria-label="Navegação de abas" className="w-full bg-slate-900/90 border-b border-slate-800/80 sticky top-20 z-30 shadow-md backdrop-blur-md">
+      <nav aria-label="Navegação de abas" className="w-full bg-slate-900/90 border-b border-slate-800/80 sticky top-20 z-30 shadow-md backdrop-blur-md print:hidden">
         <div
           ref={tabsContainerRef}
           className="max-w-7xl mx-auto overflow-x-auto tabs-scrollbar overscroll-x-contain"
@@ -864,7 +882,7 @@ export default function App() {
         ) : activeTab === 'ussd' ? (
           <UssdTool />
         ) : activeTab === 'smartphones' ? (
-          <SmartphoneSpecs />
+          <SmartphoneSpecs focusedDeviceId={focusedDeviceId} />
         ) : activeTab === 'news' ? (
           <GadgetNews />
         ) : activeTab === 'downloader' ? (
@@ -979,14 +997,16 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <Footer
-        onOpenTerms={() => openLegalModal('terms')}
-        onOpenPrivacy={() => openLegalModal('privacy')}
-        onOpenContact={() => openLegalModal('contact')}
-        onNavigateTab={(tab) => {
-          handleTabSelect(tab);
-        }}
-      />
+      <div className="print:hidden">
+        <Footer
+          onOpenTerms={() => openLegalModal('terms')}
+          onOpenPrivacy={() => openLegalModal('privacy')}
+          onOpenContact={() => openLegalModal('contact')}
+          onNavigateTab={(tab) => {
+            handleTabSelect(tab);
+          }}
+        />
+      </div>
 
       {/* Video Crop Modal */}
       {cropItem && (
