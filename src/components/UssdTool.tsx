@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Phone, Wrench, Smartphone, Copy, Check, Filter, ExternalLink, ShieldAlert, Sparkles, Zap } from 'lucide-react';
+import { Search, Phone, Wrench, Smartphone, Copy, Check, Filter, ExternalLink, ShieldAlert, Sparkles, Zap, Share2, CheckCheck } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { logUssdSearch } from '../lib/ussdTracking';
 import { UssdCode, USSD_DATABASE } from '../data/ussdcodes';
@@ -16,6 +16,7 @@ export const UssdTool: React.FC<UssdToolProps> = ({ focusedUssdId }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('todos');
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
+  const [copiedUssdId, setCopiedUssdId] = useState<string | null>(null);
 
   const handleCopyLink = (item: UssdCode) => {
     const url = `${window.location.origin}/${item.id}`;
@@ -29,6 +30,47 @@ export const UssdTool: React.FC<UssdToolProps> = ({ focusedUssdId }) => {
     setCopiedCode(item.code);
     logUssdSearch(item.code, item.titleKey);
     setTimeout(() => setCopiedCode(null), 2000);
+  };
+
+  const handleShareUssd = async (item: UssdCode) => {
+    const title = t(item.titleKey);
+    const desc = t(item.descKey);
+    const carrierName = item.carrier.charAt(0).toUpperCase() + item.carrier.slice(1);
+    const codeType = item.type || 'USSD/MMI';
+    const ussdUrl = `${window.location.origin}/${item.id}`;
+
+    const text = `📱 *${title}* (${carrierName} • ${codeType})\n\n` +
+      `• 🔢 *Código:* ${item.code}\n` +
+      `• 📋 *Serviço:* ${desc}\n` +
+      `• 🏷️ *Categoria:* ${item.category}\n` +
+      `• 🌐 *Operadora / Sistema:* ${carrierName}\n\n` +
+      `🔗 *Ver ficha do código:*\n${ussdUrl}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${title} - Código ${item.code} (Down&Convert)`,
+          text: text,
+          url: ussdUrl
+        });
+        setCopiedUssdId(item.id);
+        setTimeout(() => setCopiedUssdId(null), 2500);
+        return;
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          // fallback to clipboard
+        }
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedUssdId(item.id);
+      setTimeout(() => setCopiedUssdId(null), 2500);
+    } catch (err) {
+      setCopiedUssdId(item.id);
+      setTimeout(() => setCopiedUssdId(null), 2500);
+    }
   };
 
   const filteredCodes = focusedUssdId 
@@ -190,24 +232,51 @@ export const UssdTool: React.FC<UssdToolProps> = ({ focusedUssdId }) => {
                 </p>
               </div>
 
-              <div className="pt-4 border-t border-slate-800/80 flex items-center justify-between gap-3">
-                <div className="font-mono font-bold text-cyan-400 text-lg bg-slate-950/80 px-3 py-1 rounded-xl border border-cyan-900/50 tracking-wider">
+              <div className="pt-4 border-t border-slate-800/80 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5">
+                <div className="font-mono font-bold text-cyan-400 text-base sm:text-lg bg-slate-950/80 px-3 py-1.5 rounded-xl border border-cyan-900/50 tracking-wider shrink-0">
                   {item.code}
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap justify-end">
+                  {/* Compartilhar Ficha button */}
+                  <button
+                    type="button"
+                    onClick={() => handleShareUssd(item)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      copiedUssdId === item.id
+                        ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
+                        : 'bg-slate-800 hover:bg-slate-700 text-cyan-300 hover:text-white border border-slate-700'
+                    }`}
+                    title={t('ussd.shareCode')}
+                  >
+                    {copiedUssdId === item.id ? (
+                      <>
+                        <CheckCheck className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>{t('ussd.shareSuccess')}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Share2 className="w-3.5 h-3.5" />
+                        <span>{t('ussd.shareCode')}</span>
+                      </>
+                    )}
+                  </button>
+
+                  {/* Disparar no celular */}
                   <a
                     href={`tel:${encodeURIComponent(item.code)}`}
                     title="Disparar no celular"
-                    className="p-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-md transition-all flex items-center justify-center"
+                    className="p-2 sm:p-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-md transition-all flex items-center justify-center cursor-pointer"
                   >
                     <Phone className="w-4 h-4" />
                   </a>
 
+                  {/* Copiar Código */}
                   <button
+                    type="button"
                     onClick={() => handleCopy(item)}
                     title="Copiar Código"
-                    className={`p-2.5 rounded-xl transition-all flex items-center gap-1.5 text-xs font-semibold ${
+                    className={`p-2 sm:p-2.5 rounded-xl transition-all flex items-center gap-1.5 text-xs font-semibold cursor-pointer ${
                       copiedCode === item.code
                         ? 'bg-emerald-500 text-slate-950'
                         : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
