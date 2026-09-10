@@ -231,9 +231,9 @@ export const NotFound: React.FC<NotFoundProps> = ({ initialCode }) => {
       color: 'text-amber-400 bg-amber-500/10 border-amber-500/20 group-hover:border-amber-500/40',
     },
     {
-      title: 'Especificações de Celulares',
+      title: 'Detalhes de Dispositivos',
       href: '/smartphones',
-      description: 'Catálogo e ficha técnica detalhada de smartphones com filtros avançados de hardware',
+      description: 'Catálogo e ficha técnica detalhada de dispositivos e smartphones com filtros avançados de hardware',
       icon: Cpu,
       color: 'text-violet-400 bg-violet-500/10 border-violet-500/20 group-hover:border-violet-500/40',
     },
