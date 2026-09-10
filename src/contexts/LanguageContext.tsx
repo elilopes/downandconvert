@@ -2100,11 +2100,11 @@ const dict: Translations = {
     KO: "64 kbps (가벼운 음성)"
   },
   "tabs.smartphones": {
-    PT: "Especificações de celulares",
-    EN: "Smartphone Specifications",
-    RU: "Характеристики смартфонов",
-    HI: "स्मार्टफोन विनिर्देश",
-    KO: "스마트폰 사양"
+    PT: "Detalhes de dispositivos",
+    EN: "Device Details",
+    RU: "Детали устройств",
+    HI: "डिवाइस विवरण",
+    KO: "기기 세부정보"
   },
   "smartphones.title": {
     PT: "Pesquise as especificações dos dispositivos móveis",
@@ -2625,6 +2625,20 @@ const dict: Translations = {
     RU: "Характеристики скопированы в буфер обмена!",
     HI: "विनिर्देश क्लिपबोर्ड पर कॉपी किए गए!",
     KO: "사양이 클립보드에 복사되었습니다!"
+  },
+  "ussd.shareCode": {
+    PT: "Compartilhar Ficha",
+    EN: "Share Specs",
+    RU: "Поделиться описанием",
+    HI: "विवरण साझा करें",
+    KO: "정보 공유"
+  },
+  "ussd.shareSuccess": {
+    PT: "Ficha copiada!",
+    EN: "Code info copied!",
+    RU: "Описание скопировано!",
+    HI: "जानकारी कॉपी की गई!",
+    KO: "정보가 복사되었습니다!"
   }
 };
 
