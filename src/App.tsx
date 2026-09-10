@@ -40,6 +40,7 @@ import { UssdTool } from './components/UssdTool';
 import { SmartphoneSpecs } from './components/SmartphoneSpecs';
 import { GadgetNews } from './components/GadgetNews';
 import { mockedSmartphones } from './data/smartphones';
+import { USSD_DATABASE } from './data/ussdcodes';
 import { NotFound } from './components/NotFound';
 import { CookieBanner } from './components/CookieBanner';
 import { PopularCodesModal } from './components/PopularCodesModal';
@@ -74,6 +75,7 @@ export default function App() {
   const [isProcessingAny, setIsProcessingAny] = useState(false);
   const [isZipping, setIsZipping] = useState(false);
   const [focusedDeviceId, setFocusedDeviceId] = useState<string | null>(null);
+  const [focusedUssdId, setFocusedUssdId] = useState<string | null>(null);
 
   // Maximum allowed file size for performance & stability (250MB)
   const MAX_FILE_SIZE_BYTES = 250 * 1024 * 1024;
@@ -84,9 +86,10 @@ export default function App() {
       const path = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
       const pathSlug = path.substring(1);
       const isDeviceUrl = mockedSmartphones.some(s => s.id === pathSlug);
+      const isUssdUrl = USSD_DATABASE.some(u => u.id === pathSlug);
       
       const validPaths = ['/', '/privacy', '/terms', '/contact', '/converter', '/downloader', '/ussd', '/smartphones', '/news'];
-      if (!validPaths.includes(path) && !isDeviceUrl) {
+      if (!validPaths.includes(path) && !isDeviceUrl && !isUssdUrl) {
         setIsNotFound(true);
       } else {
         setIsNotFound(false);
@@ -104,21 +107,31 @@ export default function App() {
       if (path === '/' || path === '/converter') {
         setActiveTab('converter');
         setFocusedDeviceId(null);
+        setFocusedUssdId(null);
       } else if (path === '/downloader') {
         setActiveTab('downloader');
         setFocusedDeviceId(null);
+        setFocusedUssdId(null);
       } else if (path === '/ussd') {
         setActiveTab('ussd');
         setFocusedDeviceId(null);
+        setFocusedUssdId(null);
       } else if (path === '/smartphones') {
         setActiveTab('smartphones');
         setFocusedDeviceId(null);
+        setFocusedUssdId(null);
       } else if (path === '/news') {
         setActiveTab('news');
         setFocusedDeviceId(null);
+        setFocusedUssdId(null);
       } else if (isDeviceUrl) {
         setActiveTab('smartphones');
         setFocusedDeviceId(pathSlug);
+        setFocusedUssdId(null);
+      } else if (isUssdUrl) {
+        setActiveTab('ussd');
+        setFocusedUssdId(pathSlug);
+        setFocusedDeviceId(null);
       } else if (tabParam === 'converter' || tabParam === 'downloader' || tabParam === 'ussd' || tabParam === 'smartphones' || tabParam === 'news') {
         // Fallback for query param (so old links still work temporarily)
         setActiveTab(tabParam);
@@ -880,7 +893,7 @@ export default function App() {
         {isNotFound ? (
           <NotFound />
         ) : activeTab === 'ussd' ? (
-          <UssdTool />
+          <UssdTool focusedUssdId={focusedUssdId} />
         ) : activeTab === 'smartphones' ? (
           <SmartphoneSpecs focusedDeviceId={focusedDeviceId} />
         ) : activeTab === 'news' ? (
