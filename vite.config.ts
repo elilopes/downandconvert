@@ -8,7 +8,7 @@ export default defineConfig(() => {
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(__dirname, './src'),
       },
     },
     server: {
@@ -19,6 +19,10 @@ export default defineConfig(() => {
     build: {
       chunkSizeWarningLimit: 1200,
       rollupOptions: {
+        external: ['fsevents'],
+        input: {
+          main: path.resolve(__dirname, 'index.html'),
+        },
         output: {
           manualChunks(id) {
             if (id.includes('node_modules')) {
