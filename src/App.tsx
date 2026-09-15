@@ -800,7 +800,7 @@ export default function App() {
 
       {/* Header Bar */}
       <div className="print:hidden">
-        <Header darkMode={true} setDarkMode={() => {}} onOpenFAQ={() => setIsFAQOpen(true)} onNavigateToUssd={() => handleTabSelect('ussd')} />
+        <Header darkMode={true} setDarkMode={() => {}} onOpenFAQ={() => setIsFAQOpen(true)} onNavigateToUssd={() => window.location.href = '/ussd'} />
       </div>
 
       {/* Navigation Tabs Bar */}
@@ -841,10 +841,10 @@ export default function App() {
             </button>
 
             {/* Tab 3: Códigos USSD/MMI */}
-            <button
+            <a
               id="tab-btn-ussd"
-              ref={activeTab === 'ussd' ? activeTabRef : undefined}
-              onClick={() => handleTabSelect('ussd')}
+              href="/ussd"
+              ref={activeTab === 'ussd' ? (activeTabRef as any) : undefined}
               className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
                 activeTab === 'ussd'
                   ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20'
@@ -853,13 +853,13 @@ export default function App() {
             >
               <Smartphone className="w-4 h-4" />
               <span>{t('tabs.ussd')}</span>
-            </button>
+            </a>
 
             {/* Tab 4: Smartphones */}
-            <button
+            <a
               id="tab-btn-smartphones"
-              ref={activeTab === 'smartphones' ? activeTabRef : undefined}
-              onClick={() => handleTabSelect('smartphones')}
+              href="/smartphones"
+              ref={activeTab === 'smartphones' ? (activeTabRef as any) : undefined}
               className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
                 activeTab === 'smartphones'
                   ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20'
@@ -868,7 +868,7 @@ export default function App() {
             >
               <Smartphone className="w-4 h-4" />
               <span>{t('tabs.smartphones')}</span>
-            </button>
+            </a>
 
             {/* Tab 5: News */}
             <button
