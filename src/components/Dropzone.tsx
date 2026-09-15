@@ -125,7 +125,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
               .{fmt.toLowerCase()}
             </span>
           ))}
-          {['MP3', 'WAV', 'AAC', 'FLAC', 'OGG (WhatsApp)', 'OPUS'].map((fmt) => (
+          {['MP3', 'WAV', 'AAC', 'FLAC', 'OGG', 'OPUS'].map((fmt) => (
             <span
               key={fmt}
               className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm"
