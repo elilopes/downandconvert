@@ -22,6 +22,7 @@ export interface CropOptions {
   width: number;
   height: number;
   shape?: 'rect' | 'circle';
+  sharpen?: boolean;
 }
 
 export interface ConversionOptions {
@@ -38,6 +39,7 @@ export interface ConversionOptions {
   fadeIn: number; // in seconds
   fadeOut: number; // in seconds
   equalizer: EqualizerPreset;
+  noiseReduction?: boolean;
   metadata: ID3Metadata;
   // Video specific options
   videoQuality?: 'high' | 'medium' | 'low' | 'very_low';
