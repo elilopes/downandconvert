@@ -30,5 +30,13 @@ service cloud.firestore {
                              && incoming().count is number
                              && incoming().count >= 1;
     }
+
+    match /phone_comparisons/{comparisonId} {
+      allow read: if true;
+      allow create: if incoming().title is string
+                    && incoming().winnerOverall is string
+                    && incoming().verdict is string;
+      allow update, delete: if false;
+    }
   }
 }
