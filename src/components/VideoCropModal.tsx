@@ -15,9 +15,13 @@ import {
   AlertCircle,
   HelpCircle,
   Instagram,
+  User,
 } from 'lucide-react';
 import { VideoItem, CropOptions } from '../types';
 import { formatTime } from '../utils/audioEncoder';
+import * as tf from '@tensorflow/tfjs-core';
+import '@tensorflow/tfjs-backend-webgl';
+import * as blazeface from '@tensorflow-models/blazeface';
 
 interface VideoCropModalProps {
   item: VideoItem | null;
@@ -107,6 +111,7 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
   ];
 
   const [selectedPresetId, setSelectedPresetId] = useState<string>('9:16');
+  const [sharpen, setSharpen] = useState<boolean>(item?.options.crop?.sharpen || false);
 
   // Normalized crop percentages [0..100] relative to video container
   const [cropBox, setCropBox] = useState<{
@@ -420,6 +425,60 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
   const pixelW = Math.round((cropBox.width / 100) * videoNaturalSize.width);
   const pixelH = Math.round((cropBox.height / 100) * videoNaturalSize.height);
 
+  const [isDetectingFace, setIsDetectingFace] = useState(false);
+
+  const handleSmartCrop = async () => {
+    if (!videoRef.current) return;
+    setIsDetectingFace(true);
+    try {
+      await tf.setBackend('webgl');
+      await tf.ready();
+      const model = await blazeface.load();
+      const predictions = await model.estimateFaces(videoRef.current, false);
+      
+      if (predictions.length > 0) {
+        const face = predictions[0];
+        const topLeft = face.topLeft as [number, number];
+        const bottomRight = face.bottomRight as [number, number];
+        
+        const faceW = bottomRight[0] - topLeft[0];
+        const faceH = bottomRight[1] - topLeft[1];
+        const faceX = topLeft[0];
+        const faceY = topLeft[1];
+        
+        const videoW = videoRef.current.videoWidth;
+        const videoH = videoRef.current.videoHeight;
+        
+        const currentWidthPct = cropBox.width;
+        const currentHeightPct = cropBox.height;
+        
+        const faceCenterXPct = ((faceX + faceW / 2) / videoW) * 100;
+        const faceCenterYPct = ((faceY + faceH / 2) / videoH) * 100;
+        
+        let newX = faceCenterXPct - (currentWidthPct / 2);
+        let newY = faceCenterYPct - (currentHeightPct / 2);
+        
+        if (newX < 0) newX = 0;
+        if (newY < 0) newY = 0;
+        if (newX + currentWidthPct > 100) newX = 100 - currentWidthPct;
+        if (newY + currentHeightPct > 100) newY = 100 - currentHeightPct;
+        
+        setCropBox(prev => ({
+          ...prev,
+          x: newX,
+          y: newY
+        }));
+      } else {
+        alert("Nenhum rosto detectado neste quadro do vídeo.");
+      }
+    } catch (err) {
+      console.error("Erro no rastreamento de rosto:", err);
+      alert("Erro ao executar rastreamento inteligente.");
+    } finally {
+      setIsDetectingFace(false);
+    }
+  };
+
   const handleConfirmCrop = () => {
     const isFull = cropBox.x <= 1 && cropBox.y <= 1 && cropBox.width >= 98 && cropBox.height >= 98;
     onSaveCrop(item.id, {
@@ -429,6 +488,7 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
       width: pixelW,
       height: pixelH,
       shape: cropBox.shape,
+      sharpen,
     });
     onClose();
   };
@@ -440,6 +500,7 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
       y: 0,
       width: videoNaturalSize.width,
       height: videoNaturalSize.height,
+      sharpen: false,
     });
     onClose();
   };
@@ -644,6 +705,16 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
               <div className="flex items-center gap-2">
                 <button
                   type="button"
+                  onClick={handleSmartCrop}
+                  disabled={isDetectingFace}
+                  className="px-2.5 py-1.5 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-xs text-indigo-300 hover:text-indigo-200 border border-indigo-500/30 transition-colors flex items-center gap-1"
+                  title="Rastrear rosto e ajustar o recorte"
+                >
+                  <User className={`w-3.5 h-3.5 text-indigo-400 ${isDetectingFace ? 'animate-pulse' : ''}`} />
+                  <span>{isDetectingFace ? 'Rastreando...' : 'Smart Crop'}</span>
+                </button>
+                <button
+                  type="button"
                   onClick={handleCenterBox}
                   className="px-2.5 py-1.5 rounded-lg bg-slate-800/90 hover:bg-slate-750 text-xs text-slate-300 hover:text-white border border-slate-700 transition-colors flex items-center gap-1"
                   title="Centralizar o corte"
@@ -662,6 +733,26 @@ export const VideoCropModal: React.FC<VideoCropModalProps> = ({
                 </button>
               </div>
             </div>
+          </div>
+
+          {/* Opções Avançadas */}
+          <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-slate-900 border border-slate-700/60">
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <div className="relative flex items-center">
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={sharpen}
+                  onChange={(e) => setSharpen(e.target.checked)}
+                />
+                <div className={`w-10 h-6 rounded-full transition-colors ${sharpen ? 'bg-cyan-500' : 'bg-slate-700 group-hover:bg-slate-600'}`}></div>
+                <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${sharpen ? 'translate-x-4' : ''}`}></div>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-slate-200">Melhorar nitidez do vídeo (IA / Filtro)</span>
+                <span className="text-[10px] text-slate-400">Aplica um realce na imagem para remover o embaçamento</span>
+              </div>
+            </label>
           </div>
 
           {/* Quick info footer */}
