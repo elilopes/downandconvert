@@ -22,7 +22,13 @@ import {
   Trash2,
   Flame,
   BadgeCheck,
-  X
+  X,
+  Clock,
+  Target,
+  Copy,
+  Maximize2,
+  ChevronUp,
+  BookOpen
 } from 'lucide-react';
 import { mockedGadgetNews, LocalizedString, NewsCategory, GadgetNewsItem } from '../data/gadgetNews';
 import { AddNewsModal } from './AddNewsModal';
@@ -125,6 +131,20 @@ export const generateNewsItemId = (prefix: string, link: string = '', title?: st
   return `${prefix}-${slug}-${hashHex}-${index ?? 0}`;
 };
 
+export interface NewsTopic {
+  icon: string;
+  title: string;
+  detail: string;
+}
+
+export interface NewsSummaryData {
+  readTime: string;
+  oneLineTake?: string;
+  topics: NewsTopic[];
+  whyItMatters?: string;
+  keywords?: string[];
+}
+
 export const GadgetNews: React.FC = () => {
   const { t, lang } = useLanguage();
   const [newsList, setNewsList] = useState<GadgetNewsItem[]>(() =>
@@ -135,6 +155,21 @@ export const GadgetNews: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<NewsCategory | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
+
+  // Estados do Resumidor Inteligente em Tópicos com Gemma AI
+  const [summaries, setSummaries] = useState<Record<string, NewsSummaryData>>(() => {
+    try {
+      const saved = localStorage.getItem('gemma_news_summaries_v1');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+  const [loadingSummaryId, setLoadingSummaryId] = useState<string | null>(null);
+  const [summaryErrors, setSummaryErrors] = useState<Record<string, string | null>>({});
+  const [expandedSummaryIds, setExpandedSummaryIds] = useState<Record<string, boolean>>({});
+  const [copiedSummaryId, setCopiedSummaryId] = useState<string | null>(null);
+  const [modalSummaryItem, setModalSummaryItem] = useState<{ item: GadgetNewsItem; summary: NewsSummaryData } | null>(null);
 
   // Estados dos Modais de Adicionar & Importador RSS
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
@@ -565,6 +600,82 @@ export const GadgetNews: React.FC = () => {
     return localizedString[lang] || localizedString.PT || localizedString.EN || '';
   };
 
+  // Função para solicitar à IA Gemma o resumo inteligente da notícia em tópicos
+  const handleSummarizeNews = async (item: GadgetNewsItem) => {
+    // Se já foi gerado o resumo para esta notícia, apenas alterna visibilidade
+    if (summaries[item.id]) {
+      setExpandedSummaryIds((prev) => ({
+        ...prev,
+        [item.id]: !prev[item.id]
+      }));
+      return;
+    }
+
+    setLoadingSummaryId(item.id);
+    setSummaryErrors((prev) => ({ ...prev, [item.id]: null }));
+
+    try {
+      const title = getLocalizedText(item.title);
+      const subtitle = getLocalizedText(item.subtitle);
+      const lead = getLocalizedText(item.lead);
+
+      const res = await fetch('/api/news/summarize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          subtitle,
+          lead,
+          link: item.link,
+          author: item.author,
+          language: lang
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success || !data.summary) {
+        throw new Error(data.error || 'Não foi possível gerar o resumo da notícia.');
+      }
+
+      setSummaries((prev) => {
+        const updated = { ...prev, [item.id]: data.summary };
+        try {
+          localStorage.setItem('gemma_news_summaries_v1', JSON.stringify(updated));
+        } catch {}
+        return updated;
+      });
+
+      setExpandedSummaryIds((prev) => ({
+        ...prev,
+        [item.id]: true
+      }));
+    } catch (err: any) {
+      console.error('Falha ao resumir notícia com Gemma:', err);
+      setSummaryErrors((prev) => ({
+        ...prev,
+        [item.id]: err.message || 'Erro ao conectar à IA para gerar tópicos.'
+      }));
+    } finally {
+      setLoadingSummaryId(null);
+    }
+  };
+
+  // Função para copiar tópicos gerados com formatação amigável
+  const handleCopySummary = async (item: GadgetNewsItem, summary: NewsSummaryData) => {
+    const title = getLocalizedText(item.title);
+    const bulletsText = summary.topics?.map((t) => `${t.icon || '•'} *${t.title}:* ${t.detail}`).join('\n\n') || '';
+    const formatted = `⚡ *${title}* (Resumo Gemma IA)\n⏱️ Leitura rápida: ${summary.readTime || '30s'}\n\n${summary.oneLineTake ? `💡 _${summary.oneLineTake}_\n\n` : ''}📌 *Tópicos Principais:*\n${bulletsText}\n\n🎯 *Por que isso importa:* ${summary.whyItMatters || ''}\n🔗 Notícia completa: ${item.link}`;
+
+    try {
+      await navigator.clipboard.writeText(formatted);
+      setCopiedSummaryId(item.id);
+      setTimeout(() => setCopiedSummaryId(null), 2500);
+    } catch {
+      setCopiedSummaryId(item.id);
+      setTimeout(() => setCopiedSummaryId(null), 2500);
+    }
+  };
+
   const filteredNews = useMemo(() => {
     const seenIds = new Set<string>();
     return newsList.filter((item) => {
@@ -806,9 +917,165 @@ export const GadgetNews: React.FC = () => {
 
               {/* Lead */}
               {leadContent && (
-                <p className="text-sm text-slate-300/90 leading-relaxed mb-6 flex-1 text-justify sm:text-left">
+                <p className="text-sm text-slate-300/90 leading-relaxed mb-4 flex-1 text-justify sm:text-left">
                   {leadContent}
                 </p>
+              )}
+
+              {/* Painel de Carregamento da Síntese Gemma AI */}
+              {loadingSummaryId === item.id && (
+                <div className="mb-5 p-4 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 animate-pulse flex items-center gap-3">
+                  <div className="p-2.5 bg-indigo-500/20 rounded-xl text-indigo-400 shrink-0">
+                    <Sparkles className="w-5 h-5 animate-spin" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-bold text-indigo-200">Gemma AI analisando artigo...</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-ping" />
+                    </div>
+                    <p className="text-[11px] text-indigo-300/80 leading-relaxed">
+                      Lendo o conteúdo e sintetizando os pontos-chave, novidades técnicas e impactos práticos em tópicos.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Erro na Síntese */}
+              {summaryErrors[item.id] && (
+                <div className="mb-5 p-3.5 rounded-2xl bg-red-950/30 border border-red-500/30 flex items-center justify-between gap-3 text-xs text-red-200">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+                    <span>{summaryErrors[item.id]}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleSummarizeNews(item)}
+                    className="px-2.5 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-200 rounded-lg text-[11px] font-semibold transition-colors cursor-pointer"
+                  >
+                    Tentar novamente
+                  </button>
+                </div>
+              )}
+
+              {/* Resumo Inteligente Formatado em Tópicos */}
+              {summaries[item.id] && expandedSummaryIds[item.id] && (
+                <div className="mb-5 rounded-2xl bg-slate-950/85 border border-indigo-500/35 p-4 shadow-lg shadow-indigo-950/20 animate-in fade-in slide-in-from-top-2 duration-300">
+                  {/* Cabeçalho do Resumo */}
+                  <div className="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-800/80">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 text-indigo-300 text-xs font-bold">
+                        <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                        Gemma AI • {t('news.summaryTitle')}
+                      </span>
+                      {summaries[item.id].readTime && (
+                        <span className="inline-flex items-center gap-1 text-[11px] text-slate-400 bg-slate-900 px-2 py-0.5 rounded-md border border-slate-800">
+                          <Clock className="w-3 h-3 text-cyan-400" />
+                          {summaries[item.id].readTime}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      {/* Botão Copiar Tópicos */}
+                      <button
+                        type="button"
+                        onClick={() => handleCopySummary(item, summaries[item.id])}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-[11px] font-semibold transition-colors cursor-pointer"
+                        title={t('news.copySummary')}
+                      >
+                        {copiedSummaryId === item.id ? (
+                          <>
+                            <CheckCheck className="w-3 h-3 text-emerald-400" />
+                            <span className="text-emerald-400">{t('news.copiedSummary')}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3 h-3 text-slate-400" />
+                            <span>{t('news.copySummary')}</span>
+                          </>
+                        )}
+                      </button>
+
+                      {/* Botão Abrir em Modal Focado */}
+                      <button
+                        type="button"
+                        onClick={() => setModalSummaryItem({ item, summary: summaries[item.id] })}
+                        className="p-1.5 text-slate-400 hover:text-cyan-300 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+                        title="Modo leitor em janela cheia"
+                      >
+                        <Maximize2 className="w-3.5 h-3.5" />
+                      </button>
+
+                      {/* Botão Recolher */}
+                      <button
+                        type="button"
+                        onClick={() => setExpandedSummaryIds((prev) => ({ ...prev, [item.id]: false }))}
+                        className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+                        title={t('news.hideSummary')}
+                      >
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Frase de Impacto (One-line Take) */}
+                  {summaries[item.id].oneLineTake && (
+                    <div className="mb-3.5 px-3 py-2 rounded-xl bg-indigo-500/10 border-l-2 border-indigo-400 text-xs sm:text-sm text-indigo-100 italic leading-relaxed">
+                      "{summaries[item.id].oneLineTake}"
+                    </div>
+                  )}
+
+                  {/* Lista de Tópicos Importantes */}
+                  <div className="space-y-2.5">
+                    {summaries[item.id].topics?.map((topic, tIdx) => (
+                      <div
+                        key={tIdx}
+                        className="p-3 rounded-xl bg-slate-900/90 border border-slate-800/90 hover:border-slate-700 flex items-start gap-3 transition-colors"
+                      >
+                        <span className="text-base select-none shrink-0 mt-0.5">
+                          {topic.icon || '⚡'}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <h5 className="text-xs sm:text-sm font-bold text-slate-100 mb-1">
+                            {topic.title}
+                          </h5>
+                          <p className="text-xs text-slate-300/90 leading-relaxed">
+                            {topic.detail}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Por que isso importa (Why It Matters) */}
+                  {summaries[item.id].whyItMatters && (
+                    <div className="mt-3.5 p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-xs flex items-start gap-2.5">
+                      <Target className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <span className="font-bold text-emerald-300 block mb-0.5">
+                          {t('news.whyItMatters')}:
+                        </span>
+                        <p className="text-emerald-100/90 leading-relaxed text-xs">
+                          {summaries[item.id].whyItMatters}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tags / Palavras-chave */}
+                  {summaries[item.id].keywords && summaries[item.id].keywords!.length > 0 && (
+                    <div className="mt-3 flex items-center gap-1.5 flex-wrap pt-2 border-t border-slate-900">
+                      {summaries[item.id].keywords!.map((kw, kwIdx) => (
+                        <span
+                          key={kwIdx}
+                          className="text-[10px] font-medium text-slate-400 bg-slate-900 px-2 py-0.5 rounded-md border border-slate-800/80"
+                        >
+                          #{kw}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
 
               {/* Footer with share buttons and link to original publication */}
@@ -819,7 +1086,29 @@ export const GadgetNews: React.FC = () => {
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Botão Resumir Notícia com Gemma AI */}
+                  <button
+                    type="button"
+                    onClick={() => handleSummarizeNews(item)}
+                    disabled={loadingSummaryId === item.id}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm ${
+                      expandedSummaryIds[item.id]
+                        ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 hover:bg-indigo-500/30'
+                        : 'bg-gradient-to-r from-indigo-500/15 via-purple-500/15 to-cyan-500/15 hover:from-indigo-500/25 hover:via-purple-500/25 hover:to-cyan-500/25 text-indigo-300 hover:text-white border border-indigo-500/30 hover:border-indigo-400/50'
+                    }`}
+                    title="Gemma IA lê o artigo e extrai os pontos mais importantes em tópicos rápidos"
+                  >
+                    <Sparkles className={`w-3.5 h-3.5 text-indigo-400 ${loadingSummaryId === item.id ? 'animate-spin' : ''}`} />
+                    <span>
+                      {loadingSummaryId === item.id
+                        ? t('news.summarizing')
+                        : expandedSummaryIds[item.id]
+                        ? t('news.hideSummary')
+                        : t('news.summarizeBtn')}
+                    </span>
+                  </button>
+
                   {/* WhatsApp Quick Share */}
                   <button
                     type="button"
@@ -902,6 +1191,141 @@ export const GadgetNews: React.FC = () => {
         totalActiveNews={newsList.length}
         rejected404Count={rejected404Count}
       />
+
+      {/* Modal de Leitura Focada de Resumo (Gemma AI Reader Mode) */}
+      {modalSummaryItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-2xl max-h-[90vh] bg-slate-900 border border-indigo-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-indigo-950/50 flex flex-col overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-800 shrink-0">
+              <div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 text-indigo-300 text-xs font-bold">
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                    Gemma AI • Síntese Completa
+                  </span>
+                  {modalSummaryItem.summary.readTime && (
+                    <span className="inline-flex items-center gap-1 text-xs text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded-full border border-slate-700/60">
+                      <Clock className="w-3 h-3 text-cyan-400" />
+                      {modalSummaryItem.summary.readTime}
+                    </span>
+                  )}
+                </div>
+                <h3 className="text-lg sm:text-xl font-extrabold text-white leading-snug">
+                  {getLocalizedText(modalSummaryItem.item.title)}
+                </h3>
+                <p className="text-xs text-slate-400 mt-1 flex items-center gap-2">
+                  <span>{modalSummaryItem.item.author}</span>
+                  <span>•</span>
+                  <span>{new Date(modalSummaryItem.item.pubDate).toLocaleDateString()}</span>
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setModalSummaryItem(null)}
+                className="p-2 text-slate-400 hover:text-white bg-slate-800/60 hover:bg-slate-700 rounded-xl transition-colors cursor-pointer shrink-0"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Scrollable Body */}
+            <div className="flex-1 overflow-y-auto pr-1 py-4 space-y-4">
+              {modalSummaryItem.summary.oneLineTake && (
+                <div className="p-3.5 rounded-2xl bg-indigo-500/10 border-l-4 border-indigo-400 text-sm sm:text-base text-indigo-100 italic leading-relaxed">
+                  "{modalSummaryItem.summary.oneLineTake}"
+                </div>
+              )}
+
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold tracking-wider uppercase text-slate-400 flex items-center gap-1.5">
+                  <BookOpen className="w-4 h-4 text-indigo-400" />
+                  {t('news.summaryTitle')}
+                </h4>
+                {modalSummaryItem.summary.topics?.map((topic, idx) => (
+                  <div
+                    key={idx}
+                    className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 flex items-start gap-3.5"
+                  >
+                    <span className="text-xl select-none shrink-0 mt-0.5">{topic.icon || '⚡'}</span>
+                    <div className="flex-1 min-w-0">
+                      <h5 className="text-sm sm:text-base font-bold text-white mb-1">{topic.title}</h5>
+                      <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">{topic.detail}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {modalSummaryItem.summary.whyItMatters && (
+                <div className="p-4 rounded-2xl bg-emerald-950/30 border border-emerald-500/30 text-xs sm:text-sm flex items-start gap-3">
+                  <Target className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                  <div>
+                    <strong className="font-bold text-emerald-300 block mb-1">
+                      {t('news.whyItMatters')}:
+                    </strong>
+                    <p className="text-emerald-100 leading-relaxed">{modalSummaryItem.summary.whyItMatters}</p>
+                  </div>
+                </div>
+              )}
+
+              {modalSummaryItem.summary.keywords && modalSummaryItem.summary.keywords.length > 0 && (
+                <div className="flex items-center gap-2 flex-wrap pt-2">
+                  {modalSummaryItem.summary.keywords.map((kw, i) => (
+                    <span
+                      key={i}
+                      className="text-xs font-medium text-slate-400 bg-slate-800/80 px-2.5 py-1 rounded-lg border border-slate-700/60"
+                    >
+                      #{kw}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => handleCopySummary(modalSummaryItem.item, modalSummaryItem.summary)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs sm:text-sm font-bold shadow-sm transition-all cursor-pointer"
+              >
+                {copiedSummaryId === modalSummaryItem.item.id ? (
+                  <>
+                    <CheckCheck className="w-4 h-4 text-emerald-300" />
+                    <span>{t('news.copiedSummary')}</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    <span>{t('news.copySummary')}</span>
+                  </>
+                )}
+              </button>
+
+              <div className="flex items-center gap-2">
+                <a
+                  href={modalSummaryItem.item.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 hover:text-white rounded-xl text-xs sm:text-sm font-semibold transition-colors"
+                >
+                  <span>{t('news.readMore')}</span>
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => setModalSummaryItem(null)}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
+                >
+                  Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
