@@ -1057,6 +1057,29 @@ export const AudioTrimmerModal: React.FC<AudioTrimmerModalProps> = ({
                 </div>
               </div>
 
+              {/* Noise Reduction */}
+              <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800">
+                <label className="flex items-center justify-between cursor-pointer group">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-slate-200 flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-emerald-400" />
+                      Redução de Ruído por IA
+                    </span>
+                    <span className="text-[10px] text-slate-400">Limpa o áudio antes da transcrição pelo Gemini para maior precisão</span>
+                  </div>
+                  <div className="relative flex items-center">
+                    <input
+                      type="checkbox"
+                      className="sr-only"
+                      checked={options.noiseReduction || false}
+                      onChange={(e) => setOptions({ ...options, noiseReduction: e.target.checked })}
+                    />
+                    <div className={`w-10 h-6 rounded-full transition-colors ${options.noiseReduction ? 'bg-emerald-500' : 'bg-slate-700 group-hover:bg-slate-600'}`}></div>
+                    <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${options.noiseReduction ? 'translate-x-4' : ''}`}></div>
+                  </div>
+                </label>
+              </div>
+
               {/* Volume Gain Booster */}
               <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800">
                 <div className="flex items-center justify-between mb-2">
