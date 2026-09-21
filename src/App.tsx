@@ -88,7 +88,7 @@ export default function App() {
       const isDeviceUrl = mockedSmartphones.some(s => s.id === pathSlug);
       const isUssdUrl = USSD_DATABASE.some(u => u.id === pathSlug);
       
-      const validPaths = ['/', '/privacy', '/terms', '/contact', '/converter', '/downloader', '/ussd', '/smartphones', '/news'];
+      const validPaths = ['/', '/privacy', '/terms', '/contact', '/converter', '/converter-video', '/crop-video', '/downloader', '/ussd', '/smartphones', '/news'];
       if (!validPaths.includes(path) && !isDeviceUrl && !isUssdUrl) {
         setIsNotFound(true);
       } else {
@@ -104,7 +104,7 @@ export default function App() {
       const tabParam = searchParams.get('tab')?.toLowerCase();
 
       // Check path first
-      if (path === '/' || path === '/converter') {
+      if (path === '/' || path === '/converter' || path === '/converter-video' || path === '/crop-video') {
         setActiveTab('converter');
         setFocusedDeviceId(null);
         setFocusedUssdId(null);
