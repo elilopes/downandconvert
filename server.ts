@@ -9,10 +9,43 @@ import { Readable } from 'stream';
 import ytdl from '@distube/ytdl-core';
 import multer from 'multer';
 import { mockedSmartphones } from './src/data/smartphones';
+import { USSD_DATABASE } from './src/data/ussdcodes';
 import os from 'os';
 import fs from 'fs';
 import { spawn } from 'child_process';
 import youtubedl from 'youtube-dl-exec';
+
+function injectSEO(html: string, reqPath: string): string {
+  const pathSlug = reqPath.replace(/^\//, '').replace(/\/$/, '').toLowerCase();
+  
+  if (!pathSlug) return html;
+
+  const device = mockedSmartphones.find(s => s.id === pathSlug);
+  if (device) {
+    const title = `${device.brand} ${device.model} - Ficha Técnica e Análise | Down&Convert`;
+    const description = `Confira a ficha técnica completa, benchmark, câmeras e bateria do ${device.brand} ${device.model}. Descubra se vale a pena!`;
+    
+    return html
+      .replace(/<title>.*?<\/title>/i, `<title>${title}</title>`)
+      .replace(/<meta\s+name=["']description["']\s+content=["'][^"]*["']\s*\/?>/i, `<meta name="description" content="${description}" />`)
+      .replace(/<meta\s+property=["']og:title["']\s+content=["'][^"]*["']\s*\/?>/i, `<meta property="og:title" content="${title}" />`)
+      .replace(/<meta\s+property=["']og:description["']\s+content=["'][^"]*["']\s*\/?>/i, `<meta property="og:description" content="${description}" />`);
+  }
+
+  const ussd = USSD_DATABASE.find(u => u.id === pathSlug);
+  if (ussd) {
+    const title = `Código Secreto ${ussd.code} (${ussd.carrier.toUpperCase()}) - ${ussd.id.replace(/-/g, ' ')} | Down&Convert`;
+    const description = `Descubra para que serve o código USSD/MMI ${ussd.code} da operadora/fabricante ${ussd.carrier.toUpperCase()}. Veja comandos úteis e funções secretas do seu celular.`;
+    
+    return html
+      .replace(/<title>.*?<\/title>/i, `<title>${title}</title>`)
+      .replace(/<meta\s+name=["']description["']\s+content=["'][^"]*["']\s*\/?>/i, `<meta name="description" content="${description}" />`)
+      .replace(/<meta\s+property=["']og:title["']\s+content=["'][^"]*["']\s*\/?>/i, `<meta property="og:title" content="${title}" />`)
+      .replace(/<meta\s+property=["']og:description["']\s+content=["'][^"]*["']\s*\/?>/i, `<meta property="og:description" content="${description}" />`);
+  }
+
+  return html;
+}
 
 
 
@@ -486,6 +519,7 @@ async function fetchTikTokDirectFallback(url: string) {
 async function startServer() {
   const app = express();
   app.use(cors());
+  app.use(express.json());
 
   // API Endpoint: Pesquisar no YouTube
   app.get('/api/yt/search', async (req, res) => {
@@ -1157,6 +1191,61 @@ async function startServer() {
   
 
   // =========================================================================
+  // CONTROLADOR CENTRAL DE COMUNICAÇÃO COM IA LLM (GEMINI)
+  // TODAS as requisições de inteligência artificial do site DEVEM passar por aqui
+  // =========================================================================
+  app.post('/api/ai/chat', express.json(), async (req, res) => {
+    try {
+      const { prompt, systemInstruction, temperature = 0.7, apiKey } = req.body;
+      const geminiApiKey = apiKey || process.env.GEMINI_API_KEY;
+
+      if (!geminiApiKey) {
+        return res.status(401).json({ error: 'Nenhuma chave de API Gemini foi configurada no servidor ou fornecida.' });
+      }
+
+      if (!prompt) {
+        return res.status(400).json({ error: 'O prompt é obrigatório para comunicação com a IA.' });
+      }
+
+      const ai = new GoogleGenAI({ 
+        apiKey: geminiApiKey,
+        httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
+      });
+
+      const config: any = { temperature: Number(temperature) };
+      if (systemInstruction) {
+        config.systemInstruction = systemInstruction;
+      }
+
+      let responseText = '';
+      try {
+        const response = await ai.models.generateContent({
+          model: 'gemini-3.6-flash',
+          contents: prompt,
+          config
+        });
+        responseText = response.text || '';
+      } catch (err36: any) {
+        console.warn('Fallback para gemini-3.8-flash após erro:', err36?.message);
+        const fallbackRes = await ai.models.generateContent({
+          model: 'gemini-3.8-flash',
+          contents: prompt,
+          config
+        });
+        responseText = fallbackRes.text || '';
+      }
+
+      return res.json({
+        success: true,
+        text: responseText
+      });
+    } catch (err: any) {
+      console.error('Erro na comunicação central com a IA:', err);
+      return res.status(500).json({ error: err.message || 'Erro interno no processamento da IA.' });
+    }
+  });
+
+  // =========================================================================
   // TRANSCRIÇÃO DE ÁUDIO/VÍDEO (RÁPIDA SEM CHAVE & LENTA COM GEMINI)
   // =========================================================================
   app.post('/api/transcribe', upload.single('file'), async (req, res) => {
@@ -1304,6 +1393,20 @@ async function startServer() {
           proc.on('error', (err) => reject(err));
         });
 
+        let durationSecs = 0;
+        try {
+          const probeOut = await new Promise<string>((resolve) => {
+            const probe = spawn('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', audioExtractedPath]);
+            let out = '';
+            probe.stdout.on('data', d => out += d.toString());
+            probe.on('close', () => resolve(out.trim()));
+            probe.on('error', () => resolve(''));
+          });
+          if (probeOut && !isNaN(Number(probeOut))) {
+            durationSecs = parseFloat(probeOut);
+          }
+        } catch {}
+
         const audioBuffer = fs.readFileSync(audioExtractedPath);
         const base64Audio = audioBuffer.toString('base64');
 
@@ -1343,7 +1446,8 @@ async function startServer() {
           success: true,
           mode: 'slow',
           model: 'gemini-3.8-flash',
-          text: resultText
+          text: resultText,
+          duration: durationSecs
         });
       }
 
@@ -1355,6 +1459,184 @@ async function startServer() {
         // tentativa de remover qualquer sobra
       } catch {}
       return res.status(500).json({ error: err.message || 'Erro ao processar a transcrição do áudio.' });
+    }
+  });
+
+  // Função auxiliar para gerar legendas .srt mesmo em caso de falha de conexão com IA
+  function generateFallbackSrt(text: string, durationSecs: number = 60): string {
+    const clean = text.replace(/\[.*?\]/g, '').trim();
+    const sentences = clean
+      .split(/(?<=[.?!;:\n])\s+/)
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+
+    if (sentences.length === 0) {
+      return `1\n00:00:01,000 --> 00:00:04,000\n[Áudio sem falas identificadas]`;
+    }
+
+    const effectiveDuration = durationSecs && durationSecs > 0 ? durationSecs : Math.max(10, sentences.length * 4);
+    const timePerSegment = Math.max(2.5, effectiveDuration / sentences.length);
+
+    const formatSrtTime = (seconds: number) => {
+      const hrs = Math.floor(seconds / 3600);
+      const mins = Math.floor((seconds % 3600) / 60);
+      const secs = Math.floor(seconds % 60);
+      const ms = Math.floor((seconds % 1) * 1000);
+      return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')},${String(ms).padStart(3, '0')}`;
+    };
+
+    return sentences.map((sent, idx) => {
+      const startSec = idx * timePerSegment;
+      const endSec = Math.min(effectiveDuration, (idx + 1) * timePerSegment - 0.2);
+      let formattedSent = sent;
+      if (formattedSent.length > 50) {
+        const mid = Math.floor(formattedSent.length / 2);
+        const spaceIdx = formattedSent.indexOf(' ', mid);
+        if (spaceIdx !== -1) {
+          formattedSent = formattedSent.slice(0, spaceIdx) + '\n' + formattedSent.slice(spaceIdx + 1);
+        }
+      }
+      return `${idx + 1}\n${formatSrtTime(startSec)} --> ${formatSrtTime(endSec)}\n${formattedSent}`;
+    }).join('\n\n');
+  }
+
+  // =========================================================================
+  // PÓS-PROCESSAMENTO DE TRANSCRIÇÃO COM GEMMA IA
+  // Ações: 'summary' (Resumidor), 'email' (Formal/Corporativo), 'minutes' (Ata de Reunião), 'srt' (Legendar Vídeo)
+  // =========================================================================
+  app.post('/api/transcribe/process', async (req, res) => {
+    try {
+      const { text, action, duration, apiKey } = req.body || {};
+      if (!text || typeof text !== 'string' || text.trim().length === 0) {
+        return res.status(400).json({ error: 'Texto da transcrição é obrigatório.' });
+      }
+
+      const validActions = ['summary', 'email', 'minutes', 'srt'];
+      if (!validActions.includes(action)) {
+        return res.status(400).json({ error: `Ação inválida. Escolha entre: ${validActions.join(', ')}` });
+      }
+
+      const geminiApiKey = apiKey || process.env.GEMINI_API_KEY;
+
+      // Se não houver chave de API configurada, fornecer fallback inteligente local
+      if (!geminiApiKey) {
+        if (action === 'srt') {
+          const fallbackSrt = generateFallbackSrt(text, duration);
+          return res.json({ success: true, action, result: fallbackSrt, isFallback: true });
+        } else if (action === 'summary') {
+          const sentences = text.split(/(?<=[.?!])\s+/).filter(Boolean);
+          const topSentences = sentences.slice(0, Math.min(6, Math.ceil(sentences.length * 0.4)));
+          const fallbackSummary = `📌 **Síntese Geral:**\n${topSentences.slice(0, 2).join(' ')}\n\n💡 **Principais Pontos Discutidos:**\n${topSentences.map(s => `• ${s.trim()}`).join('\n')}\n\n🎯 **Conclusão:**\nPontos registrados e consolidados com base no áudio.`;
+          return res.json({ success: true, action, result: fallbackSummary, isFallback: true });
+        } else if (action === 'email') {
+          const fallbackEmail = `**Assunto:** Resumo formal e encaminhamentos sobre assuntos tratados\n\nPrezado(a),\n\nGostaria de compartilhar os principais pontos discutidos no áudio:\n\n${text.trim()}\n\nPermanecemos à disposição para eventuais alinhamentos.\n\nAtenciosamente,\nEquipe`;
+          return res.json({ success: true, action, result: fallbackEmail, isFallback: true });
+        } else if (action === 'minutes') {
+          const fallbackMinutes = `📋 **ATA DE REUNIÃO EXECUTIVA**\n\n• **Objetivo:** Registro e deliberação dos temas abordados\n\n• **Tópicos e Discussões:**\n${text.trim().split(/(?<=[.?!])\s+/).slice(0, 8).map(s => ` - ${s.trim()}`).join('\n')}\n\n• **Decisões:** Ações acordadas entre os participantes.`;
+          return res.json({ success: true, action, result: fallbackMinutes, isFallback: true });
+        }
+      }
+
+      const ai = new GoogleGenAI({
+        apiKey: geminiApiKey,
+        httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
+      });
+
+      let prompt = '';
+      if (action === 'summary') {
+        prompt = "Você é a inteligência artificial Gemma, especialista em síntese textual, compreensão fonética e produtividade.\n" +
+          "Analise a transcrição de áudio a seguir e elabore um RESUMO EXECUTIVO COMPLETO, CLARO E OBJETIVO.\n" +
+          "Se o áudio for longo (acima de 3 minutos), capture a essência dos tópicos principais com precisão cirúrgica.\n\n" +
+          "Estrutura obrigatória da resposta:\n" +
+          "📌 **Síntese Geral:**\n" +
+          "[1 ou 2 parágrafos resumindo com clareza o tema central e objetivo do áudio]\n\n" +
+          "💡 **Principais Pontos e Assuntos Tratados:**\n" +
+          "• [Ponto importante 1]\n" +
+          "• [Ponto importante 2]\n" +
+          "• [Ponto importante 3]\n\n" +
+          "🎯 **Conclusão & Encaminhamentos:**\n" +
+          "[Resumo prático dos desfechos, acordos ou ações finais recomendadas]";
+      } else if (action === 'email') {
+        prompt = "Você é a inteligência artificial Gemma, especialista em redação corporativa, comunicação executiva e eliminação de vícios de linguagem.\n" +
+          "Abaixo está a transcrição literal de uma fala ou mensagem de áudio (que pode conter gírias, pausas, hesitações e vícios como 'tipo', 'né', 'daí', 'aí', 'tá ligado', 'então', 'hum').\n\n" +
+          "Sua missão é transformar essa transcrição em um E-MAIL FORMAL E PROFISSIONAL impecável.\n" +
+          "- Elimine completamente todas as gírias, coloquialismos e vícios de fala.\n" +
+          "- Converta o conteúdo para uma linguagem culta, cortês, direta e polida.\n" +
+          "- Organize as ideias em parágrafos claros ou tópicos de fácil leitura.\n\n" +
+          "Estruture a resposta no seguinte formato:\n" +
+          "**Assunto:** [Assunto claro, formal e descritivo]\n\n" +
+          "Prezado(a) [Destinatário],\n\n" +
+          "[Corpo do e-mail com redação formal e elegante]\n\n" +
+          "[Tópicos organizados com solicitações, prazos ou detalhes, se aplicável]\n\n" +
+          "Atenciosamente,\n[Seu Nome / Cargo]";
+      } else if (action === 'minutes') {
+        prompt = "Você é a inteligência artificial Gemma, especialista em governança corporativa e redação de atas de reuniões.\n" +
+          "Abaixo está a transcrição falada de uma reunião ou conversa de trabalho, frequentemente cheia de pausas, digressões e linguagem informal.\n\n" +
+          "Sua missão é transformar essa transcrição em uma ATA DE REUNIÃO estruturada, formal e dividida em tópicos claros.\n" +
+          "- Elimine gírias, hesitações e conversas paralelas desnecessárias.\n" +
+          "- Destaque o objetivo, pontos debatidos, deliberações e plano de ação.\n\n" +
+          "Estruture a resposta assim:\n" +
+          "📋 **ATA DE REUNIÃO EXECUTIVA**\n\n" +
+          "• **Objetivo / Pauta Central:**\n[Finalidade central do encontro]\n\n" +
+          "• **Pontos Discutidos:**\n- [Tópico 1 com descrição clara]\n- [Tópico 2...]\n\n" +
+          "• **Decisões e Deliberações Firmadas:**\n- [O que foi aprovado, decidido ou acordado entre as partes]\n\n" +
+          "• **Plano de Ação e Próximos Passos:**\n- [Ação 1 - Responsável / Prazo quando aplicável]\n- [Ação 2...]";
+      } else if (action === 'srt') {
+        prompt = `Você é a inteligência artificial Gemma, especialista em legendagem e sincronização audiovisual profissional.\n` +
+          `Abaixo está a transcrição textual de um áudio/vídeo${duration ? ` com duração aproximada de ${Math.round(duration)} segundos` : ''}.\n\n` +
+          `Sua tarefa é gerar um arquivo de legendas no formato SubRip (.srt) estritamente válido.\n\n` +
+          `Regras obrigatórias:\n` +
+          `1. Siga estritamente a sintaxe padrão SubRip (.srt):\n` +
+          `1\n` +
+          `00:00:01,000 --> 00:00:04,500\n` +
+          `Primeira linha de texto da legenda\n\n` +
+          `2\n` +
+          `00:00:04,800 --> 00:00:08,200\n` +
+          `Segunda linha de texto da legenda\n\n` +
+          `2. Elimine gírias excessivas, hesitações e ruídos ('ééé', 'tipo'), ajustando para texto fluido e bem pontuado.\n` +
+          `3. Cada bloco deve conter de 1 a 2 linhas curtas (máximo 42 caracteres por linha).\n` +
+          `4. Distribua os blocos cronologicamente do início ao fim sem sobreposição de tempos.\n` +
+          `5. IMPORTANTE: Retorne ESTRITAMENTE o arquivo SRT cru. NÃO use crases de código (\`\`\`srt), NÃO inclua saudações, explicações ou notas antes ou depois.`;
+      }
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.8-flash',
+        contents: [
+          {
+            text: `${prompt}\n\n--- TRANSCRIÇÃO ORIGINAL ---\n${text.slice(0, 15000)}`
+          }
+        ]
+      });
+
+      let result = response.text?.trim() || '';
+
+      if (action === 'srt') {
+        result = result
+          .replace(/^```srt\s*/i, '')
+          .replace(/^```\s*/i, '')
+          .replace(/\s*```$/i, '')
+          .trim();
+
+        if (!/^\d+\r?\n\d{2}:\d{2}:\d{2}/.test(result)) {
+          result = generateFallbackSrt(text, duration);
+        }
+      }
+
+      return res.json({
+        success: true,
+        action,
+        model: 'gemini-3.8-flash',
+        result
+      });
+
+    } catch (err: any) {
+      console.error('Erro no pós-processamento Gemma:', err);
+      const { text, action, duration } = req.body || {};
+      if (action === 'srt' && text) {
+        const fallbackSrt = generateFallbackSrt(text, duration);
+        return res.json({ success: true, action, result: fallbackSrt, isFallback: true, warning: err.message });
+      }
+      return res.status(500).json({ error: err.message || 'Erro ao processar com Gemma IA.' });
     }
   });
 
@@ -1702,6 +1984,358 @@ app.post('/api/convert-server', upload.single('file'), async (req, res) => {
       res.json({ results });
     } catch (err: any) {
       res.status(500).json({ error: err.message || 'Erro ao checar links.' });
+    }
+  });
+
+  // Endpoint: Resumidor Inteligente de Notícias em Tópicos (Gemma AI)
+  app.post('/api/news/summarize', express.json(), async (req, res) => {
+    try {
+      const { title, subtitle, lead, link, author, language = 'PT', apiKey } = req.body;
+      const geminiApiKey = apiKey || process.env.GEMINI_API_KEY;
+
+      if (!geminiApiKey) {
+        return res.status(401).json({
+          error: 'Chave de API do Gemini não configurada no servidor. Configure a variável GEMINI_API_KEY no painel de segredos.'
+        });
+      }
+
+      if (!title) {
+        return res.status(400).json({ error: 'O título da notícia é obrigatório para o resumo.' });
+      }
+
+      // Se houver link válido, tenta obter o corpo textual do artigo de forma rápida (timeout 3.5s)
+      let articleBody = '';
+      if (link && typeof link === 'string' && (link.startsWith('http://') || link.startsWith('https://'))) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 3500);
+          const pageRes = await fetch(link, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+            },
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
+          if (pageRes.ok) {
+            const html = await pageRes.text();
+            const textOnly = html
+              .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
+              .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')
+              .replace(/<[^>]+>/g, ' ')
+              .replace(/\s+/g, ' ')
+              .trim();
+            articleBody = textOnly.slice(0, 3500);
+          }
+        } catch {
+          // Usa os dados locais se falhar o fetch do link
+        }
+      }
+
+      const langNames: Record<string, string> = {
+        PT: 'Português',
+        EN: 'Inglês (English)',
+        RU: 'Russo (Русский)',
+        HI: 'Hindi (हिन्दी)',
+        KO: 'Coreano (한국어)'
+      };
+      const langName = langNames[language] || 'Português';
+
+      const prompt = `Você é a IA Gemma (Gemma 4 / Gemini), uma inteligência artificial especialista em síntese de notícias tecnológicas, invenções e gadgets.
+Analise a notícia abaixo e sintetize-a em formato de tópicos objetivos e escaneáveis para economizar o tempo do usuário.
+
+Dados da Notícia:
+Título: ${title}
+Subtítulo: ${subtitle || 'Nenhum'}
+Resumo/Lead: ${lead || 'Nenhum'}
+Fonte/Autor: ${author || 'TechViva'}
+${articleBody ? `Trecho do texto original: ${articleBody.slice(0, 2500)}` : ''}
+
+Retorne estritamente um JSON com a seguinte estrutura:
+{
+  "readTime": "30 seg",
+  "oneLineTake": "Uma frase de impacto sintetizando a grande novidade",
+  "topics": [
+    {
+      "icon": "⚡",
+      "title": "Título conciso do ponto-chave",
+      "detail": "Explicação em 1 ou 2 frases diretas explicando o impacto prático ou a novidade técnica."
+    }
+  ],
+  "whyItMatters": "Uma frase de conclusão explicando por que essa inovação importa para o usuário ou mercado.",
+  "keywords": ["tag1", "tag2", "tag3"]
+}
+
+Regras:
+1. Gere de 3 a 5 tópicos (topics) informativos e diretos.
+2. Cada tópico DEVE ter um emoji temático adequado em "icon", um "title" chamativo e o "detail" claro.
+3. Responda no idioma: ${langName}.
+4. Retorne apenas o objeto JSON válido, sem comentários ou markdown.`;
+
+      const ai = new GoogleGenAI({
+        apiKey: geminiApiKey,
+        httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
+      });
+
+      let rawText = '';
+      try {
+        const response = await ai.models.generateContent({
+          model: 'gemini-3.6-flash',
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+            temperature: 0.3
+          }
+        });
+        rawText = response.text || '{}';
+      } catch (err36: any) {
+        console.warn('Fallback para gemini-3.8-flash em news/summarize:', err36?.message);
+        const fallbackRes = await ai.models.generateContent({
+          model: 'gemini-3.8-flash',
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+            temperature: 0.3
+          }
+        });
+        rawText = fallbackRes.text || '{}';
+      }
+      let parsedJson: any;
+      try {
+        parsedJson = JSON.parse(rawText.trim());
+      } catch {
+        const cleaned = rawText.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
+        parsedJson = JSON.parse(cleaned);
+      }
+
+      return res.json({
+        success: true,
+        summary: parsedJson
+      });
+    } catch (err: any) {
+      console.error('Erro ao resumir notícia com Gemma:', err);
+      return res.status(500).json({ error: err.message || 'Erro ao gerar resumo da notícia.' });
+    }
+  });
+
+  // =========================================================================
+  // Assistente de Comparação de Smartphones "Qual eu compro?" com Gemma AI
+  // =========================================================================
+  const COMPARISONS_FILE_PATH = path.join(process.cwd(), 'data', 'phone_comparisons.json');
+
+  // Helper para ler comparações salvas no arquivo
+  function readSavedComparisons(): any[] {
+    try {
+      if (fs.existsSync(COMPARISONS_FILE_PATH)) {
+        const fileData = fs.readFileSync(COMPARISONS_FILE_PATH, 'utf-8');
+        const parsed = JSON.parse(fileData);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {
+      console.warn('Erro ao ler arquivo de comparações:', e);
+    }
+    return [];
+  }
+
+  // Helper para salvar nova comparação no arquivo
+  function appendSavedComparison(comparison: any): void {
+    try {
+      const dataDir = path.join(process.cwd(), 'data');
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
+      const existing = readSavedComparisons();
+      const filtered = existing.filter((c: any) => c.id !== comparison.id);
+      filtered.unshift(comparison);
+      fs.writeFileSync(COMPARISONS_FILE_PATH, JSON.stringify(filtered, null, 2), 'utf-8');
+    } catch (e) {
+      console.error('Erro ao gravar no arquivo de comparações:', e);
+    }
+  }
+
+  // Endpoint para listar comparações feitas por todos os usuários
+  app.get('/api/smartphones/comparisons', (req, res) => {
+    try {
+      const list = readSavedComparisons();
+      return res.json({ success: true, comparisons: list });
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message || 'Erro ao carregar comparações.' });
+    }
+  });
+
+  // Endpoint para gerar análise e comparação de 2 ou 3 modelos com Gemma AI
+  app.post('/api/smartphones/compare', async (req, res) => {
+    try {
+      const { phones, language } = req.body;
+      if (!Array.isArray(phones) || phones.length < 2 || phones.length > 3) {
+        return res.status(400).json({ error: 'Selecione 2 ou 3 smartphones para comparar.' });
+      }
+
+      const geminiApiKey = process.env.GEMINI_API_KEY;
+      if (!geminiApiKey) {
+        return res.status(500).json({ error: 'Chave GEMINI_API_KEY não configurada no servidor.' });
+      }
+
+      // Prepara ficha técnica resumida em JSON para a IA
+      const specsSummary = phones.map((p: any) => ({
+        id: p.id,
+        name: `${p.brand} ${p.model}`,
+        brand: p.brand,
+        model: p.model,
+        year: p.releaseYear,
+        os: p.os,
+        screen: {
+          size: `${p.specs?.screen?.size}"`,
+          type: p.specs?.screen?.type,
+          resolution: p.specs?.screen?.resolution,
+          refreshRate: `${p.specs?.screen?.refreshRate}Hz`,
+          foldable: p.specs?.screen?.isFoldable
+        },
+        processor: {
+          chipset: p.specs?.processor?.chipset,
+          cores: p.specs?.processor?.cores,
+          cpuBrand: p.specs?.processor?.cpuBrand,
+          antutu: p.specs?.performance?.antutu
+        },
+        gpu: `${p.specs?.gpu?.brand} ${p.specs?.gpu?.model}`,
+        memory: {
+          ram: p.specs?.ram,
+          storage: p.specs?.storage?.options,
+          expandable: p.specs?.storage?.expandable
+        },
+        camera: {
+          rear: `${p.specs?.camera?.rear}MP`,
+          front: `${p.specs?.camera?.front}MP`,
+          opticalZoom: `${p.specs?.camera?.opticalZoom}x`,
+          stabilization: p.specs?.camera?.stabilization,
+          recording: p.specs?.camera?.recordingResolution
+        },
+        battery: {
+          capacity: `${p.specs?.battery?.capacity} mAh`,
+          charging: p.specs?.battery?.chargingTypes
+        },
+        features: {
+          network: p.specs?.features?.network,
+          nfc: p.specs?.features?.hasNfc,
+          gps: p.specs?.features?.hasGps,
+          fingerprint: p.specs?.features?.hasFingerprint
+        }
+      }));
+
+      const phoneNamesStr = specsSummary.map((p: any) => p.name).join(' vs ');
+      const targetLang = language === 'EN' ? 'Inglês' : language === 'ES' ? 'Espanhol' : 'Português (Brasil)';
+
+      const prompt = `Você é o especialista e consultor de tecnologia do assistente "Qual eu compro?".
+Sua missão é comparar os seguintes smartphones (${specsSummary.length} modelos) com base na ficha técnica em JSON fornecida e gerar uma análise completa, amigável, clara e objetiva para quem está em dúvida sobre qual modelo comprar.
+
+Ficha técnica dos modelos em JSON:
+${JSON.stringify(specsSummary, null, 2)}
+
+Você DEVE responder ESTRITAMENTE em formato JSON com o seguinte formato:
+{
+  "title": "Título chamativo do duelo (ex: ${phoneNamesStr}: Qual Vale Mais a Pena?)",
+  "winnerOverall": "Nome do modelo mais recomendado ou 'Empate Técnico'",
+  "winnerReason": "Explicação em 1 ou 2 frases resumindo a principal razão da escolha geral.",
+  "summary": "Texto introdutório amigável (2 a 3 parágrafos curtos) analisando o cenário e as principais diferenças de proposta de cada aparelho.",
+  "categories": [
+    {
+      "category": "Tela & Construção",
+      "winner": "Nome do vencedor ou Empate",
+      "detail": "Análise concisa comparando qualidade da tela, taxa de atualização e materiais."
+    },
+    {
+      "category": "Desempenho & Jogos",
+      "winner": "Nome do vencedor ou Empate",
+      "detail": "Comparação de chipset, GPU, RAM e pontuação Antutu para jogos e multitarefa."
+    },
+    {
+      "category": "Câmeras & Vídeo",
+      "winner": "Nome do vencedor ou Empate",
+      "detail": "Comparação da câmera principal, zoom óptico, selfies e qualidade de gravação."
+    },
+    {
+      "category": "Bateria & Autonomia",
+      "winner": "Nome do vencedor ou Empate",
+      "detail": "Comparação de capacidade em mAh, velocidade e tipos de carregamento."
+    }
+  ],
+  "bestFor": [
+    {
+      "phone": "Nome do modelo 1",
+      "badge": "Frase curta definindo o perfil (ex: Melhor Custo-Benefício / Melhor para Fotos)",
+      "profile": "Descrição de quem é o usuário ideal para este aparelho."
+    }
+  ],
+  "verdict": "Veredito final direto e amigável respondendo à pergunta 'Qual eu compro?': dê conselhos práticos considerando custo, prioridades do usuário e longevidade."
+}
+
+Regras:
+1. Idioma: ${targetLang}.
+2. Seja sincero, sem viés de marcas, destacando os pontos fortes e limitações reais de cada modelo.
+3. No array "bestFor", inclua exatamente uma entrada para cada um dos ${specsSummary.length} smartphones comparados.
+4. Retorne apenas JSON válido sem crases ou markdown adicionais.`;
+
+      const ai = new GoogleGenAI({
+        apiKey: geminiApiKey,
+        httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
+      });
+
+      let rawText = '';
+      try {
+        const response = await ai.models.generateContent({
+          model: 'gemini-3.6-flash',
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+            temperature: 0.3
+          }
+        });
+        rawText = response.text || '{}';
+      } catch (err36: any) {
+        console.warn('Fallback para gemini-3.8-flash em /api/smartphones/compare:', err36?.message);
+        const fallbackRes = await ai.models.generateContent({
+          model: 'gemini-3.8-flash',
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+            temperature: 0.3
+          }
+        });
+        rawText = fallbackRes.text || '{}';
+      }
+
+      let parsed: any;
+      try {
+        parsed = JSON.parse(rawText.trim());
+      } catch {
+        const cleaned = rawText.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
+        parsed = JSON.parse(cleaned);
+      }
+
+      const comparisonRecord = {
+        id: 'comp-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7),
+        createdAt: new Date().toISOString(),
+        phoneIds: phones.map((p: any) => p.id),
+        phoneNames: specsSummary.map((p: any) => p.name),
+        title: parsed.title || `${phoneNamesStr}: Qual Comprar?`,
+        winnerOverall: parsed.winnerOverall || 'Empate Técnico',
+        winnerReason: parsed.winnerReason || '',
+        summary: parsed.summary || '',
+        categories: parsed.categories || [],
+        bestFor: parsed.bestFor || [],
+        verdict: parsed.verdict || ''
+      };
+
+      // Salva no arquivo data/phone_comparisons.json
+      appendSavedComparison(comparisonRecord);
+
+      return res.json({
+        success: true,
+        comparison: comparisonRecord
+      });
+    } catch (err: any) {
+      console.error('Erro ao gerar comparação de smartphones:', err);
+      return res.status(500).json({ error: err.message || 'Erro ao processar comparação com Gemma.' });
     }
   });
 
@@ -2301,9 +2935,25 @@ app.post('/api/convert-server', upload.single('file'), async (req, res) => {
   if (!isProd) {
     const vite = await createViteServer({
       server: { middlewareMode: true },
-      appType: 'spa',
+      appType: 'custom',
     });
     app.use(vite.middlewares);
+
+    app.use('*', async (req, res, next) => {
+      const url = req.originalUrl;
+      if (url.startsWith('/api') || url.includes('.')) {
+        return next();
+      }
+      try {
+        let template = fs.readFileSync(path.resolve(process.cwd(), 'index.html'), 'utf-8');
+        template = await vite.transformIndexHtml(url, template);
+        const finalHtml = injectSEO(template, req.originalUrl);
+        res.status(200).set({ 'Content-Type': 'text/html' }).end(finalHtml);
+      } catch (e: any) {
+        vite.ssrFixStacktrace(e);
+        next(e);
+      }
+    });
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     
@@ -2312,8 +2962,21 @@ app.post('/api/convert-server', upload.single('file'), async (req, res) => {
       res.sendFile(path.join(distPath, 'robots.txt'));
     });
 
-    app.use(express.static(distPath));
-    app.use('*', (req, res) => res.sendFile(path.join(distPath, 'index.html')));
+    app.use(express.static(distPath, { index: false }));
+
+    const indexHtmlPath = path.join(distPath, 'index.html');
+    let baseHtml = '';
+    if (fs.existsSync(indexHtmlPath)) {
+      baseHtml = fs.readFileSync(indexHtmlPath, 'utf-8');
+    }
+
+    app.use('*', (req, res, next) => {
+      if (req.originalUrl.startsWith('/api') || req.originalUrl.includes('.')) {
+        return res.status(404).end();
+      }
+      const finalHtml = injectSEO(baseHtml, req.originalUrl);
+      res.status(200).set({ 'Content-Type': 'text/html' }).end(finalHtml);
+    });
   }
 
   const port = process.env.PORT || 3000;
