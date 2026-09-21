@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { Smartphone, Watch, Tablet, Cpu, Camera, Battery, Monitor, HardDrive, Search, Filter, Check, MapPin, Wifi, Fingerprint, Maximize2, RotateCcw, Share2, CheckCheck, Layers, MessageSquare, MessageSquareShare, ChevronUp, ChevronDown, Menu, Gamepad2, X, FileDown } from 'lucide-react';
+import { Smartphone, Watch, Tablet, Cpu, Camera, Battery, Monitor, HardDrive, Search, Filter, Check, MapPin, Wifi, Fingerprint, Maximize2, RotateCcw, Share2, CheckCheck, Layers, MessageSquare, MessageSquareShare, ChevronUp, ChevronDown, Menu, Gamepad2, X, FileDown, Tv, Sparkles, Scale, Users } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { mockedSmartphones, Smartphone as SmartphoneType } from '../data/smartphones';
+import { PhoneComparisonModal } from './PhoneComparisonModal';
 
 interface GameCompatibility {
   title: string;
@@ -199,6 +200,29 @@ const RAM_STEPS = [0, 0.5, 1, 1.5, 2, 4, 6, 8, 12, 16];
 const RECORDING_RES_STEPS = ['any', 'HD', 'FHD', '2K', '4K', '8K'] as const;
 const RES_RANK_MAP: Record<string, number> = { 'HD': 1, 'FHD': 2, '2K': 3, '4K': 4, '8K': 5 };
 
+export type DeviceTier = 'entrada' | 'intermediário' | 'topo de linha';
+
+export const getDeviceTier = (phone: any): DeviceTier => {
+  if (phone.categoryTier) return phone.categoryTier;
+  const antutu = phone.specs.performance?.antutu || 0;
+  const maxRam = Math.max(...(phone.specs.ram || [0]));
+  const brand = (phone.brand || '').toLowerCase();
+  const model = (phone.model || '').toLowerCase();
+  
+  if (phone.specs.screen?.isFoldable || antutu >= 800000 || maxRam >= 12 || (brand === 'apple' && model.includes('pro')) || (brand === 'samsung' && model.includes('ultra'))) {
+    return 'topo de linha';
+  }
+  if (antutu <= 350000 && maxRam <= 4 && brand !== 'apple') {
+    return 'entrada';
+  }
+  return 'intermediário';
+};
+
+export const normalizeTextForSearch = (text: string) => {
+  if (!text) return '';
+  return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+};
+
 interface SmartphoneSpecsProps {
   focusedDeviceId?: string | null;
 }
@@ -210,7 +234,26 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
   const [isFiltersMinimized, setIsFiltersMinimized] = useState<boolean>(false);
   const [selectedPhoneForGames, setSelectedPhoneForGames] = useState<SmartphoneType | null>(null);
   
+  // Assistente de Comparação "Qual eu compro?" com Gemma IA
+  const [isComparisonModalOpen, setIsComparisonModalOpen] = useState<boolean>(false);
+  const [selectedForComparison, setSelectedForComparison] = useState<SmartphoneType[]>([]);
+
+  const handleToggleCompare = (phone: SmartphoneType) => {
+    setSelectedForComparison(prev => {
+      const exists = prev.some(p => p.id === phone.id);
+      if (exists) {
+        return prev.filter(p => p.id !== phone.id);
+      }
+      if (prev.length >= 3) {
+        // Substitui o último se já tiver 3 selecionados
+        return [prev[0], prev[1], phone];
+      }
+      return [...prev, phone];
+    });
+  };
+  
   // Basic Filters
+  const [selectedCategoryTier, setSelectedCategoryTier] = useState<'all' | 'entrada' | 'intermediário' | 'topo de linha'>('all');
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedOS, setSelectedOS] = useState<string[]>([]);
   const [selectedCpuBrands, setSelectedCpuBrands] = useState<string[]>([]);
@@ -429,8 +472,18 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
     }
     return mockedSmartphones.filter(phone => {
       const p = phone.specs;
-      const matchesSearch = phone.model.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                            phone.brand.toLowerCase().includes(searchTerm.toLowerCase());
+      const term = normalizeTextForSearch(searchTerm);
+      const tier = getDeviceTier(phone);
+      const normalizedTier = normalizeTextForSearch(tier);
+      
+      const matchesSearch = term === '' || 
+                            normalizeTextForSearch(phone.model).includes(term) || 
+                            normalizeTextForSearch(phone.brand).includes(term) ||
+                            normalizedTier.includes(term) ||
+                            ((term === 'tv' || term.includes('tv digital') || term.includes('digital tv') || term.includes('televisao')) && p.features.hasDigitalTv);
+                            
+      const matchesCategoryTier = selectedCategoryTier === 'all' || tier === selectedCategoryTier;
+      
       const matchesBrand = selectedBrands.length === 0 || selectedBrands.includes(phone.brand);
       const matchesOS = selectedOS.length === 0 || selectedOS.includes(phone.os);
       const matchesCpuBrand = selectedCpuBrands.length === 0 || selectedCpuBrands.includes(p.processor.cpuBrand);
@@ -472,14 +525,14 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
 
       const matchesGps = !hasGps || p.features.hasGps;
 
-      return matchesSearch && matchesBrand && matchesOS && matchesCpuBrand && matchesGpuBrand &&
+      return matchesSearch && matchesCategoryTier && matchesBrand && matchesOS && matchesCpuBrand && matchesGpuBrand &&
              matchesRam && matchesStorage && matchesMinCores && matchesArchitecture &&
              matchesSimCards && matchesDigitalTv && matchesPhysicalKeyboard && matchesFoldable &&
              matchesNetwork && matchesExpandable && matchesMinScreen && matchesMinFrontCam &&
              matchesOpticalZoom && matchesStabilization && matchesFaceDetection && matchesFingerprint &&
              matchesRecRes && matchesGps && matchesWhatsApp && matchesBattery && matchesSimTypes && matchesChargingTypes && matchesCompass && matchesUsbOtg && matchesNfc && matchesSlowMotion;
     });
-  }, [searchTerm, selectedBrands, selectedOS, selectedCpuBrands, selectedGpuBrands, minRam, minStorage, minCores, architecture, simCards, digitalTv, physicalKeyboard, foldable, networkIndex, expandableMemory, minScreenSize, minFrontCamera, opticalZoom, stabilization, faceDetection, fingerprint, recResIndex, hasGps, supportsWhatsApp, onlyWithoutWhatsApp, minBattery, selectedSimTypes, selectedChargingTypes, hasCompass, hasUsbOtg, hasNfc, slowMotion]);
+  }, [searchTerm, selectedCategoryTier, selectedBrands, selectedOS, selectedCpuBrands, selectedGpuBrands, minRam, minStorage, minCores, architecture, simCards, digitalTv, physicalKeyboard, foldable, networkIndex, expandableMemory, minScreenSize, minFrontCamera, opticalZoom, stabilization, faceDetection, fingerprint, recResIndex, hasGps, supportsWhatsApp, onlyWithoutWhatsApp, minBattery, selectedSimTypes, selectedChargingTypes, hasCompass, hasUsbOtg, hasNfc, slowMotion]);
 
   const CheckboxFilter: React.FC<{ label: string, checked: boolean, onChange: (c: boolean) => void, textSize?: string }> = ({ label, checked, onChange, textSize = "text-sm" }) => (
     <label className="flex items-center gap-2 cursor-pointer group select-none">
@@ -545,6 +598,34 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
         </div>
       )}
 
+      {/* Assistente de Comparação "Qual eu compro?" com Gemma IA */}
+      {!focusedDeviceId && (
+        <div className="w-full max-w-3xl mx-auto flex flex-wrap items-center justify-center gap-3 my-1">
+          <button
+            type="button"
+            onClick={() => setIsComparisonModalOpen(true)}
+            className="inline-flex items-center gap-2.5 px-5 py-2.5 bg-gradient-to-r from-cyan-500 via-indigo-500 to-purple-600 hover:from-cyan-400 hover:via-indigo-400 hover:to-purple-500 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-cyan-500/20 transition-all cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
+          >
+            <Sparkles className="w-4 h-4 text-cyan-200 animate-pulse" />
+            <span>Qual eu compro? 🤖 Assistente Gemma</span>
+            {selectedForComparison.length > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-slate-950/40 text-cyan-200 text-xs font-black border border-cyan-400/30">
+                {selectedForComparison.length}/3 selecionados
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsComparisonModalOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700 font-bold text-xs sm:text-sm rounded-2xl transition-all cursor-pointer shadow-sm"
+          >
+            <Users className="w-4 h-4 text-cyan-400" />
+            <span>Duelos da Comunidade</span>
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-col lg:flex-row gap-6 items-start">
         {/* Sidebar Filters */}
         {!focusedDeviceId && (
@@ -590,6 +671,78 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
           
           {!isFiltersMinimized && (
             <div className="space-y-6 animate-in fade-in duration-200">
+            {/* Categoria */}
+            <div>
+              <label className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider flex items-center gap-1.5">
+                <Layers className="w-4 h-4" /> Categoria
+              </label>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                {[
+                  { key: 'all', label: 'Todas', color: 'bg-slate-700' },
+                  { key: 'entrada', label: 'Entrada', color: 'bg-blue-600' },
+                  { key: 'intermediário', label: 'Intermediário', color: 'bg-purple-600' },
+                  { key: 'topo de linha', label: 'Topo de Linha', color: 'bg-amber-500' }
+                ].map(t => (
+                  <button
+                    key={t.key}
+                    type="button"
+                    onClick={() => setSelectedCategoryTier(t.key as any)}
+                    className={`px-2 py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold border transition-all ${
+                      selectedCategoryTier === t.key 
+                        ? `${t.color} text-white border-transparent shadow-md` 
+                        : 'bg-slate-800/60 text-slate-300 border-slate-700/50 hover:bg-slate-800'
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* TV Digital Selection Filter */}
+            <div>
+              <label className="text-xs font-bold text-cyan-400 mb-2 uppercase tracking-wider flex items-center justify-between">
+                <span className="flex items-center gap-1.5"><Tv className="w-4 h-4 text-amber-400" /> TV Digital</span>
+                {digitalTv && (
+                  <button 
+                    type="button" 
+                    onClick={() => setDigitalTv(false)}
+                    className="text-[10px] text-slate-400 hover:text-cyan-400 transition-colors lowercase"
+                  >
+                    limpar
+                  </button>
+                )}
+              </label>
+              <button
+                type="button"
+                id="filter-tv-digital-toggle"
+                onClick={() => setDigitalTv(prev => !prev)}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
+                  digitalTv
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-400/80 shadow-md shadow-amber-500/10'
+                    : 'bg-slate-800/60 text-slate-300 border-slate-700/50 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <div className={`p-1.5 rounded-lg ${digitalTv ? 'bg-amber-400 text-slate-950' : 'bg-slate-700/60 text-amber-400'}`}>
+                    <Tv className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="flex flex-col text-left">
+                    <span className="text-xs">Apenas com TV Digital</span>
+                    <span className="text-[10px] font-normal text-slate-400">Receptor 1-Seg / Full-Seg</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                    digitalTv ? 'bg-amber-400 text-slate-950' : 'bg-slate-700 text-slate-300'
+                  }`}>
+                    {mockedSmartphones.filter(s => s.specs.features.hasDigitalTv).length}
+                  </span>
+                  {digitalTv && <Check className="w-3.5 h-3.5 text-amber-300 stroke-[3]" />}
+                </div>
+              </button>
+            </div>
+
             {/* General */}
             <div>
               <h4 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">Geral</h4>
@@ -1110,6 +1263,26 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
                         )}
                       </div>
                       <h3 className="text-xl sm:text-2xl font-black text-white leading-tight mt-0.5">{phone.model}</h3>
+                      <div className="flex gap-2 items-center flex-wrap mt-2">
+                        {(() => {
+                          const tier = getDeviceTier(phone);
+                          const tierColors = {
+                            'entrada': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+                            'intermediário': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+                            'topo de linha': 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                          };
+                          return (
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border uppercase tracking-wider ${tierColors[tier]}`}>
+                              {tier}
+                            </span>
+                          );
+                        })()}
+                        {p.features.hasDigitalTv && (
+                          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border bg-amber-500/20 text-amber-300 border-amber-500/40 uppercase tracking-wider">
+                            <Tv className="w-3 h-3 text-amber-400" /> TV Digital
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2.5 py-1 shrink-0">
@@ -1241,6 +1414,25 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
                   </span>
 
                   <div className="flex items-center gap-2 ml-auto">
+                    {/* Botão de Comparação de Smartphone */}
+                    <button
+                      type="button"
+                      onClick={() => handleToggleCompare(phone)}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer print:hidden ${
+                        selectedForComparison.some(p => p.id === phone.id)
+                          ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
+                          : 'bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                      }`}
+                      title={selectedForComparison.some(p => p.id === phone.id) ? "Remover do comparador" : "Adicionar ao comparador (até 3 modelos)"}
+                    >
+                      <Scale className="w-3.5 h-3.5" />
+                      <span>
+                        {selectedForComparison.some(p => p.id === phone.id)
+                          ? 'Selecionado'
+                          : 'Comparar'}
+                      </span>
+                    </button>
+
                     {/* Quick WhatsApp Share */}
                     <button
                       type="button"
@@ -1413,6 +1605,66 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
           </div>
         </div>
       )}
+
+      {/* Dock Flutuante de Comparação quando há aparelhos selecionados */}
+      {selectedForComparison.length > 0 && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[95%] max-w-2xl bg-slate-900/95 border border-cyan-500/50 rounded-2xl p-3 sm:p-4 shadow-2xl shadow-cyan-950/50 backdrop-blur-xl flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-4 duration-200">
+          <div className="flex items-center gap-2 overflow-x-auto py-1 max-w-full">
+            <span className="text-xs font-black text-cyan-300 shrink-0 flex items-center gap-1.5">
+              <Scale className="w-3.5 h-3.5 text-cyan-400" />
+              Comparador ({selectedForComparison.length}/3):
+            </span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {selectedForComparison.map((p) => (
+                <span
+                  key={p.id}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-800 text-slate-100 text-xs font-bold border border-slate-700 shadow-sm"
+                >
+                  <Smartphone className="w-3 h-3 text-cyan-400" />
+                  <span className="truncate max-w-[120px] sm:max-w-[160px]">{p.brand} {p.model}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleCompare(p)}
+                    className="hover:text-red-400 p-0.5 rounded cursor-pointer"
+                    title="Remover modelo"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0 ml-auto">
+            <button
+              type="button"
+              onClick={() => setSelectedForComparison([])}
+              className="text-xs font-semibold text-slate-400 hover:text-white px-2 py-1 rounded transition-colors cursor-pointer"
+            >
+              Limpar
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsComparisonModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white shadow-md shadow-cyan-500/25 transition-all cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-cyan-200" />
+              <span>
+                {selectedForComparison.length >= 2
+                  ? `Comparar com Gemma (${selectedForComparison.length})`
+                  : 'Abrir Comparador'}
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal do Assistente de Comparação "Qual eu compro?" */}
+      <PhoneComparisonModal
+        isOpen={isComparisonModalOpen}
+        onClose={() => setIsComparisonModalOpen(false)}
+        initialSelectedPhones={selectedForComparison}
+      />
 
     </div>
   );
