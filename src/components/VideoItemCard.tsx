@@ -25,7 +25,13 @@ import {
   DownloadCloud,
   Copy,
   Check,
-  FileText
+  FileText,
+  Mail,
+  ClipboardList,
+  Subtitles,
+  FileCheck,
+  FileDown,
+  Bot
 } from 'lucide-react';
 import { VideoItem } from '../types';
 import { formatBytes, formatTime } from '../utils/audioEncoder';
@@ -64,14 +70,75 @@ export const VideoItemCard: React.FC<VideoItemCardProps> = ({
   const [transcriptionError, setTranscriptionError] = useState<string | null>(null);
   const [copiedTranscription, setCopiedTranscription] = useState(false);
 
+  // Estados do Pós-processamento com IA Gemma
+  type PostProcessAction = 'summary' | 'email' | 'minutes' | 'srt';
+  const [activePostTab, setActivePostTab] = useState<PostProcessAction | null>(null);
+  const [postProcessResults, setPostProcessResults] = useState<Record<PostProcessAction, string>>({
+    summary: '',
+    email: '',
+    minutes: '',
+    srt: '',
+  });
+  const [isProcessingPost, setIsProcessingPost] = useState<PostProcessAction | null>(null);
+  const [postProcessError, setPostProcessError] = useState<string | null>(null);
+  const [copiedPostText, setCopiedPostText] = useState(false);
+  const [autoSummaryNotice, setAutoSummaryNotice] = useState(false);
+
+  const handleProcessTranscription = async (
+    action: PostProcessAction,
+    textOverride?: string,
+    isAutoTrigger: boolean = false
+  ) => {
+    const textToProcess = textOverride || transcriptionText;
+    if (!textToProcess) return;
+
+    setActivePostTab(action);
+    setIsProcessingPost(action);
+    setPostProcessError(null);
+    if (isAutoTrigger) {
+      setAutoSummaryNotice(true);
+    }
+
+    try {
+      const response = await fetch('/api/transcribe/process', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: textToProcess,
+          action,
+          duration: audioDuration || item.duration || 0,
+          apiKey: transcriptionKey.trim() || undefined
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro no pós-processamento da IA Gemma');
+      }
+
+      setPostProcessResults(prev => ({
+        ...prev,
+        [action]: data.result
+      }));
+    } catch (err: any) {
+      setPostProcessError(err.message || 'Falha ao pós-processar com a IA Gemma.');
+    } finally {
+      setIsProcessingPost(null);
+    }
+  };
+
   const handleTranscribe = async () => {
     setIsTranscribing(true);
     setTranscriptionError(null);
     setTranscriptionText(null);
+    setAutoSummaryNotice(false);
 
     try {
       const formData = new FormData();
-      formData.append('file', item.file);
+      const fileToSend = item.outputBlob 
+        ? new File([item.outputBlob], `edited_${item.name}`, { type: item.outputBlob.type })
+        : item.file;
+      formData.append('file', fileToSend);
       formData.append('mode', transcriptionMode);
       if (transcriptionMode === 'slow' && transcriptionKey.trim()) {
         formData.append('apiKey', transcriptionKey.trim());
@@ -88,6 +155,16 @@ export const VideoItemCard: React.FC<VideoItemCardProps> = ({
       }
 
       setTranscriptionText(data.text);
+      const effectiveSecs = (data.duration && data.duration > 0) ? data.duration : (audioDuration || item.duration || 0);
+      if (data.duration && data.duration > 0) {
+        setAudioDuration(data.duration);
+      }
+
+      // Regra de Negócio: Áudios longos acima de 3 minutos (> 180s ou > 1500 caracteres)
+      // O Gemma realiza o pós-processamento resumidor de forma 100% automática
+      if (effectiveSecs >= 180 || data.text.length > 1500) {
+        handleProcessTranscription('summary', data.text, true);
+      }
     } catch (err: any) {
       setTranscriptionError(err.message);
     } finally {
@@ -109,6 +186,44 @@ export const VideoItemCard: React.FC<VideoItemCardProps> = ({
     element.href = URL.createObjectURL(file);
     const baseName = item.name.replace(/\.[^/.]+$/, '');
     element.download = `transcricao_${baseName}.txt`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  };
+
+  const handleCopyPostResult = (action: PostProcessAction) => {
+    const content = postProcessResults[action];
+    if (!content) return;
+    navigator.clipboard.writeText(content);
+    setCopiedPostText(true);
+    setTimeout(() => setCopiedPostText(false), 2000);
+  };
+
+  const handleDownloadPostResult = (action: PostProcessAction) => {
+    const content = postProcessResults[action];
+    if (!content) return;
+
+    const baseName = item.name.replace(/\.[^/.]+$/, '');
+    const element = document.createElement("a");
+
+    if (action === 'srt') {
+      const file = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      element.href = URL.createObjectURL(file);
+      element.download = `legenda_${baseName}.srt`;
+    } else if (action === 'email') {
+      const file = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      element.href = URL.createObjectURL(file);
+      element.download = `email_${baseName}.txt`;
+    } else if (action === 'minutes') {
+      const file = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      element.href = URL.createObjectURL(file);
+      element.download = `ata_reuniao_${baseName}.txt`;
+    } else {
+      const file = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      element.href = URL.createObjectURL(file);
+      element.download = `resumo_${baseName}.txt`;
+    }
+
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
@@ -640,6 +755,258 @@ return () => {
                         <Download className="w-3.5 h-3.5" />
                         <span>Baixar Transcrição (.txt)</span>
                       </button>
+                    </div>
+
+                    {/* Suíte de Pós-Processamento Inteligente com Gemma IA */}
+                    <div className="mt-4 pt-3.5 border-t border-slate-800/80 space-y-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <div className="p-1.5 rounded-lg bg-gradient-to-tr from-cyan-500/20 via-indigo-500/20 to-purple-500/20 text-cyan-400 border border-cyan-500/30">
+                            <Sparkles className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                              Pós-processamento com IA Gemma
+                              <span className="px-1.5 py-0.2 rounded text-[10px] font-black bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                                Inteligência Fonética
+                              </span>
+                            </h4>
+                            <p className="text-[11px] text-slate-400">
+                              Transforme a fala transcrita em documentos executivos, resumos ou legendas sincronizadas.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Indicador de áudio longo se > 3 min */}
+                        {(audioDuration >= 180 || item.duration >= 180 || transcriptionText.length > 1500) && (
+                          <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                            <Zap className="w-3 h-3 text-amber-400" />
+                            Áudio longo (&gt; 3 min): Resumo automático
+                          </span>
+                        )}
+                      </div>
+
+                      {/* 4 Botões de Ação Solicitados pelo Usuário */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {/* 1. Resumir áudio */}
+                        <button
+                          type="button"
+                          onClick={() => handleProcessTranscription('summary')}
+                          disabled={isProcessingPost !== null}
+                          className={`px-3 py-2.5 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
+                            activePostTab === 'summary'
+                              ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200 shadow-md shadow-cyan-500/10'
+                              : 'bg-slate-900/90 border-slate-800 text-slate-300 hover:border-slate-700 hover:text-white'
+                          } disabled:opacity-50`}
+                          title="Resumir áudio com Gemma IA"
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <FileText className="w-4 h-4 text-cyan-400" />
+                            <span>Resumir áudio</span>
+                          </div>
+                          <span className="text-[10px] text-slate-400 font-normal">
+                            {(audioDuration >= 180 || item.duration >= 180) ? 'Auto > 3 min' : 'Síntese objetiva'}
+                          </span>
+                        </button>
+
+                        {/* 2. Transformar em email */}
+                        <button
+                          type="button"
+                          onClick={() => handleProcessTranscription('email')}
+                          disabled={isProcessingPost !== null}
+                          className={`px-3 py-2.5 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
+                            activePostTab === 'email'
+                              ? 'bg-indigo-500/20 border-indigo-400 text-indigo-200 shadow-md shadow-indigo-500/10'
+                              : 'bg-slate-900/90 border-slate-800 text-slate-300 hover:border-slate-700 hover:text-white'
+                          } disabled:opacity-50`}
+                          title="Transformar em e-mail corporativo formal"
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <Mail className="w-4 h-4 text-indigo-400" />
+                            <span>Transformar em email</span>
+                          </div>
+                          <span className="text-[10px] text-slate-400 font-normal">
+                            Sem gírias / Formal
+                          </span>
+                        </button>
+
+                        {/* 3. Transformar em ata */}
+                        <button
+                          type="button"
+                          onClick={() => handleProcessTranscription('minutes')}
+                          disabled={isProcessingPost !== null}
+                          className={`px-3 py-2.5 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
+                            activePostTab === 'minutes'
+                              ? 'bg-purple-500/20 border-purple-400 text-purple-200 shadow-md shadow-purple-500/10'
+                              : 'bg-slate-900/90 border-slate-800 text-slate-300 hover:border-slate-700 hover:text-white'
+                          } disabled:opacity-50`}
+                          title="Transformar em Ata de Reunião dividida em tópicos"
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <ClipboardList className="w-4 h-4 text-purple-400" />
+                            <span>Transformar em ata</span>
+                          </div>
+                          <span className="text-[10px] text-slate-400 font-normal">
+                            Dividida em tópicos
+                          </span>
+                        </button>
+
+                        {/* 4. Legendar vídeo (.srt) */}
+                        <button
+                          type="button"
+                          onClick={() => handleProcessTranscription('srt')}
+                          disabled={isProcessingPost !== null}
+                          className={`px-3 py-2.5 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
+                            activePostTab === 'srt'
+                              ? 'bg-emerald-500/20 border-emerald-400 text-emerald-200 shadow-md shadow-emerald-500/10'
+                              : 'bg-slate-900/90 border-slate-800 text-slate-300 hover:border-slate-700 hover:text-white'
+                          } disabled:opacity-50`}
+                          title="Legendar vídeo e baixar no formato .srt"
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <Subtitles className="w-4 h-4 text-emerald-400" />
+                            <span>Legendar vídeo</span>
+                          </div>
+                          <span className="text-[10px] text-emerald-400 font-semibold">
+                            Baixar arquivo .srt
+                          </span>
+                        </button>
+                      </div>
+
+                      {/* Notificação se o resumo foi acionado automaticamente */}
+                      {autoSummaryNotice && (
+                        <div className="p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-200 text-xs flex items-center justify-between">
+                          <span className="flex items-center gap-1.5">
+                            <Zap className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                            <span>Áudio longo detectado (&gt; 3 min). A IA Gemma gerou o resumo executivo automaticamente:</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setAutoSummaryNotice(false)}
+                            className="text-amber-400 hover:text-amber-200 text-xs ml-2 cursor-pointer font-bold"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Estado de carregamento do processamento */}
+                      {isProcessingPost && (
+                        <div className="p-3.5 bg-slate-900/90 border border-slate-800 rounded-xl flex items-center justify-center gap-2.5 text-cyan-300 text-xs">
+                          <RefreshCw className="w-4 h-4 animate-spin text-cyan-400" />
+                          <span>
+                            {isProcessingPost === 'summary' && 'Gemma IA resumindo áudio longo e extraindo pontos-chave...'}
+                            {isProcessingPost === 'email' && 'Gemma IA eliminando gírias/pausas e redigindo e-mail corporativo formal...'}
+                            {isProcessingPost === 'minutes' && 'Gemma IA estruturando ata de reunião formal dividida em tópicos...'}
+                            {isProcessingPost === 'srt' && 'Gemma IA sincronizando timestamps e gerando legendas SubRip (.srt)...'}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Mensagem de Erro se houver */}
+                      {postProcessError && (
+                        <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs flex items-start gap-2">
+                          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="font-semibold">Erro no pós-processamento:</p>
+                            <p>{postProcessError}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Painel com o Resultado Ativo */}
+                      {activePostTab && postProcessResults[activePostTab] && !isProcessingPost && (
+                        <div className="p-3.5 bg-slate-900 border border-slate-700/90 rounded-2xl space-y-2.5 animate-fadeIn shadow-lg">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                              {activePostTab === 'summary' && (
+                                <>
+                                  <FileText className="w-4 h-4 text-cyan-400" />
+                                  <span>Resumo Inteligente gerado pelo Gemma:</span>
+                                </>
+                              )}
+                              {activePostTab === 'email' && (
+                                <>
+                                  <Mail className="w-4 h-4 text-indigo-400" />
+                                  <span>E-mail Corporativo Formal pronto:</span>
+                                </>
+                              )}
+                              {activePostTab === 'minutes' && (
+                                <>
+                                  <ClipboardList className="w-4 h-4 text-purple-400" />
+                                  <span>Ata de Reunião Executiva em tópicos:</span>
+                                </>
+                              )}
+                              {activePostTab === 'srt' && (
+                                <>
+                                  <Subtitles className="w-4 h-4 text-emerald-400" />
+                                  <span>Legenda Sincronizada (.srt) para Vídeo:</span>
+                                </>
+                              )}
+                            </span>
+
+                            <div className="flex items-center gap-2">
+                              {/* Botão Copiar */}
+                              <button
+                                type="button"
+                                onClick={() => handleCopyPostResult(activePostTab)}
+                                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer"
+                              >
+                                {copiedPostText ? (
+                                  <>
+                                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                    <span className="text-emerald-400">Copiado!</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="w-3.5 h-3.5 text-slate-400" />
+                                    <span>Copiar</span>
+                                  </>
+                                )}
+                              </button>
+
+                              {/* Botão Baixar Arquivo */}
+                              <button
+                                type="button"
+                                onClick={() => handleDownloadPostResult(activePostTab)}
+                                className={`px-3.5 py-1.5 text-xs font-bold rounded-lg text-white shadow-md transition-all flex items-center gap-1.5 cursor-pointer ${
+                                  activePostTab === 'srt'
+                                    ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/25'
+                                    : 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/25'
+                                }`}
+                              >
+                                <Download className="w-3.5 h-3.5" />
+                                <span>
+                                  {activePostTab === 'srt' ? 'Baixar Legenda (.srt)' : 'Baixar (.txt)'}
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Visualizador do Conteúdo Formatado */}
+                          <div className={`p-3 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs leading-relaxed max-h-72 overflow-y-auto tabs-scrollbar select-text whitespace-pre-wrap ${
+                            activePostTab === 'srt' ? 'font-mono text-[11px] text-emerald-300/90' : 'font-sans'
+                          }`}>
+                            {postProcessResults[activePostTab]}
+                          </div>
+
+                          {/* Dica para Arquivo .srt */}
+                          {activePostTab === 'srt' && (
+                            <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400 bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/60">
+                              <span className="flex items-center gap-1 text-emerald-400">
+                                ✓ Arquivo compatível com VLC Player, Premiere, DaVinci, CapCut e YouTube.
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleDownloadPostResult('srt')}
+                                className="text-emerald-400 hover:text-emerald-300 font-bold underline cursor-pointer"
+                              >
+                                Baixar arquivo .srt agora
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
