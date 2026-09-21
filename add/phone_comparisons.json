@@ -1,0 +1,155 @@
+[
+  {
+    "id": "comp-1789675792557-9ki51",
+    "createdAt": "2026-09-17T20:09:52.557Z",
+    "phoneIds": [
+      "samsung-galaxy-s24",
+      "apple-iphone-15"
+    ],
+    "phoneNames": [
+      "Samsung Galaxy S24",
+      "Apple iPhone 15"
+    ],
+    "title": "Samsung Galaxy S24 vs Apple iPhone 15: Qual Vale Mais a Pena?",
+    "winnerOverall": "Samsung Galaxy S24",
+    "winnerReason": "O Galaxy S24 entrega um conjunto de hardware mais completo e equilibrado, destacando-se pela tela de 120Hz, maior quantidade de RAM e zoom óptico telefoto dedicado de 3x.",
+    "summary": "Ao comparar os modelos de entrada das principais linhas topo de linha do mercado, vemos duas filosofias distintas. O Samsung Galaxy S24 foca em especificações de ponta com foco em fluidez de tela, versatilidade de câmeras e alto poder de processamento bruto.\n\nPor outro lado, o Apple iPhone 15 aposta na forte otimização do sistema iOS, excelente fidelidade de imagem e na tão aguardada adoção da conexão USB-C, mantendo a tradição de altíssimo valor de revenda e integração perfeita com o ecossistema da maçã.",
+    "categories": [
+      {
+        "category": "Tela & Construção",
+        "winner": "Samsung Galaxy S24",
+        "detail": "Embora ambos tenham telas OLED de altíssima qualidade e excelente brilho, o Galaxy S24 vence ao oferecer taxa de atualização de 120Hz contra apenas 60Hz do iPhone 15, garantindo navegação e animações visivelmente mais fluidas."
+      },
+      {
+        "category": "Desempenho & Jogos",
+        "winner": "Samsung Galaxy S24",
+        "detail": "O Galaxy S24 possui maior pontuação em benchmarks (1.650.000 vs 1.450.000 no AnTuTu) e vem acompanhado de 8GB de RAM (contra 6GB do iPhone 15), o que garante melhor sustentação para jogos pesados e multitarefa."
+      },
+      {
+        "category": "Câmeras & Vídeo",
+        "winner": "Samsung Galaxy S24",
+        "detail": "Apesar do iPhone 15 entregar vídeos espetaculares e fotos incríveis com a principal de 48MP, o Galaxy S24 leva a melhor pela versatilidade de ter uma lente telefoto dedicada com zoom óptico de 3x e suporte a gravações em 8K."
+      },
+      {
+        "category": "Bateria & Autonomia",
+        "winner": "Samsung Galaxy S24",
+        "detail": "O Galaxy S24 conta com uma bateria de 4000 mAh contra 3349 mAh do iPhone 15. Apesar do iOS ser muito otimizado, a maior capacidade do modelo da Samsung garante uma autonomia ligeiramente superior em uso misto."
+      }
+    ],
+    "bestFor": [
+      {
+        "phone": "Samsung Galaxy S24",
+        "badge": "Melhor em Hardware e Fluidez",
+        "profile": "Ideal para quem busca máxima tecnologia em um formato compacto, prioriza telas fluidas de 120Hz, quer zoom óptico real para fotos distantes e prefere a liberdade do ecossistema Android."
+      },
+      {
+        "phone": "Apple iPhone 15",
+        "badge": "Melhor Otimização e Pós-Venda",
+        "profile": "Ideal para usuários já integrados ao ecossistema Apple, que buscam extrema simplicidade de uso, excelente estabilidade para redes sociais, gravação de vídeo consistente e maior retenção de valor de revenda."
+      }
+    ],
+    "verdict": "Se o seu objetivo é levar para casa o smartphone com a melhor ficha técnica pelo dinheiro investido, o Samsung Galaxy S24 é a escolha correta pela tela de 120Hz, conjunto de câmeras mais completo e maior memória. Porém, se você valoriza a estabilidade do iOS, a facilidade do ecossistema Apple ou deseja um aparelho com menor desvalorização no mercado usado, o iPhone 15 é uma excelente opção."
+  },
+  {
+    "id": "comp-s24-vs-iphone15-initial",
+    "createdAt": "2026-09-17T12:00:00.000Z",
+    "phoneIds": [
+      "samsung-galaxy-s24",
+      "apple-iphone-15"
+    ],
+    "phoneNames": [
+      "Samsung Galaxy S24",
+      "Apple iPhone 15"
+    ],
+    "title": "Galaxy S24 vs iPhone 15: Qual vale mais a pena?",
+    "winnerOverall": "Empate Técnico com Vantagens Distintas",
+    "winnerReason": "O Galaxy S24 vence em tela (120Hz LTPO) e versatilidade de zoom com câmera teleobjetiva 3x. O iPhone 15 se destaca na longevidade de revenda, gravação de vídeo consistente e ecossistema iOS integrado.",
+    "summary": "Um dos duelos mais disputados do mercado! Se você busca tela mais rápida com 120Hz e câmera com zoom óptico de 3x sem pagar o preço de um Ultra, o Galaxy S24 é o vencedor direto em hardware. Por outro lado, se você prioriza gravação de vídeo suave, ecossistema Apple e máxima estabilidade em redes sociais, o iPhone 15 continua imbatível.",
+    "categories": [
+      {
+        "category": "Tela & Visual",
+        "winner": "Samsung Galaxy S24",
+        "detail": "O Galaxy S24 traz Dynamic AMOLED 2X com taxa variável de 1Hz a 120Hz e pico de 2.600 nits. O iPhone 15 ainda está limitado aos 60Hz tradicionais."
+      },
+      {
+        "category": "Câmeras & Fotografia",
+        "winner": "Empate (S24 em Zoom, iPhone 15 em Vídeo)",
+        "detail": "O S24 possui sensor telefoto óptico dedicado de 3x (10MP), enquanto o iPhone 15 usa corte no sensor de 48MP (2x digital). Em gravação de vídeo em 4K HDR e stories, o iPhone entrega menor compressão."
+      },
+      {
+        "category": "Desempenho & Processamento",
+        "winner": "Ambos excelentes",
+        "detail": "O chip Exynos 2400 / Snapdragon 8 Gen 3 e o Apple A16 Bionic rodam qualquer jogo atual com folga. O S24 vem com 8GB de RAM padrão, garantindo maior retenção de apps em segundo plano."
+      },
+      {
+        "category": "Bateria & Carregamento",
+        "winner": "Samsung Galaxy S24",
+        "detail": "4.000 mAh com carregamento de 25W e suporte a Wireless PowerShare reverso (para carregar fones ou relógio na traseira), recurso ausente no iPhone 15."
+      }
+    ],
+    "bestFor": [
+      {
+        "phone": "Samsung Galaxy S24",
+        "badge": "Mais Versátil & Tela Fluida",
+        "profile": "Ideal para quem ama telas super fluidas de 120Hz, valoriza fotos com zoom óptico real (3x) em shows e eventos, e quer a flexibilidade do Android com recursos de IA do Galaxy AI."
+      },
+      {
+        "phone": "Apple iPhone 15",
+        "badge": "Melhor para Vídeos & Ecossistema",
+        "profile": "Ideal para criadores de conteúdo para Instagram/TikTok, quem já utiliza Mac/iPad/Apple Watch, e quem busca altíssimo valor de revenda após 2 a 3 anos de uso."
+      }
+    ],
+    "verdict": "Se o preço estiver semelhante, o Galaxy S24 entrega mais tecnologia bruta (120Hz + teleobjetiva 3x + carregamento reverso). Mas se você produz muitos vídeos ou já está no ecossistema da Apple, o iPhone 15 é a compra mais segura e com menor desvalorização."
+  },
+  {
+    "id": "comp-s24ultra-vs-iphone15promax-initial",
+    "createdAt": "2026-09-17T11:30:00.000Z",
+    "phoneIds": [
+      "samsung-galaxy-s24-ultra",
+      "apple-iphone-15-pro-max"
+    ],
+    "phoneNames": [
+      "Samsung Galaxy S24 Ultra",
+      "Apple iPhone 15 Pro Max"
+    ],
+    "title": "Galaxy S24 Ultra vs iPhone 15 Pro Max: O Duelo Supremo dos Titãs",
+    "winnerOverall": "Samsung Galaxy S24 Ultra",
+    "winnerReason": "Tela antirreflexo Gorilla Armor espetacular, caneta S-Pen integrada, zoom óptico duplo (3x e 5x) e 12GB de RAM para multitarefa pesada.",
+    "summary": "O ápice da tecnologia em smartphones! O Galaxy S24 Ultra impressiona pela tela plana sem reflexos e versatilidade profissional, enquanto o iPhone 15 Pro Max traz o chassi em titânio leve com gravação de vídeo em ProRes Log para cineastas.",
+    "categories": [
+      {
+        "category": "Design & Construção",
+        "winner": "Empate em Titânio",
+        "detail": "Ambos contam com laterais em Titânio Grau 5. A Samsung se destaca pelo vidro frontal Corning Gorilla Armor que reduz em 75% os reflexos externos."
+      },
+      {
+        "category": "Câmeras & Zoom",
+        "winner": "Samsung Galaxy S24 Ultra",
+        "detail": "Sensor principal de 200MP + duas lentes teleobjetivas (3x de 10MP e 5x periscópio de 50MP). O iPhone possui teleobjetiva tetraprisma de 5x com estabilização 3D, mas sem lente intermediária de 3x."
+      },
+      {
+        "category": "Produtividade & Extras",
+        "winner": "Samsung Galaxy S24 Ultra",
+        "detail": "Caneta S-Pen embutida com latência quase nula para anotações e assinaturas, além do modo Samsung DeX que transforma o celular em computador de mesa."
+      },
+      {
+        "category": "Bateria & Eficiência",
+        "winner": "Apple iPhone 15 Pro Max",
+        "detail": "O A17 Pro fabricado em 3nm aliado ao iOS consegue uma das maiores autonomias de bateria contínua em testes de navegação e reprodução de mídia."
+      }
+    ],
+    "bestFor": [
+      {
+        "phone": "Samsung Galaxy S24 Ultra",
+        "badge": "Power Users & Produtividade",
+        "profile": "Para quem quer o canivete suíço definitivo: anotações na tela, multitarefa em janelas, zoom de 100x e visualização perfeita sob o sol."
+      },
+      {
+        "phone": "Apple iPhone 15 Pro Max",
+        "badge": "Criadores de Vídeo & Gamers",
+        "profile": "Para quem precisa de gravação ProRes Log em SSD externo via USB-C 3.2 e jogos AAA com Ray Tracing de console como Resident Evil e Death Stranding."
+      }
+    ],
+    "verdict": "Para a grande maioria das tarefas do dia a dia, o Galaxy S24 Ultra oferece mais ferramentas úteis (tela antirreflexo, S-Pen e zoom versátil). Para criadores audiovisuais focados em vídeo e praticantes do ecossistema Apple, o iPhone 15 Pro Max é a escolha certa."
+  }
+]
