@@ -504,8 +504,8 @@ const dict: Translations = {
     KO: "통신사 및 모바일 기기 진단을 위한 가장 많이 사용되는 빠른 단축키입니다."
   },
   "editorial.media.title": {
-    PT: "Guia Definitivo de Conversão de Mídia e Privacidade no Navegador",
-    EN: "Definitve Guide to Media Conversion and Browser Privacy",
+    PT: "Sobre a conversão de mídia com o uso de tecnologia web com aumento da privacidade",
+    EN: "About media conversion using web technology with enhanced privacy",
     RU: "Официальное руководство по конвертации медиа и конфиденциальности в браузере",
     HI: "मीडिया रूपांतरण और ब्राउज़र गोपनीयता के लिए निश्चित मार्गदर्शिका",
     KO: "미디어 변환 및 브라우저 개인정보 보호를 위한 완벽 가이드"
@@ -2478,6 +2478,55 @@ const dict: Translations = {
     RU: "Импорт RSS",
     HI: "आरएसएस आयात",
     KO: "RSS 가져오기"
+  },
+  "news.summarizeBtn": {
+    PT: "Resumir notícia",
+    EN: "Summarize news",
+    RU: "Краткий перескаz",
+    HI: "समाचार सारांश",
+    KO: "뉴스 요약"
+  },
+  "news.summarizing": {
+    PT: "Gemma lendo...",
+    EN: "Gemma summarizing...",
+    RU: "Gemma читает...",
+    HI: "जेम्मा पढ़ रहा है...",
+    KO: "Gemma 요약 중..."
+  },
+  "news.summaryTitle": {
+    PT: "Resumo Inteligente em Tópicos",
+    EN: "Smart Bullet Summary",
+    RU: "Краткое изложение по пунктам",
+    HI: "स्मार्ट बुलेट सारांश",
+    KO: "핵심 요약 정리"
+  },
+  "news.copySummary": {
+    PT: "Copiar tópicos",
+    EN: "Copy bullets",
+    RU: "Скопировать тезисы",
+    HI: "अंक कॉपी करें",
+    KO: "요약 복사"
+  },
+  "news.copiedSummary": {
+    PT: "Tópicos copiados!",
+    EN: "Bullets copied!",
+    RU: "Скопировано!",
+    HI: "कॉपी हो गया!",
+    KO: "복사 완료!"
+  },
+  "news.hideSummary": {
+    PT: "Recolher resumo",
+    EN: "Hide summary",
+    RU: "Скрыть",
+    HI: "सारांश छिपाएं",
+    KO: "요약 접기"
+  },
+  "news.whyItMatters": {
+    PT: "Por que isso importa",
+    EN: "Why it matters",
+    RU: "Почему это важно",
+    HI: "यह क्यों महत्वपूर्ण है",
+    KO: "주요 의의"
   },
   "news.verifierAlwaysActive": {
     PT: "Verificador 404 Automático Sempre Ativo",
