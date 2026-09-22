@@ -1,8 +1,17 @@
+import fs from 'fs';
+import path from 'path';
+import dotenv from 'dotenv';
+
+// Se .env não existe, copia do .env.example para garantir que as variáveis sejam carregadas
+if (!fs.existsSync('.env') && fs.existsSync('.env.example')) {
+  fs.copyFileSync('.env.example', '.env');
+}
+dotenv.config();
+
 import { GoogleGenAI } from '@google/genai';
 import express from 'express';
 import cors from 'cors';
 import { createServer as createViteServer } from 'vite';
-import path from 'path';
 import { fileURLToPath } from 'url';
 import ytSearch from 'yt-search';
 import { Readable } from 'stream';
@@ -11,7 +20,6 @@ import multer from 'multer';
 import { mockedSmartphones } from './src/data/smartphones';
 import { USSD_DATABASE } from './src/data/ussdcodes';
 import os from 'os';
-import fs from 'fs';
 import { spawn } from 'child_process';
 import youtubedl from 'youtube-dl-exec';
 
