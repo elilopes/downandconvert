@@ -1,3 +1,7 @@
+// 1. Guarda a chave injetada pela plataforma de nuvem/AI Studio antes de carregar o .env
+const originalCloudKey = process.env.GEMINI_API_KEY;
+const leakedKeyPattern = "AIzaSyAXbMg3sb2ZUlEXb4D8gPQlgHYtDPsyzes";
+
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
@@ -7,6 +11,15 @@ if (!fs.existsSync('.env') && fs.existsSync('.env.example')) {
   fs.copyFileSync('.env.example', '.env');
 }
 dotenv.config();
+
+// Se o .env carregou a chave vazada, ou está vazia, e temos uma chave de nuvem válida, restauramos
+if (
+  originalCloudKey && 
+  originalCloudKey !== leakedKeyPattern &&
+  (process.env.GEMINI_API_KEY === leakedKeyPattern || !process.env.GEMINI_API_KEY)
+) {
+  process.env.GEMINI_API_KEY = originalCloudKey;
+}
 
 import { GoogleGenAI } from '@google/genai';
 import express from 'express';
@@ -2343,6 +2356,19 @@ Regras:
       });
     } catch (err: any) {
       console.error('Erro ao gerar comparação de smartphones:', err);
+      const errMsg = err.message || '';
+      if (
+        errMsg.includes('503') || 
+        errMsg.toLowerCase().includes('high demand') || 
+        errMsg.toLowerCase().includes('unavailable') || 
+        err.status === 503 ||
+        err.statusCode === 503
+      ) {
+        return res.status(503).json({ 
+          error: 'Error: code 503 - This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.',
+          isGemini503: true
+        });
+      }
       return res.status(500).json({ error: err.message || 'Erro ao processar comparação com Gemma.' });
     }
   });
