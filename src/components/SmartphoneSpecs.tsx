@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Smartphone, Watch, Tablet, Cpu, Camera, Battery, Monitor, HardDrive, Search, Filter, Check, MapPin, Wifi, Fingerprint, Maximize2, RotateCcw, Share2, CheckCheck, Layers, MessageSquare, MessageSquareShare, ChevronUp, ChevronDown, Menu, Gamepad2, X, FileDown, Tv, Sparkles, Scale, Users } from 'lucide-react';
+import { Smartphone, Watch, Tablet, Cpu, Camera, Battery, Monitor, HardDrive, Search, Filter, Check, MapPin, Wifi, Fingerprint, Maximize2, RotateCcw, Share2, CheckCheck, Layers, MessageSquare, MessageSquareShare, ChevronUp, ChevronDown, Menu, Gamepad2, X, FileDown, Tv, Sparkles, Scale, Users, Calendar } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { mockedSmartphones, Smartphone as SmartphoneType } from '../data/smartphones';
 import { PhoneComparisonModal } from './PhoneComparisonModal';
@@ -17,6 +17,31 @@ interface GameCompatibility {
 }
 
 const getCompatibleGamesForPhone = (phone: SmartphoneType): GameCompatibility[] => {
+  const isSmartwatch = phone.deviceType === 'smartwatch';
+
+  if (isSmartwatch) {
+    const heavyGameTitles = [
+      { title: "Red Dead Redemption (Port Oficial)", genre: "Ação / Mundo Aberto AAA" },
+      { title: "Call of Duty: Warzone Mobile", genre: "Battle Royale Pesado" },
+      { title: "XCOM 2 Collection", genre: "Estratégia Tática AAA" },
+      { title: "Genshin Impact", genre: "RPG de Mundo Aberto" },
+      { title: "Wuthering Waves", genre: "Action RPG de Mundo Aberto" },
+      { title: "Resident Evil Village / 4 Remake", genre: "Survival Horror AAA" }
+    ];
+
+    return heavyGameTitles.map(g => ({
+      title: g.title,
+      genre: g.genre,
+      graphics: "Incompatível (Smartwatch)",
+      fps: "Não Executa",
+      badge: "Incompatível com Relógio",
+      badgeColor: "bg-red-500/10 text-red-400 border-red-500/30",
+      note: "Smartwatches possuem sistemas operacionais dedicados (Wear OS / watchOS) e não suportam jogos mobile AAA de smartphones.",
+      isSupported: false,
+      unsupportedReason: "Dispositivo do tipo Smartwatch (sistema e formato incompatíveis)."
+    }));
+  }
+
   const antutu = phone.specs.performance?.antutu || 1000000;
   const chipset = phone.specs.processor.chipset.toLowerCase();
   const ramOptions = Array.isArray(phone.specs.ram) ? phone.specs.ram : [phone.specs.ram];
@@ -232,6 +257,10 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
   const [searchTerm, setSearchTerm] = useState('');
   const [copiedPhoneId, setCopiedPhoneId] = useState<string | null>(null);
   const [isFiltersMinimized, setIsFiltersMinimized] = useState<boolean>(false);
+  const [isYearExpanded, setIsYearExpanded] = useState<boolean>(true);
+  const [isBrandExpanded, setIsBrandExpanded] = useState<boolean>(true);
+  const [isGamesExpanded, setIsGamesExpanded] = useState<boolean>(true);
+  const [selectedGames, setSelectedGames] = useState<string[]>([]);
   const [selectedPhoneForGames, setSelectedPhoneForGames] = useState<SmartphoneType | null>(null);
   
   // Assistente de Comparação "Qual eu compro?" com Gemma IA
@@ -255,6 +284,7 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
   // Basic Filters
   const [selectedCategoryTier, setSelectedCategoryTier] = useState<'all' | 'entrada' | 'intermediário' | 'topo de linha'>('all');
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [selectedReleaseYears, setSelectedReleaseYears] = useState<number[]>([]);
   const [selectedOS, setSelectedOS] = useState<string[]>([]);
   const [selectedCpuBrands, setSelectedCpuBrands] = useState<string[]>([]);
   const [selectedGpuBrands, setSelectedGpuBrands] = useState<string[]>([]);
@@ -294,6 +324,7 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
   const [slowMotion, setSlowMotion] = useState<boolean>(false);
 
   const allBrands = useMemo(() => Array.from(new Set(mockedSmartphones.map(s => s.brand))).sort(), []);
+  const allReleaseYears = useMemo(() => Array.from(new Set(mockedSmartphones.map(s => s.releaseYear))).sort((a, b) => b - a), []);
   const allOS = useMemo(() => Array.from(new Set(mockedSmartphones.map(s => s.os))).sort(), []);
   const allSimTypes = useMemo(() => ['Padrão (1FF)', 'Mini-SIM (2FF)', 'Micro-SIM (3FF)', 'Nano-SIM (4FF)', 'eSIM', 'Sem suporte'], []);
   const allChargingTypes = useMemo(() => ['USB/V8', 'USB tipo C', 'Sem fio', '30 pinos', 'Lightning', 'Turbo'], []);
@@ -321,6 +352,8 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
 
   const handleResetFilters = () => {
     setSelectedBrands([]);
+    setSelectedReleaseYears([]);
+    setSelectedGames([]);
     setSelectedOS([]);
     setSelectedCpuBrands([]);
     setSelectedGpuBrands([]);
@@ -407,6 +440,8 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
   const activeFiltersCount = useMemo(() => {
     let count = 0;
     if (selectedBrands.length > 0) count += selectedBrands.length;
+    if (selectedReleaseYears.length > 0) count += selectedReleaseYears.length;
+    if (selectedGames.length > 0) count += selectedGames.length;
     if (selectedOS.length > 0) count += selectedOS.length;
     if (selectedCpuBrands.length > 0) count += selectedCpuBrands.length;
     if (selectedGpuBrands.length > 0) count += selectedGpuBrands.length;
@@ -439,7 +474,7 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
     if (slowMotion) count++;
     if (searchTerm.trim().length > 0) count++;
     return count;
-  }, [selectedBrands, selectedOS, selectedCpuBrands, selectedGpuBrands, minRam, minStorage, minCores, minScreenSize, minFrontCamera, recResIndex, architecture, simCards, networkIndex, digitalTv, physicalKeyboard, foldable, expandableMemory, opticalZoom, stabilization, faceDetection, fingerprint, hasGps, supportsWhatsApp, onlyWithoutWhatsApp, minBattery, selectedSimTypes, selectedChargingTypes, hasCompass, hasUsbOtg, hasNfc, slowMotion, searchTerm]);
+  }, [selectedBrands, selectedReleaseYears, selectedOS, selectedCpuBrands, selectedGpuBrands, minRam, minStorage, minCores, minScreenSize, minFrontCamera, recResIndex, architecture, simCards, networkIndex, digitalTv, physicalKeyboard, foldable, expandableMemory, opticalZoom, stabilization, faceDetection, fingerprint, hasGps, supportsWhatsApp, onlyWithoutWhatsApp, minBattery, selectedSimTypes, selectedChargingTypes, hasCompass, hasUsbOtg, hasNfc, slowMotion, searchTerm]);
 
   // Handle SEO Meta Tags for Dynamic Routes
   React.useEffect(() => {
@@ -485,6 +520,7 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
       const matchesCategoryTier = selectedCategoryTier === 'all' || tier === selectedCategoryTier;
       
       const matchesBrand = selectedBrands.length === 0 || selectedBrands.includes(phone.brand);
+      const matchesReleaseYear = selectedReleaseYears.length === 0 || selectedReleaseYears.includes(phone.releaseYear);
       const matchesOS = selectedOS.length === 0 || selectedOS.includes(phone.os);
       const matchesCpuBrand = selectedCpuBrands.length === 0 || selectedCpuBrands.includes(p.processor.cpuBrand);
       const matchesGpuBrand = selectedGpuBrands.length === 0 || selectedGpuBrands.includes(p.gpu.brand);
@@ -525,14 +561,19 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
 
       const matchesGps = !hasGps || p.features.hasGps;
 
-      return matchesSearch && matchesCategoryTier && matchesBrand && matchesOS && matchesCpuBrand && matchesGpuBrand &&
+      const matchesGames = selectedGames.length === 0 || selectedGames.every(gameName => {
+        const phoneGames = getCompatibleGamesForPhone(phone);
+        return phoneGames.some(g => g.title.toLowerCase().includes(gameName.toLowerCase()) && g.isSupported);
+      });
+
+      return matchesSearch && matchesCategoryTier && matchesBrand && matchesReleaseYear && matchesGames && matchesOS && matchesCpuBrand && matchesGpuBrand &&
              matchesRam && matchesStorage && matchesMinCores && matchesArchitecture &&
              matchesSimCards && matchesDigitalTv && matchesPhysicalKeyboard && matchesFoldable &&
              matchesNetwork && matchesExpandable && matchesMinScreen && matchesMinFrontCam &&
              matchesOpticalZoom && matchesStabilization && matchesFaceDetection && matchesFingerprint &&
              matchesRecRes && matchesGps && matchesWhatsApp && matchesBattery && matchesSimTypes && matchesChargingTypes && matchesCompass && matchesUsbOtg && matchesNfc && matchesSlowMotion;
     });
-  }, [searchTerm, selectedCategoryTier, selectedBrands, selectedOS, selectedCpuBrands, selectedGpuBrands, minRam, minStorage, minCores, architecture, simCards, digitalTv, physicalKeyboard, foldable, networkIndex, expandableMemory, minScreenSize, minFrontCamera, opticalZoom, stabilization, faceDetection, fingerprint, recResIndex, hasGps, supportsWhatsApp, onlyWithoutWhatsApp, minBattery, selectedSimTypes, selectedChargingTypes, hasCompass, hasUsbOtg, hasNfc, slowMotion]);
+  }, [searchTerm, selectedCategoryTier, selectedBrands, selectedReleaseYears, selectedGames, selectedOS, selectedCpuBrands, selectedGpuBrands, minRam, minStorage, minCores, architecture, simCards, digitalTv, physicalKeyboard, foldable, networkIndex, expandableMemory, minScreenSize, minFrontCamera, opticalZoom, stabilization, faceDetection, fingerprint, recResIndex, hasGps, supportsWhatsApp, onlyWithoutWhatsApp, minBattery, selectedSimTypes, selectedChargingTypes, hasCompass, hasUsbOtg, hasNfc, slowMotion]);
 
   const CheckboxFilter: React.FC<{ label: string, checked: boolean, onChange: (c: boolean) => void, textSize?: string }> = ({ label, checked, onChange, textSize = "text-sm" }) => (
     <label className="flex items-center gap-2 cursor-pointer group select-none">
@@ -626,14 +667,14 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
         </div>
       )}
 
-      <div className="flex flex-col lg:flex-row gap-6 items-start">
+      <div className="flex flex-col md:flex-row gap-6 items-start">
         {/* Sidebar Filters */}
         {!focusedDeviceId && (
-          <aside className={`w-full ${isFiltersMinimized ? 'lg:w-20' : 'lg:w-80'} shrink-0 flex flex-col gap-6 transition-all duration-300`}>
-        <div className={`bg-slate-900/60 border border-slate-800 rounded-2xl ${isFiltersMinimized ? 'p-3 lg:p-3 lg:h-auto overflow-hidden' : 'p-5 lg:h-[84vh] overflow-y-auto custom-scrollbar'} shadow-lg transition-all`}>
-          <div className={`flex ${isFiltersMinimized ? 'lg:flex-col lg:items-center' : 'items-center justify-between'} gap-2 mb-3 lg:mb-5 sticky top-0 bg-slate-900/95 py-2.5 z-10 backdrop-blur-md border-b border-slate-800`}>
+          <aside className={`w-full ${isFiltersMinimized ? 'md:w-20' : 'md:w-80'} shrink-0 flex flex-col gap-6 transition-all duration-300`}>
+        <div className={`bg-slate-900/60 border border-slate-800 rounded-2xl ${isFiltersMinimized ? 'p-3 md:p-3 md:h-auto overflow-hidden' : 'p-5 md:h-[84vh] md:sticky md:top-20 overflow-y-auto custom-scrollbar'} shadow-lg transition-all`}>
+          <div className={`flex ${isFiltersMinimized ? 'md:flex-col md:items-center' : 'items-center justify-between'} gap-2 mb-3 md:mb-5 sticky top-0 bg-slate-900/95 py-2.5 z-10 backdrop-blur-md border-b border-slate-800`}>
             <div 
-              className={`flex items-center gap-2 cursor-pointer select-none group ${isFiltersMinimized ? 'lg:justify-center lg:w-full' : ''}`} 
+              className={`flex items-center gap-2 cursor-pointer select-none group ${isFiltersMinimized ? 'md:justify-center md:w-full' : ''}`} 
               onClick={() => setIsFiltersMinimized(prev => !prev)}
               title={isFiltersMinimized ? "Expandir Filtros & Categorias" : "Minimizar Filtros & Categorias"}
             >
@@ -647,7 +688,7 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
                 </span>
               )}
             </div>
-            <div className={`flex items-center gap-2 ${isFiltersMinimized ? 'lg:flex-col lg:w-full' : ''}`}>
+            <div className={`flex items-center gap-2 ${isFiltersMinimized ? 'md:flex-col md:w-full' : ''}`}>
               {!isFiltersMinimized && activeFiltersCount > 0 && (
                 <button
                   onClick={handleResetFilters}
@@ -673,12 +714,12 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
             <div className="space-y-6 animate-in fade-in duration-200">
             {/* Categoria */}
             <div>
-              <label className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider flex items-center gap-1.5">
+              <label className="text-xs font-bold text-cyan-400 mb-2 uppercase tracking-wider flex items-center gap-1.5">
                 <Layers className="w-4 h-4" /> Categoria
               </label>
-              <div className="grid grid-cols-2 gap-2 mt-2">
+              <div className="flex flex-col gap-1.5 mt-2">
                 {[
-                  { key: 'all', label: 'Todas', color: 'bg-slate-700' },
+                  { key: 'all', label: 'Todas as categorias', color: 'bg-slate-700' },
                   { key: 'entrada', label: 'Entrada', color: 'bg-blue-600' },
                   { key: 'intermediário', label: 'Intermediário', color: 'bg-purple-600' },
                   { key: 'topo de linha', label: 'Topo de Linha', color: 'bg-amber-500' }
@@ -687,16 +728,201 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
                     key={t.key}
                     type="button"
                     onClick={() => setSelectedCategoryTier(t.key as any)}
-                    className={`px-2 py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold border transition-all ${
+                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-[10px] sm:text-[11px] font-semibold border transition-all flex items-center justify-between ${
                       selectedCategoryTier === t.key 
-                        ? `${t.color} text-white border-transparent shadow-md` 
-                        : 'bg-slate-800/60 text-slate-300 border-slate-700/50 hover:bg-slate-800'
+                        ? `${t.color} text-white border-transparent shadow-sm` 
+                        : 'bg-slate-800/60 text-slate-300 border-slate-700/50 hover:bg-slate-800 hover:text-white'
                     }`}
                   >
-                    {t.label}
+                    <span>{t.label}</span>
+                    {selectedCategoryTier === t.key && <Check className="w-3.5 h-3.5 text-white shrink-0" />}
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Ano de Lançamento Filter (Retrátil) */}
+            <div className="border border-slate-800/80 rounded-xl bg-slate-900/40 overflow-hidden">
+              <button
+                type="button"
+                id="filter-year-toggle"
+                onClick={() => setIsYearExpanded(prev => !prev)}
+                className="w-full flex items-center justify-between p-2.5 text-xs font-bold text-cyan-400 uppercase tracking-wider hover:bg-slate-800/50 transition-colors select-none"
+              >
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-cyan-400" />
+                  Ano de Lançamento
+                  {selectedReleaseYears.length > 0 && (
+                    <span className="bg-cyan-500/20 text-cyan-300 text-[10px] px-2 py-0.5 rounded-full font-bold ml-1">
+                      {selectedReleaseYears.length}
+                    </span>
+                  )}
+                </span>
+                <div className="flex items-center gap-2">
+                  {selectedReleaseYears.length > 0 && (
+                    <span 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedReleaseYears([]);
+                      }}
+                      className="text-[10px] text-slate-400 hover:text-cyan-400 transition-colors lowercase cursor-pointer font-normal normal-case"
+                      title="Limpar seleção de anos"
+                    >
+                      limpar
+                    </span>
+                  )}
+                  {isYearExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                </div>
+              </button>
+              {isYearExpanded && (
+                <div className="p-2.5 pt-0 border-t border-slate-800/60 mt-1">
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {allReleaseYears.map(year => {
+                      const isSelected = selectedReleaseYears.includes(year);
+                      return (
+                        <button
+                          key={year}
+                          type="button"
+                          id={`filter-year-${year}`}
+                          onClick={() => {
+                            setSelectedReleaseYears(prev =>
+                              prev.includes(year) ? prev.filter(y => y !== year) : [...prev, year]
+                            );
+                          }}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${
+                            isSelected
+                              ? 'bg-cyan-500 text-slate-950 border-cyan-400 font-bold shadow-md shadow-cyan-500/20'
+                              : 'bg-slate-800/60 text-slate-300 border-slate-700/50 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          {year}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Fabricante / Brand (Retrátil) */}
+            <div className="border border-slate-800/80 rounded-xl bg-slate-900/40 overflow-hidden">
+              <button
+                type="button"
+                id="filter-brand-toggle"
+                onClick={() => setIsBrandExpanded(prev => !prev)}
+                className="w-full flex items-center justify-between p-2.5 text-xs font-bold text-cyan-400 uppercase tracking-wider hover:bg-slate-800/50 transition-colors select-none"
+              >
+                <span className="flex items-center gap-1.5">
+                  <Smartphone className="w-4 h-4 text-cyan-400" />
+                  Fabricante
+                  {selectedBrands.length > 0 && (
+                    <span className="bg-cyan-500/20 text-cyan-300 text-[10px] px-2 py-0.5 rounded-full font-bold ml-1">
+                      {selectedBrands.length}
+                    </span>
+                  )}
+                </span>
+                <div className="flex items-center gap-2">
+                  {selectedBrands.length > 0 && (
+                    <span 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedBrands([]);
+                      }}
+                      className="text-[10px] text-slate-400 hover:text-cyan-400 transition-colors cursor-pointer font-normal normal-case"
+                      title="Limpar seleção de marcas"
+                    >
+                      limpar
+                    </span>
+                  )}
+                  {isBrandExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                </div>
+              </button>
+              {isBrandExpanded && (
+                <div className="p-2.5 pt-0 border-t border-slate-800/60 mt-1 max-h-56 overflow-y-auto custom-scrollbar">
+                  <div className="flex flex-col gap-1.5 mt-2">
+                    {allBrands.map(brand => (
+                      <CheckboxFilter key={brand} label={brand} checked={selectedBrands.includes(brand)} onChange={() => toggleBrand(brand)} textSize="text-xs" />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Jogos Suportados Filter (Retrátil) */}
+            <div className="border border-slate-800/80 rounded-xl bg-slate-900/40 overflow-hidden">
+              <button
+                type="button"
+                id="filter-games-toggle"
+                onClick={() => setIsGamesExpanded(prev => !prev)}
+                className="w-full flex items-center justify-between p-2.5 text-xs font-bold text-cyan-400 uppercase tracking-wider hover:bg-slate-800/50 transition-colors select-none"
+              >
+                <span className="flex items-center gap-1.5">
+                  <Gamepad2 className="w-4 h-4 text-purple-400" />
+                  Jogos Suportados
+                  {selectedGames.length > 0 && (
+                    <span className="bg-purple-500/20 text-purple-300 text-[10px] px-2 py-0.5 rounded-full font-bold ml-1">
+                      {selectedGames.length}
+                    </span>
+                  )}
+                </span>
+                <div className="flex items-center gap-2">
+                  {selectedGames.length > 0 && (
+                    <span 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedGames([]);
+                      }}
+                      className="text-[10px] text-slate-400 hover:text-cyan-400 transition-colors lowercase cursor-pointer font-normal normal-case"
+                      title="Limpar jogos selecionados"
+                    >
+                      limpar
+                    </span>
+                  )}
+                  {isGamesExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                </div>
+              </button>
+              {isGamesExpanded && (
+                <div className="p-2.5 pt-0 border-t border-slate-800/60 mt-1">
+                  <p className="text-[10px] text-slate-400 mb-2 leading-tight">
+                    Filtra dispositivos que executam o jogo (Config. Mínima a Gráficos Máximos):
+                  </p>
+                  <div className="flex flex-col gap-1.5 mt-1">
+                    {[
+                      { name: 'Call of Duty: Warzone Mobile', icon: '🔫' },
+                      { name: 'XCOM 2 Collection', icon: '🛸' }
+                    ].map(game => {
+                      const isChecked = selectedGames.includes(game.name);
+                      return (
+                        <label
+                          key={game.name}
+                          className={`flex items-center justify-between p-2 rounded-lg border text-xs cursor-pointer transition-all select-none ${
+                            isChecked
+                              ? 'bg-purple-950/40 border-purple-500/60 text-purple-200 font-semibold shadow-sm'
+                              : 'bg-slate-800/50 border-slate-700/50 text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => {
+                                setSelectedGames(prev =>
+                                  prev.includes(game.name)
+                                    ? prev.filter(g => g !== game.name)
+                                    : [...prev, game.name]
+                                );
+                              }}
+                              className="w-3.5 h-3.5 accent-purple-500 rounded cursor-pointer"
+                            />
+                            <span className="text-[11px]">{game.icon} {game.name}</span>
+                          </div>
+                          {isChecked && <Check className="w-3.5 h-3.5 text-purple-400 shrink-0" />}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* TV Digital Selection Filter */}
@@ -747,14 +973,6 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
             <div>
               <h4 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">Geral</h4>
               <div className="flex flex-col gap-3">
-                <div className="flex flex-col gap-2">
-                  <span className="text-xs font-medium text-slate-400">{t('smartphones.brand')}</span>
-                  <div className="flex flex-col gap-1.5">
-                    {allBrands.map(brand => (
-                      <CheckboxFilter key={brand} label={brand} checked={selectedBrands.includes(brand)} onChange={() => toggleBrand(brand)} textSize="text-xs" />
-                    ))}
-                  </div>
-                </div>
                 <div className="flex flex-col gap-2 mt-2">
                   <span className="text-xs font-medium text-slate-400">{t('smartphones.os')}</span>
                   {allOS.map(os => (
