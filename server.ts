@@ -1,3045 +1,807 @@
-// 1. Guarda a chave injetada pela plataforma de nuvem/AI Studio antes de carregar o .env
-const originalCloudKey = process.env.GEMINI_API_KEY;
-const leakedKeyPattern = "AIzaSyAXbMg3sb2ZUlEXb4D8gPQlgHYtDPsyzes";
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  X, 
+  Sparkles, 
+  Scale, 
+  Users, 
+  Trophy, 
+  Copy, 
+  CheckCheck, 
+  Plus, 
+  Trash2, 
+  Search, 
+  Smartphone, 
+  ChevronRight, 
+  Check, 
+  AlertCircle,
+  Clock,
+  Zap,
+  ArrowRight,
+  Filter
+} from 'lucide-react';
+import { Smartphone as SmartphoneType, mockedSmartphones } from '../data/smartphones';
+import { useLanguage } from '../contexts/LanguageContext';
+import { db } from '../lib/firebase';
+import { collection, getDocs, setDoc, doc, query, limit, orderBy } from 'firebase/firestore';
 
-import fs from 'fs';
-import path from 'path';
-import dotenv from 'dotenv';
-
-// Se .env não existe, copia do .env.example para garantir que as variáveis sejam carregadas
-if (!fs.existsSync('.env') && fs.existsSync('.env.example')) {
-  fs.copyFileSync('.env.example', '.env');
+export interface ComparisonCategory {
+  category: string;
+  winner: string;
+  detail: string;
 }
-dotenv.config();
 
-// Se o .env carregou a chave vazada, ou está vazia, e temos uma chave de nuvem válida, restauramos
-if (
-  originalCloudKey && 
-  originalCloudKey !== leakedKeyPattern &&
-  (process.env.GEMINI_API_KEY === leakedKeyPattern || !process.env.GEMINI_API_KEY)
-) {
-  process.env.GEMINI_API_KEY = originalCloudKey;
+export interface BestForProfile {
+  phone: string;
+  badge: string;
+  profile: string;
 }
 
-import { GoogleGenAI } from '@google/genai';
-import express from 'express';
-import cors from 'cors';
-import { createServer as createViteServer } from 'vite';
-import { fileURLToPath } from 'url';
-import ytSearch from 'yt-search';
-import { Readable } from 'stream';
-import ytdl from '@distube/ytdl-core';
-import multer from 'multer';
-import { mockedSmartphones } from './src/data/smartphones';
-import { USSD_DATABASE } from './src/data/ussdcodes';
-import os from 'os';
-import { spawn } from 'child_process';
-import youtubedl from 'youtube-dl-exec';
+export interface PhoneComparisonRecord {
+  id: string;
+  createdAt: string;
+  phoneIds: string[];
+  phoneNames: string[];
+  title: string;
+  winnerOverall: string;
+  winnerReason?: string;
+  summary: string;
+  categories: ComparisonCategory[];
+  bestFor: BestForProfile[];
+  verdict: string;
+}
 
-function injectSEO(html: string, reqPath: string): string {
-  const pathSlug = reqPath.replace(/^\//, '').replace(/\/$/, '').toLowerCase();
+interface PhoneComparisonModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  initialSelectedPhones?: SmartphoneType[];
+  onSelectPhoneToCompare?: (phone: SmartphoneType) => void;
+}
+
+export const PhoneComparisonModal: React.FC<PhoneComparisonModalProps> = ({
+  isOpen,
+  onClose,
+  initialSelectedPhones = []
+}) => {
+  const { lang, t } = useLanguage();
+  const [activeTab, setActiveTab] = useState<'duel' | 'community'>('duel');
+  const [selectedPhones, setSelectedPhones] = useState<SmartphoneType[]>([]);
   
-  if (!pathSlug) return html;
+  // Selector popup state
+  const [isSelectorOpen, setIsSelectorOpen] = useState<boolean>(false);
+  const [selectorSlotIndex, setSelectorSlotIndex] = useState<number>(0);
+  const [selectorSearch, setSelectorSearch] = useState<string>('');
+  const [selectorBrandFilter, setSelectorBrandFilter] = useState<string>('all');
 
-  const device = mockedSmartphones.find(s => s.id === pathSlug);
-  if (device) {
-    const title = `${device.brand} ${device.model} - Ficha Técnica e Análise | Down&Convert`;
-    const description = `Confira a ficha técnica completa, benchmark, câmeras e bateria do ${device.brand} ${device.model}. Descubra se vale a pena!`;
-    
-    return html
-      .replace(/<title>.*?<\/title>/i, `<title>${title}</title>`)
-      .replace(/<meta\s+name=["']description["']\s+content=["'][^"]*["']\s*\/?>/i, `<meta name="description" content="${description}" />`)
-      .replace(/<meta\s+property=["']og:title["']\s+content=["'][^"]*["']\s*\/?>/i, `<meta property="og:title" content="${title}" />`)
-      .replace(/<meta\s+property=["']og:description["']\s+content=["'][^"]*["']\s*\/?>/i, `<meta property="og:description" content="${description}" />`);
-  }
+  // AI Generation State
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [currentComparison, setCurrentComparison] = useState<PhoneComparisonRecord | null>(null);
+  const [copiedAnalysis, setCopiedAnalysis] = useState<boolean>(false);
 
-  const ussd = USSD_DATABASE.find(u => u.id === pathSlug);
-  if (ussd) {
-    const title = `Código Secreto ${ussd.code} (${ussd.carrier.toUpperCase()}) - ${ussd.id.replace(/-/g, ' ')} | Down&Convert`;
-    const description = `Descubra para que serve o código USSD/MMI ${ussd.code} da operadora/fabricante ${ussd.carrier.toUpperCase()}. Veja comandos úteis e funções secretas do seu celular.`;
-    
-    return html
-      .replace(/<title>.*?<\/title>/i, `<title>${title}</title>`)
-      .replace(/<meta\s+name=["']description["']\s+content=["'][^"]*["']\s*\/?>/i, `<meta name="description" content="${description}" />`)
-      .replace(/<meta\s+property=["']og:title["']\s+content=["'][^"]*["']\s*\/?>/i, `<meta property="og:title" content="${title}" />`)
-      .replace(/<meta\s+property=["']og:description["']\s+content=["'][^"]*["']\s*\/?>/i, `<meta property="og:description" content="${description}" />`);
-  }
+  // Community comparisons state
+  const [savedComparisons, setSavedComparisons] = useState<PhoneComparisonRecord[]>([]);
+  const [isLoadingCommunity, setIsLoadingCommunity] = useState<boolean>(false);
+  const [communitySearch, setCommunitySearch] = useState<string>('');
 
-  return html;
-}
-
-
-
-function extractVideoId(url: string) {
-  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([^&?]+)/);
-  return match ? match[1] : null;
-}
-
-function detectPlatform(url: string) {
-  const lower = url.toLowerCase();
-  if (lower.includes('tiktok.com') || lower.includes('douyin.com')) return 'tiktok';
-  if (lower.includes('instagram.com')) return 'instagram';
-  if (lower.includes('facebook.com') || lower.includes('fb.watch') || lower.includes('fb.com')) return 'facebook';
-  if (lower.includes('vimeo.com')) return 'vimeo';
-  if (lower.includes('twitter.com') || lower.includes('x.com')) return 'twitter';
-  if (lower.includes('pinterest.com') || lower.includes('pin.it')) return 'pinterest';
-  if (lower.includes('reddit.com') || lower.includes('redd.it')) return 'reddit';
-  if (lower.includes('soundcloud.com')) return 'soundcloud';
-  if (lower.includes('spotify.com')) return 'spotify';
-  if (lower.includes('capcut.com')) return 'capcut';
-  if (lower.includes('threads.net')) return 'threads';
-  if (lower.includes('dailymotion.com') || lower.includes('dai.ly')) return 'dailymotion';
-  if (lower.includes('youtube.com') || lower.includes('youtu.be')) return 'youtube';
-  return 'general';
-}
-
-const RAPID_API_KEY = process.env.RAPIDAPI_KEY || '8d0b2005e5msh7794ca50aee0eb4p14f460jsn249cb3b9d70b';
-
-// Helper for fetch with timeout
-async function fetchWithTimeout(url: string, options: any = {}, timeoutMs = 12000) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal
-    });
-    return response;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
-// 1. YouTube Data Fetcher (youtube-media-downloader)
-async function fetchYoutubeData(videoId: string) {
-  const host = 'youtube-media-downloader.p.rapidapi.com';
-  const response = await fetchWithTimeout(`https://${host}/v2/video/details?videoId=${videoId}`, {
-    headers: { 'x-rapidapi-host': host, 'x-rapidapi-key': RAPID_API_KEY }
-  });
-  if (!response.ok) throw new Error(`YouTube API Error (Status ${response.status})`);
-  return await response.json();
-}
-
-// 1.1. YouTube Video & MP3 Downloader API (youtube-video-mp3-downloader-api)
-async function fetchYoutubeVideoMp3DownloaderApi(url: string, mode: string = 'video') {
-  const host = 'youtube-video-mp3-downloader-api.p.rapidapi.com';
-  const response = await fetchWithTimeout(`https://${host}/download?url=${encodeURIComponent(url)}`, {
-    headers: {
-      'x-rapidapi-host': host,
-      'x-rapidapi-key': RAPID_API_KEY,
-      'Accept': 'application/json'
+  // Sincroniza telefones iniciais quando o modal abre
+  useEffect(() => {
+    if (isOpen) {
+      if (initialSelectedPhones.length >= 2) {
+        setSelectedPhones(initialSelectedPhones.slice(0, 3));
+      } else if (selectedPhones.length === 0) {
+        // Sugestão padrão inicial: Galaxy S24 vs iPhone 15
+        const s24 = mockedSmartphones.find(p => p.id === 'samsung-galaxy-s24') || mockedSmartphones[0];
+        const ip15 = mockedSmartphones.find(p => p.id === 'apple-iphone-15') || mockedSmartphones[1];
+        if (s24 && ip15) {
+          setSelectedPhones([s24, ip15]);
+        }
+      }
+      loadCommunityComparisons();
     }
-  }, 10000);
-  if (!response.ok) throw new Error(`youtube-video-mp3-downloader-api returned status ${response.status}`);
-  const json = await response.json();
-  if (json.success === false) throw new Error(json.message || 'youtube-video-mp3-downloader-api under upgrade');
-  const data = json.data || json;
-  if (!data) throw new Error('Invalid response from youtube-video-mp3-downloader-api');
+  }, [isOpen, initialSelectedPhones]);
 
-  const title = (data.title || 'youtube_media').replace(/[^\w\s-]/gi, '').trim() || 'youtube_media';
-  const medias = Array.isArray(data.medias) ? data.medias : [];
-
-  if (mode === 'audio') {
-    const audioMedia = medias.find((m: any) => m.type === 'audio' || m.is_audio || m.quality?.includes('audio') || m.label?.includes('mp3') || m.ext === 'mp3' || m.ext === 'm4a');
-    if (audioMedia && audioMedia.url) {
-      return { downloadUrl: audioMedia.url, extension: audioMedia.ext || 'mp3', title };
-    }
-  }
-
-  // Video mode or fallback to video media
-  const videoMedia = medias.find((m: any) => (m.type === 'video' || !m.type) && m.url) || medias[0];
-  if (videoMedia && videoMedia.url) {
-    return { downloadUrl: videoMedia.url, extension: videoMedia.ext || 'mp4', title };
-  }
-
-  throw new Error('No media URL found in youtube-video-mp3-downloader-api');
-}
-
-// 1.2. YouTube to MP3 2025 API (youtube-mp3-2025)
-async function fetchYoutubeMp32025(videoId: string, mode: string = 'video') {
-  const host = 'youtube-mp3-2025.p.rapidapi.com';
-  const endpoint = mode === 'audio' ? '/v1/social/youtube/audio' : '/v1/social/youtube/video';
-  const response = await fetchWithTimeout(`https://${host}${endpoint}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-rapidapi-host': host,
-      'x-rapidapi-key': RAPID_API_KEY
-    },
-    body: JSON.stringify({ id: videoId })
-  }, 10000);
-
-  if (!response.ok) throw new Error(`youtube-mp3-2025 returned status ${response.status}`);
-  const data = await response.json();
-  if (data.error || data.success === false) throw new Error(data.message || 'youtube-mp3-2025 error');
-  const title = (data.title || 'youtube_media').replace(/[^\w\s-]/gi, '').trim() || 'youtube_media';
-
-  const downloadUrl = data.linkDownload || data.linkStream || data.downloadUrl || data.url || (data.formats?.[0]?.url);
-  if (!downloadUrl) throw new Error('No download URL returned from youtube-mp3-2025');
-
-  return { downloadUrl, extension: mode === 'audio' ? 'mp3' : 'mp4', title };
-}
-
-async function fetchLoaderToInfoFallback(url: string) {
-  const initialRes = await fetchWithTimeout(`https://loader.to/ajax/download.php?format=720&url=${encodeURIComponent(url)}`, {}, 10000);
-  const data = await initialRes.json();
-  if (!data || !data.id) throw new Error('No loader.to info');
-  return {
-    title: data.title || data.info?.title || 'youtube_media',
-    thumbnail: data.thumbnail_url || data.info?.image || '',
-    author: 'YouTube'
-  };
-}
-
-// 1.3. YouTube Quick Video Downloader API (youtube-quick-video-downloader)
-async function fetchYoutubeQuickVideoDownloader(url: string, mode: string = 'video') {
-  const host = 'youtube-quick-video-downloader.p.rapidapi.com';
-  const response = await fetchWithTimeout(`https://${host}/api/youtube/links`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-rapidapi-host': host,
-      'x-rapidapi-key': RAPID_API_KEY,
-      'X-Forwarded-For': '70.41.3.18'
-    },
-    body: JSON.stringify({ url })
-  }, 10000);
-
-  if (!response.ok) throw new Error(`youtube-quick-video-downloader returned status ${response.status}`);
-  const data = await response.json();
-  const title = (data.title || data.meta?.title || 'youtube_media').replace(/[^\w\s-]/gi, '').trim() || 'youtube_media';
-
-  let downloadUrl = '';
-  if (mode === 'audio') {
-    downloadUrl = data.audio || data.mp3 || data.audioUrl || (data.links?.audio?.[0]?.url) || (data.audios?.[0]?.url);
-  } else {
-    downloadUrl = data.video || data.mp4 || data.videoUrl || (data.links?.mp4?.[0]?.url) || (data.videos?.[0]?.url) || data.url;
-  }
-
-  if (!downloadUrl && (data.links || data.urls || data.medias)) {
-    const list = data.links || data.urls || data.medias;
-    if (Array.isArray(list) && list.length > 0) downloadUrl = list[0].url || list[0];
-  }
-
-  if (!downloadUrl) throw new Error('No download URL from youtube-quick-video-downloader');
-  return { downloadUrl, extension: mode === 'audio' ? 'mp3' : 'mp4', title };
-}
-
-// 1.4. YouTube Audio Video Download (youtube-audio-video-download)
-async function fetchYoutubeAudioVideoDownload(url: string, mode: string = 'video') {
-  const host = 'youtube-audio-video-download.p.rapidapi.com';
-  const response = await fetchWithTimeout(`https://${host}/geturl?video_url=${encodeURIComponent(url)}`, {
-    headers: {
-      'x-rapidapi-host': host,
-      'x-rapidapi-key': RAPID_API_KEY,
-      'Accept': 'application/json'
-    }
-  }, 10000);
-
-  if (!response.ok) throw new Error(`youtube-audio-video-download returned status ${response.status}`);
-  const data = await response.json();
-  const title = (data.title || data.video_title || 'youtube_media').replace(/[^\w\s-]/gi, '').trim() || 'youtube_media';
-
-  let downloadUrl = '';
-  if (mode === 'audio') {
-    downloadUrl = data.audio_url || data.audio || data.download_audio || (data.audios?.[0]?.url) || data.url;
-  } else {
-    downloadUrl = data.video_url || data.video || data.download_url || (data.videos?.[0]?.url) || data.url;
-  }
-
-  if (!downloadUrl) throw new Error('No download URL from youtube-audio-video-download');
-  return { downloadUrl, extension: mode === 'audio' ? 'mp3' : 'mp4', title };
-}
-
-// 1.5. YouTube Video / Stream Download (youtube-video-stream-download)
-async function fetchYoutubeVideoStreamDownload(videoId: string, mode: string = 'video') {
-  const host = 'youtube-video-stream-download.p.rapidapi.com';
-  const response = await fetchWithTimeout(`https://${host}/api/v1/Youtube/getAllDetails/${videoId}`, {
-    headers: {
-      'x-rapidapi-host': host,
-      'x-rapidapi-key': RAPID_API_KEY,
-      'Accept': 'application/json'
-    }
-  }, 10000);
-
-  if (!response.ok) throw new Error(`youtube-video-stream-download returned status ${response.status}`);
-  const data = await response.json();
-  const title = (data.title || data.videoDetails?.title || 'youtube_media').replace(/[^\w\s-]/gi, '').trim() || 'youtube_media';
-
-  let downloadUrl = '';
-  if (mode === 'audio') {
-    const audios = data.audioDetails || data.audios || (data.streamingData?.adaptiveFormats?.filter((f: any) => f.mimeType?.includes('audio')));
-    if (audios && audios.length > 0) downloadUrl = audios[0].url || audios[0].downloadUrl;
-  } else {
-    const videos = data.videoDetails || data.videos || (data.streamingData?.formats);
-    if (videos && videos.length > 0) downloadUrl = videos[0].url || videos[0].downloadUrl;
-  }
-
-  if (!downloadUrl && data.url) downloadUrl = data.url;
-  if (!downloadUrl) throw new Error('No download URL from youtube-video-stream-download');
-  return { downloadUrl, extension: mode === 'audio' ? 'mp3' : 'mp4', title };
-}
-
-// 2. TikTok Data Fetcher (No Watermark)
-async function fetchTikTokData(url: string) {
-  const host = 'tiktok-video-no-watermark2.p.rapidapi.com';
-  const response = await fetchWithTimeout(`https://${host}/?url=${encodeURIComponent(url)}`, {
-    headers: { 'x-rapidapi-host': host, 'x-rapidapi-key': RAPID_API_KEY }
-  });
-  if (!response.ok) throw new Error(`TikTok API Error (Status ${response.status})`);
-  const data = await response.json();
-  if (data.code !== 0 || !data.data) throw new Error(data.msg || 'Erro ao processar TikTok.');
-  return data.data;
-}
-
-// 3. Facebook Data Fetcher
-async function fetchFacebookData(url: string) {
-  const host = 'facebook-download-media.p.rapidapi.com';
-  const response = await fetchWithTimeout(`https://${host}/?url=${encodeURIComponent(url)}`, {
-    headers: { 'x-rapidapi-host': host, 'x-rapidapi-key': RAPID_API_KEY }
-  });
-  if (!response.ok) throw new Error(`Facebook API Error (Status ${response.status})`);
-  const data = await response.json();
-  if (data.error || !data.data) throw new Error('Falha ao obter vídeo do Facebook');
-  return data.data;
-}
-
-// 4. Vimeo Data Fetcher
-async function fetchVimeoData(url: string) {
-  const host = 'vimeo-video-downloader-api.p.rapidapi.com';
-  const response = await fetchWithTimeout(`https://${host}/video.php`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'x-rapidapi-host': host,
-      'x-rapidapi-key': RAPID_API_KEY
-    },
-    body: `video_url=${encodeURIComponent(url)}`
-  });
-  if (!response.ok) throw new Error(`Vimeo API Error (Status ${response.status})`);
-  const data = await response.json();
-  return data;
-}
-
-// 5. All-in-One Social Media Downloader (Download Social Media)
-async function fetchAllInOneData(url: string) {
-  const host = 'download-social-media.p.rapidapi.com';
-  const response = await fetchWithTimeout(`https://${host}/autolink?url=${encodeURIComponent(url)}`, {
-    headers: {
-      'x-rapidapi-host': host,
-      'x-rapidapi-key': RAPID_API_KEY
-    }
-  });
-  if (!response.ok) throw new Error(`All-in-One API Error (Status ${response.status})`);
-  const data = await response.json();
-  return data;
-}
-
-// 6. Instagram Reels Downloader API
-async function fetchInstagramReelsData(url: string) {
-  const host = 'instagram-reels-downloader-api.p.rapidapi.com';
-  const response = await fetchWithTimeout(`https://${host}/download?url=${encodeURIComponent(url)}`, {
-    headers: { 'x-rapidapi-host': host, 'x-rapidapi-key': RAPID_API_KEY }
-  });
-  if (!response.ok) throw new Error(`Instagram API Error (Status ${response.status})`);
-  const data = await response.json();
-  return data;
-}
-
-// 7. Invidious Open Source Fallback for YouTube
-async function fetchInvidiousFallback(videoId: string, mode: string = 'video'): Promise<any> {
-  const knownInstances = [
-    'https://inv.nadeko.net',
-    'https://invidious.nerdvpn.de',
-    'https://invidious.jing.rocks',
-    'https://invidious.private.coffee',
-    'https://yt.drgnz.club',
-    'https://inv.tux.pizza',
-    'https://invidious.projectsegfau.lt'
-  ];
-
-  for (const inst of knownInstances) {
+  // Carrega comparações feitas por todos os usuários do servidor e do Firestore
+  const loadCommunityComparisons = async () => {
+    setIsLoadingCommunity(true);
     try {
-      const res = await fetchWithTimeout(`${inst}/api/v1/videos/${videoId}`, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-      }, 5000);
-      if (!res.ok) continue;
+      // 1. Tenta carregar do backend (data/phone_comparisons.json)
+      const res = await fetch('/api/smartphones/comparisons');
       const data = await res.json();
-      if (!data || !data.title) continue;
-
-      const cleanTitle = (data.title || 'youtube_video').replace(/[^\w\s-]/gi, '').trim() || 'youtube_media';
-
-      if (mode === 'audio') {
-        const audios = (data.adaptiveFormats || []).filter((f: any) => f.type?.startsWith('audio/') && f.url);
-        if (audios.length > 0) {
-          const bestAudio = audios[0];
-          const ext = bestAudio.type?.includes('mp4') || bestAudio.container === 'm4a' ? 'm4a' : 'webm';
-          return { downloadUrl: bestAudio.url, extension: ext, title: cleanTitle, thumbnail: data.videoThumbnails?.[0]?.url || '' };
-        }
-      } else {
-        // Video mode
-        const formatStreams = (data.formatStreams || []).filter((f: any) => f.url);
-        if (formatStreams.length > 0) {
-          const bestStream = formatStreams[0];
-          return { downloadUrl: bestStream.url, extension: bestStream.container || 'mp4', title: cleanTitle, thumbnail: data.videoThumbnails?.[0]?.url || '' };
-        }
-        // Adaptive video fallback
-        const videos = (data.adaptiveFormats || []).filter((f: any) => f.type?.startsWith('video/') && f.url);
-        if (videos.length > 0) {
-          return { downloadUrl: videos[0].url, extension: 'mp4', title: cleanTitle, thumbnail: data.videoThumbnails?.[0]?.url || '' };
-        }
+      let list: PhoneComparisonRecord[] = [];
+      if (data.success && Array.isArray(data.comparisons)) {
+        list = data.comparisons;
       }
-    } catch (e) {
-      // Continue to next instance
-    }
-  }
-  throw new Error('Invidious instances unavailable');
-}
 
-// =========================================================================
-// FALLBACKS DIRETOS (Cookies de Sessão e Assinaturas Criptográficas Locais)
-// =========================================================================
-
-async function fetchYoutubeDirectFallback(url: string, mode: string) {
-  console.log('Using YouTube Direct Fallback (ytdl-core) with possible Cookies...');
-  // Parse cookies from env (format expected by ytdl-core agent or raw string)
-  let agent;
-  try {
-    if (process.env.YOUTUBE_COOKIES) {
-      agent = ytdl.createAgent(JSON.parse(process.env.YOUTUBE_COOKIES));
-    }
-  } catch (e) {
-    console.error('Invalid YOUTUBE_COOKIES format. Proceeding without cookies.');
-  }
-
-  const info = await ytdl.getInfo(url, { agent });
-  const title = (info.videoDetails.title || 'youtube_video').replace(/[^\w\s-]/gi, '').trim() || 'youtube_media';
-  
-  return { useYtdl: true, info, agent, extension: mode === 'video' ? 'mp4' : 'm4a', title };
-}
-
-
-async function fetchLoaderToFallback(url: string, mode: string = 'video') {
-  console.log('Using loader.to API fallback for YouTube...');
-  
-  let format = '720';
-  if (mode === 'audio') {
-    format = 'm4a'; // mp3 or m4a
-  }
-
-  const initialRes = await fetchWithTimeout(`https://loader.to/ajax/download.php?format=${format}&url=${encodeURIComponent(url)}`, {}, 15000);
-  const data = await initialRes.json();
-  
-  if (!data || !data.id) {
-    throw new Error('Failed to initialize loader.to API download');
-  }
-
-  let downloadUrl = '';
-  let title = data.title || 'youtube_media';
-  let thumbnail = data.info?.image || '';
-  
-  // Poll for progress up to 25 times (50 seconds)
-  for (let i = 0; i < 25; i++) {
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    try {
-      const pRes = await fetchWithTimeout(`https://lto2.affadaffa.com/api/progress?id=${data.id}`, {}, 10000);
-      const pData = await pRes.json();
-      
-      if (pData.success === 1 && pData.download_url) {
-        downloadUrl = pData.download_url;
-        break;
-      } else if (pData.success === 0 && pData.text && pData.text.toLowerCase().includes('error')) {
-        throw new Error(`loader.to polling error: ${pData.text}`);
-      }
-    } catch (e) {
-      console.warn('Polling error, retrying...', e);
-    }
-  }
-
-  if (!downloadUrl) {
-    throw new Error('Timeout waiting for loader.to API to process the video');
-  }
-
-  return { 
-    downloadUrl, 
-    extension: mode === 'audio' ? format : 'mp4', 
-    title, 
-    thumbnail, 
-    author: 'YouTube' 
-  };
-}
-
-async function fetchYtdlpFallback(url: string, platform: string, mode: string = 'video'): Promise<any> {
-  console.log(`Using yt-dlp fallback for ${platform}...`);
-  const ytOptions: any = {
-    dumpJson: true,
-    noWarnings: true,
-    noCheckCertificate: true,
-    preferFreeFormats: true,
-    format: mode === 'audio' ? 'bestaudio/best' : 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
-  };
-
-  // Se existir um arquivo cookies.txt ou variável COOKIES_FILE
-  const defaultCookiePath = path.resolve('./cookies.txt');
-  const cookiesFile = process.env.COOKIES_FILE || (fs.existsSync(defaultCookiePath) ? defaultCookiePath : undefined);
-  const cookieString = process.env[`${platform.toUpperCase()}_COOKIE`];
-
-  let output;
-  try {
-    output = await youtubedl(url, ytOptions) as any;
-  } catch (err) {
-    console.warn(`yt-dlp sem cookies falhou para ${platform}, tentando com cookies (3ª opção)...`);
-    
-    if (cookiesFile) {
-      ytOptions.cookies = cookiesFile;
-    } else if (cookieString) {
-      ytOptions.addHeader = ['Cookie: ' + cookieString];
-    } else {
-      throw err; // Re-throw se não houver cookies configurados
-    }
-    
-    try {
-      output = await youtubedl(url, ytOptions) as any;
-    } catch (cookieErr: any) {
-      throw new Error(`Erro no yt-dlp (com cookies): ${cookieErr.message || cookieErr.stderr || cookieErr}`);
-    }
-  }
-  
-  const videoUrl = output.requested_formats ? output.requested_formats[0].url : output.url;
-  if (!videoUrl) throw new Error(`Não foi possível extrair a URL do vídeo de ${platform} via yt-dlp.`);
-  
-  const title = (output.title || output.description || `${platform}_media_fallback`).replace(/[^\w\s-]/gi, '').trim() || `${platform}_media`;
-  const ext = output.ext || 'mp4';
-  const thumbnail = output.thumbnail || '';
-  const author = output.uploader || output.uploader_id || platform;
-  
-  return { downloadUrl: videoUrl, extension: ext, title, thumbnail, author };
-}
-
-async function fetchTikTokDirectFallback(url: string) {
-  console.log('Using TikTok Direct Fallback with Session Cookie...');
-  const cookie = process.env.TIKTOK_COOKIE;
-  
-  const res = await fetchWithTimeout(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      'Cookie': cookie || ''
-    }
-  }, 10000);
-  
-  const html = await res.text();
-  // Busca pela playAddr injetada no script de estado (assinatura embutida pela plataforma)
-  const match = html.match(/"playAddr":"([^"]+)"/);
-  if (!match) throw new Error('Não foi possível decodificar a assinatura criptográfica do TikTok via scraper direto.');
-  
-  const videoUrl = match[1].replace(/\\u002F/g, '/');
-  
-  return { downloadUrl: videoUrl, extension: 'mp4', title: 'tiktok_media_fallback' };
-}
-
-async function startServer() {
-  const app = express();
-  app.use(cors());
-  app.use(express.json());
-
-  // API Endpoint: Pesquisar no YouTube
-  app.get('/api/yt/search', async (req, res) => {
-    try {
-      const query = req.query.q as string;
-      if (!query) return res.status(400).send('Query obrigatória');
-
-      // Method 1: Direct Scrape Fallback
+      // 2. Tenta complementar com o Firestore
       try {
-        const scrapeRes = await fetchWithTimeout(`https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7'
-          }
-        }, 6000);
-        const html = await scrapeRes.text();
-        const dataMatch = html.match(/ytInitialData = (.*?);<\/script>/);
-        if (dataMatch && dataMatch[1]) {
-          const data = JSON.parse(dataMatch[1]);
-          const contents = data.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer?.contents?.[0]?.itemSectionRenderer?.contents;
-          const videos = [];
-          if (contents) {
-            for (const item of contents) {
-              const vid = item.videoRenderer;
-              if (!vid) continue;
-
-              const title = vid.title?.runs?.[0]?.text || 'Vídeo do YouTube';
-              const thumbnail = vid.thumbnail?.thumbnails?.[0]?.url || '';
-              const author = 
-                vid.ownerText?.runs?.[0]?.text || 
-                vid.shortBylineText?.runs?.[0]?.text || 
-                'YouTube';
-              const duration = 
-                vid.lengthText?.simpleText || vid.lengthText?.runs?.[0]?.text || 'Vídeo';
-
-              videos.push({
-                id: vid.videoId,
-                title,
-                url: `https://www.youtube.com/watch?v=${vid.videoId}`,
-                thumbnail,
-                duration,
-                author,
-              });
-
-              if (videos.length >= 10) break;
-            }
-          }
-          if (videos.length > 0) {
-            return res.json(videos);
-          }
-        }
-      } catch (scrapeErr) {
-        console.log('Direct scrape fallback error:', scrapeErr);
-      }
-
-      // Method 2: Fallback to yt-search library
-      try {
-        const r = await ytSearch(query);
-        if (r && Array.isArray(r.videos) && r.videos.length > 0) {
-          const videos = r.videos.slice(0, 10).map((v) => ({
-            id: v.videoId || '',
-            title: typeof v.title === 'string' ? v.title : 'Vídeo do YouTube',
-            url: v.url || `https://www.youtube.com/watch?v=${v.videoId}`,
-            thumbnail: v.thumbnail || v.image || '',
-            duration: v.timestamp || 'Vídeo',
-            author: v.author?.name || 'YouTube',
-          }));
-          return res.json(videos);
-        }
-      } catch (ytSearchErr: any) {
-        console.log('yt-search fallback error:', ytSearchErr?.message);
-      }
-
-      return res.json([]);
-    } catch (error: any) {
-      console.log('YouTube Search Issue:', error.message);
-      res.status(500).send(error.message || 'Erro ao pesquisar no YouTube');
-    }
-  });
-
-  // API Endpoint: Obter Informações do Mídia (Título, Thumbnail, Autor)
-  app.get('/api/yt/info', async (req, res) => {
-    try {
-      const url = req.query.url as string;
-      if (!url) return res.status(400).json({ error: 'INVALID_URL', message: 'URL é obrigatória.' });
-
-      const platform = detectPlatform(url);
-      let title = 'Mídia Social';
-      let thumbnail = '';
-      let author = '';
-
-      if (platform === 'youtube') {
-        const videoId = extractVideoId(url);
-        if (!videoId) return res.status(400).json({ error: 'INVALID_URL', message: 'URL do YouTube inválida.' });
-        
-        let infoSuccess = false;
-
-        // 0. Try loader.to API
-        try {
-          const loaderInfo = await fetchLoaderToInfoFallback(url);
-          if (loaderInfo.title) {
-            title = loaderInfo.title;
-            thumbnail = loaderInfo.thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-            author = loaderInfo.author;
-            infoSuccess = true;
-          }
-        } catch (e) {}
-
-        // 1. Try youtube-video-mp3-downloader-api
-        if (!infoSuccess) {
-          try {
-            const ytApiData = await fetchYoutubeVideoMp3DownloaderApi(url, 'video');
-            if (ytApiData.title) {
-              title = ytApiData.title;
-              thumbnail = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-              author = 'YouTube';
-              infoSuccess = true;
-            }
-          } catch (e) {}
-        }
-
-        // 2. Try youtube-media-downloader
-        if (!infoSuccess) {
-          try {
-            const data = await fetchYoutubeData(videoId);
-            title = data.title || 'Vídeo do YouTube';
-            thumbnail = data.thumbnails?.[0]?.url || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-            author = data.channel?.name || 'YouTube';
-            infoSuccess = true;
-          } catch (err) {}
-        }
-
-        // 3. Try youtube-mp3-2025
-        if (!infoSuccess) {
-          try {
-            const yt2025 = await fetchYoutubeMp32025(videoId, 'video');
-            if (yt2025.title) {
-              title = yt2025.title;
-              thumbnail = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-              author = 'YouTube';
-              infoSuccess = true;
-            }
-          } catch (e) {}
-        }
-
-        // 4. Try All-In-One
-        if (!infoSuccess) {
-          try {
-            const aio = await fetchAllInOneData(url);
-            title = aio.title || aio.caption || 'Vídeo do YouTube';
-            thumbnail = aio.thumbnail || aio.cover || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-            author = aio.author || 'YouTube';
-            infoSuccess = true;
-          } catch (e) {}
-        }
-
-        // 5. Try Invidious
-        if (!infoSuccess) {
-          try {
-            const inv = await fetchInvidiousFallback(videoId, 'video');
-            title = inv.title;
-            thumbnail = inv.thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-            author = 'YouTube';
-            infoSuccess = true;
-          } catch (e) {}
-        }
-
-        // 6. Fallback to youtubedl
-        if (!infoSuccess) {
-          try {
-            const output: any = await fetchYtdlpFallback(url, platform, 'video');
-            title = output.title;
-            thumbnail = output.thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-            author = output.author;
-          } catch (err) {
-            // Default fallback with videoId thumbnail
-            title = 'Vídeo do YouTube';
-            thumbnail = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-            author = 'YouTube';
-          }
-        }
-      }
-      else if (platform === 'tiktok') {
-        try {
-          const data = await fetchTikTokData(url);
-          title = data.title || 'TikTok Video';
-          thumbnail = data.origin_cover || data.cover || '';
-          author = data.author?.nickname || 'TikTok Creator';
-        } catch {
-          const aio = await fetchAllInOneData(url);
-          title = aio.title || aio.caption || 'TikTok Video';
-          thumbnail = aio.thumbnail || aio.cover || '';
-          author = aio.author || 'TikTok Creator';
-        }
-      }
-      else if (platform === 'facebook') {
-        try {
-          const data = await fetchFacebookData(url);
-          title = data.title || 'Vídeo do Facebook';
-          thumbnail = data.thumbnail || '';
-          author = 'Facebook';
-        } catch {
-          try {
-            const aio = await fetchAllInOneData(url);
-            title = aio.title || 'Vídeo do Facebook';
-            thumbnail = aio.thumbnail || '';
-            author = 'Facebook';
-          } catch (err) {
-            console.warn('Facebook info RapidAPI failed, trying youtubedl fallback...', err);
-            const output: any = await fetchYtdlpFallback(url, platform, 'video');
-            title = output.title;
-            thumbnail = output.thumbnail;
-            author = output.author;
-          }
-        }
-      }
-      else if (platform === 'instagram') {
-        try {
-          const aio = await fetchAllInOneData(url);
-          title = aio.title || aio.caption || 'Instagram Reel / Post';
-          thumbnail = aio.thumbnail || aio.cover || '';
-          author = aio.author || aio.username || 'Instagram';
-        } catch {
-          try {
-            const data = await fetchInstagramReelsData(url);
-            title = data.title || data.caption || 'Instagram Reel';
-            thumbnail = data.thumbnail_url || data.thumbnail || '';
-            author = data.owner_username || 'Instagram';
-          } catch (err) {
-            console.warn('Instagram info RapidAPI failed, trying youtubedl fallback...', err);
-            const output: any = await fetchYtdlpFallback(url, platform, 'video');
-            title = output.title;
-            thumbnail = output.thumbnail;
-            author = output.author;
-          }
-        }
-      }
-      else {
-        // Twitter, Pinterest, Reddit, SoundCloud, Spotify, CapCut, etc.
-        const aio = await fetchAllInOneData(url);
-        title = aio.title || aio.caption || `${platform.toUpperCase()} Mídia`;
-        thumbnail = aio.thumbnail || aio.cover || '';
-        author = aio.author || platform;
-      }
-
-      res.json({ title, thumbnail, author, platform });
-    } catch (error: any) {
-      console.log('Media Info Issue:', error.message);
-      res.status(500).json({ error: 'FETCH_ERROR', message: error.message || 'Erro ao obter informações da mídia.' });
-    }
-  });
-
-  // API Endpoint: Extrair e transmitir áudio ou vídeo
-  app.get('/api/yt/download', async (req, res) => {
-    try {
-      const url = req.query.url as string;
-      const mode = (req.query.mode as string) || 'audio';
-      if (!url) return res.status(400).json({ error: 'INVALID_URL', message: 'URL é obrigatória.' });
-
-      const platform = detectPlatform(url);
-      let downloadUrl = '';
-      let extension = 'mp4';
-      let title = 'media';
-
-      if (platform === 'youtube') {
-        const videoId = extractVideoId(url);
-        if (!videoId) return res.status(400).json({ error: 'INVALID_URL', message: 'URL do YouTube inválida.' });
-
-        let ytSuccess = false;
-
-        // Tier 0: loader.to API (Open Unauthenticated High-Quality Mirror)
-        try {
-          const res0 = await fetchLoaderToFallback(url, mode);
-          if (res0.downloadUrl) {
-            downloadUrl = res0.downloadUrl;
-            extension = res0.extension;
-            title = res0.title;
-            ytSuccess = true;
-          }
-        } catch (e) {
-          console.warn('YouTube Tier 0 (loader.to) failed, trying Tier 1...', e);
-        }
-
-        // Tier 1: YouTube Video & MP3 Downloader API (youtube-video-mp3-downloader-api)
-        if (!ytSuccess) {
-          try {
-            const res1 = await fetchYoutubeVideoMp3DownloaderApi(url, mode);
-            if (res1.downloadUrl) {
-              downloadUrl = res1.downloadUrl;
-              extension = res1.extension;
-              title = res1.title;
-              ytSuccess = true;
-            }
-          } catch (e) {
-            console.warn('YouTube Tier 1 (youtube-video-mp3-downloader-api) failed, trying Tier 2...');
-          }
-        }
-
-        // Tier 2: YouTube to MP3 2025 API (youtube-mp3-2025)
-        if (!ytSuccess) {
-          try {
-            const res2 = await fetchYoutubeMp32025(videoId, mode);
-            if (res2.downloadUrl) {
-              downloadUrl = res2.downloadUrl;
-              extension = res2.extension;
-              title = res2.title;
-              ytSuccess = true;
-            }
-          } catch (e) {
-            console.warn('YouTube Tier 2 (youtube-mp3-2025) failed, trying Tier 3...');
-          }
-        }
-
-        // Tier 3: YouTube Quick Video Downloader (youtube-quick-video-downloader)
-        if (!ytSuccess) {
-          try {
-            const res3 = await fetchYoutubeQuickVideoDownloader(url, mode);
-            if (res3.downloadUrl) {
-              downloadUrl = res3.downloadUrl;
-              extension = res3.extension;
-              title = res3.title;
-              ytSuccess = true;
-            }
-          } catch (e) {
-            console.warn('YouTube Tier 3 (youtube-quick-video-downloader) failed, trying Tier 4...');
-          }
-        }
-
-        // Tier 4 (Plano E): Local yt-dlp binary with Cookies and Anti-Bot bypass
-        if (!ytSuccess) {
-          try {
-            console.log('Tentando Plano E: yt-dlp local com cookies.txt...');
-            const fallbackData: any = await fetchYtdlpFallback(url, platform, mode);
-            if (fallbackData.downloadUrl) {
-              downloadUrl = fallbackData.downloadUrl;
-              extension = fallbackData.extension;
-              title = fallbackData.title;
-              ytSuccess = true;
-            }
-          } catch (e) {
-            console.warn('YouTube Tier 4 (yt-dlp with cookies) failed, trying Tier 5...');
-          }
-        }
-
-        // Tier 5: YouTube Audio Video Download (youtube-audio-video-download)
-        if (!ytSuccess) {
-          try {
-            const res4 = await fetchYoutubeAudioVideoDownload(url, mode);
-            if (res4.downloadUrl) {
-              downloadUrl = res4.downloadUrl;
-              extension = res4.extension;
-              title = res4.title;
-              ytSuccess = true;
-            }
-          } catch (e) {
-            console.warn('YouTube Tier 5 (youtube-audio-video-download) failed, trying Tier 6...');
-          }
-        }
-
-        // Tier 5: YouTube Video Stream Download (youtube-video-stream-download)
-        if (!ytSuccess) {
-          try {
-            const res5 = await fetchYoutubeVideoStreamDownload(videoId, mode);
-            if (res5.downloadUrl) {
-              downloadUrl = res5.downloadUrl;
-              extension = res5.extension;
-              title = res5.title;
-              ytSuccess = true;
-            }
-          } catch (e) {
-            console.warn('YouTube Tier 5 (youtube-video-stream-download) failed, trying Tier 6...');
-          }
-        }
-
-        // Tier 6: Dedicated YouTube Media Downloader (youtube-media-downloader)
-        if (!ytSuccess) {
-          try {
-            const data = await fetchYoutubeData(videoId);
-            title = (data.title || 'youtube_video').replace(/[^\w\s-]/gi, '').trim() || 'youtube_media';
-            if (mode === 'video') {
-              const videos = data.videos?.items || [];
-              const videoWithAudio = videos.filter((v: any) => v.hasAudio === true).sort((a: any, b: any) => b.height - a.height);
-              if (videoWithAudio.length > 0) {
-                downloadUrl = videoWithAudio[0].url;
-                extension = videoWithAudio[0].extension || 'mp4';
-              } else if (videos.length > 0) {
-                downloadUrl = videos[0].url;
-                extension = videos[0].extension || 'mp4';
-              }
-            } else {
-              const audios = data.audios?.items || [];
-              if (audios.length > 0) {
-                downloadUrl = audios[0].url;
-                extension = audios[0].extension || 'm4a';
-              }
-            }
-            if (downloadUrl) ytSuccess = true;
-          } catch (e) {
-            console.warn('YouTube Tier 6 (youtube-media-downloader) failed, trying Tier 7 (All-In-One)...');
-          }
-        }
-
-        // Tier 7: All-in-One Social Downloader RapidAPI
-        if (!ytSuccess) {
-          try {
-            const aio = await fetchAllInOneData(url);
-            title = (aio.title || 'youtube_video').replace(/[^\w\s-]/gi, '').trim() || 'youtube_media';
-            downloadUrl = mode === 'audio' 
-              ? (aio.audio || aio.music || aio.url || aio.medias?.find((m: any) => m.type === 'audio')?.url)
-              : (aio.video || aio.url || aio.medias?.find((m: any) => m.type === 'video')?.url || aio.medias?.[0]?.url);
-            extension = mode === 'audio' ? 'mp3' : 'mp4';
-            if (downloadUrl) ytSuccess = true;
-          } catch (e) {
-            console.warn('YouTube Tier 7 failed, trying Tier 8 (Invidious Network)...');
-          }
-        }
-
-        // Tier 8: Invidious Open Source High-Speed Mirror Network
-        if (!ytSuccess) {
-          try {
-            const invData = await fetchInvidiousFallback(videoId, mode);
-            downloadUrl = invData.downloadUrl;
-            extension = invData.extension;
-            title = invData.title;
-            if (downloadUrl) ytSuccess = true;
-          } catch (e) {
-            console.warn('YouTube Tier 8 failed, trying Tier 9 (yt-dlp engine)...');
-          }
-        }
-
-        // Tier 9: Local yt-dlp binary with Cookies and Anti-Bot bypass
-        if (!ytSuccess) {
-          try {
-            const fallbackData: any = await fetchYtdlpFallback(url, platform, mode);
-            downloadUrl = fallbackData.downloadUrl;
-            extension = fallbackData.extension;
-            title = fallbackData.title;
-          } catch (err: any) {
-            console.error('All YouTube extraction layers exhausted:', err.message);
-            const isBotBlock = (err.message || '').includes('Sign in to confirm you') || (err.message || '').includes('bot');
-            if (isBotBlock) {
-              return res.status(429).json({
-                error: 'RATE_LIMIT_429',
-                code: 429,
-                message: 'O YouTube bloqueou temporariamente a requisição em nuvem por proteção Anti-Bot (Sign in to confirm you are not a bot). Forneça cookies válidos ou use links do TikTok, Instagram, Facebook ou Vimeo.'
-              });
-            }
-            throw err;
-          }
-        }
-      }
-      else if (platform === 'tiktok') {
-        try {
-          const data = await fetchTikTokData(url);
-          title = (data.title || 'tiktok_video').replace(/[^\w\s-]/gi, '').trim() || 'tiktok_media';
-          if (mode === 'video') {
-            downloadUrl = data.play || data.wmplay;
-            extension = 'mp4';
-          } else {
-            downloadUrl = data.music || data.music_info?.play || data.play;
-            extension = data.music ? 'mp3' : 'mp4';
-          }
-          if (!downloadUrl) throw new Error('No url');
-        } catch {
-          try {
-            const aio = await fetchAllInOneData(url);
-            title = (aio.title || 'tiktok').replace(/[^\w\s-]/gi, '').trim() || 'tiktok_media';
-            downloadUrl = (mode === 'audio' ? (aio.audio || aio.music || aio.url) : (aio.video || aio.url || aio.medias?.[0]?.url));
-            extension = mode === 'audio' ? 'mp3' : 'mp4';
-            if (!downloadUrl) throw new Error('No url');
-          } catch (err) {
-            console.warn('TikTok RapidAPI failed, trying direct fallback...', err);
-            const fallbackData = await fetchTikTokDirectFallback(url);
-            downloadUrl = fallbackData.downloadUrl;
-            extension = fallbackData.extension;
-            title = fallbackData.title;
-          }
-        }
-      }
-      else if (platform === 'facebook') {
-        try {
-          const data = await fetchFacebookData(url);
-          title = (data.title || 'facebook_video').replace(/[^\w\s-]/gi, '').trim() || 'facebook_media';
-          if (mode === 'video') {
-            downloadUrl = data.hd || data.sd;
-            extension = 'mp4';
-          } else {
-            downloadUrl = data.audio_url || data.music || data.sd || data.hd;
-            extension = data.audio_url || data.music ? 'mp4' : 'mp4';
-          }
-          if (!downloadUrl) throw new Error('No url');
-        } catch {
-          try {
-            const aio = await fetchAllInOneData(url);
-            title = (aio.title || 'facebook_video').replace(/[^\w\s-]/gi, '').trim() || 'facebook_media';
-            downloadUrl = (mode === 'audio' ? (aio.audio || aio.url) : (aio.hd || aio.sd || aio.video || aio.url));
-            extension = 'mp4';
-            if (!downloadUrl) throw new Error('No url');
-          } catch (err) {
-            console.warn('Facebook RapidAPI failed, trying youtdlp fallback...', err);
-            const fallbackData: any = await fetchYtdlpFallback(url, platform, mode);
-            downloadUrl = fallbackData.downloadUrl;
-            extension = fallbackData.extension;
-            title = fallbackData.title;
-          }
-        }
-      }
-      else if (platform === 'vimeo') {
-        try {
-          const data = await fetchVimeoData(url);
-          title = (data.title || 'vimeo_video').replace(/[^\w\s-]/gi, '').trim() || 'vimeo_media';
-          const downloadLinks = data.download || data.files || data.links || [];
-          if (Array.isArray(downloadLinks) && downloadLinks.length > 0) {
-            downloadUrl = downloadLinks[0].url || downloadLinks[0].link || downloadLinks[0];
-          } else if (typeof data.url === 'string') {
-            downloadUrl = data.url;
-          }
-          extension = 'mp4';
-          if (!downloadUrl) throw new Error('No url from RapidAPI');
-        } catch {
-          try {
-            const aio = await fetchAllInOneData(url);
-            title = (aio.title || 'vimeo_video').replace(/[^\w\s-]/gi, '').trim() || 'vimeo_media';
-            downloadUrl = aio.video || aio.url || aio.medias?.[0]?.url;
-            extension = 'mp4';
-            if (!downloadUrl) throw new Error('No url from RapidAPI AllInOne');
-          } catch (err) {
-            console.warn('Vimeo API failed, trying yt-dlp fallback...', err);
-            const fallbackData: any = await fetchYtdlpFallback(url, platform, mode);
-            downloadUrl = fallbackData.downloadUrl;
-            extension = fallbackData.extension;
-            title = fallbackData.title;
-          }
-        }
-      }
-      else if (platform === 'instagram') {
-        try {
-          const aio = await fetchAllInOneData(url);
-          title = (aio.title || aio.caption || 'instagram_media').replace(/[^\w\s-]/gi, '').trim() || 'instagram_media';
-          downloadUrl = (mode === 'audio' ? (aio.audio || aio.music || aio.url) : (aio.video || aio.url || aio.medias?.[0]?.url));
-          extension = mode === 'audio' && aio.audio ? 'mp3' : 'mp4';
-          if (!downloadUrl) throw new Error('No url');
-        } catch {
-          try {
-            const data = await fetchInstagramReelsData(url);
-            title = (data.title || data.caption || 'instagram_reel').replace(/[^\w\s-]/gi, '').trim() || 'instagram_media';
-            downloadUrl = data.video_url || data.videoUrl || data.url;
-            extension = 'mp4';
-            if (!downloadUrl) throw new Error('No url');
-          } catch (err) {
-            console.warn('Instagram RapidAPI failed, trying direct fallback...', err);
-            const fallbackData = await fetchYtdlpFallback(url, platform, mode);
-            downloadUrl = fallbackData.downloadUrl;
-            extension = fallbackData.extension;
-            title = fallbackData.title;
-          }
-        }
-      }
-      else {
-        // General all-in-one platforms (Twitter, Pinterest, Reddit, SoundCloud, Spotify, CapCut, etc.)
-        const aio = await fetchAllInOneData(url);
-        title = (aio.title || `${platform}_media`).replace(/[^\w\s-]/gi, '').trim() || 'social_media';
-        if (mode === 'audio') {
-          downloadUrl = aio.audio || aio.music || aio.url || aio.medias?.[0]?.url;
-          extension = aio.audio ? 'mp3' : 'mp4';
-        } else {
-          downloadUrl = aio.video || aio.hd || aio.sd || aio.url || aio.medias?.[0]?.url;
-          extension = 'mp4';
-        }
-      }
-
-      if (!downloadUrl) {
-        return res.status(404).json({ error: 'NO_FORMATS', message: 'Nenhum link de download direto foi retornado para esta mídia.' });
-      }
-
-      // Forçar o formato mp3 para áudio e mp4 para vídeo
-      if (mode === 'audio') {
-        extension = 'mp3';
-      } else {
-        extension = 'mp4';
-      }
-
-      // Stream the media back to client with automatic retry (up to 2 retries on 500/502)
-      let streamRes: Response | null = null;
-      let streamError: any = null;
-
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        try {
-          const reqHeaders: Record<string, string> = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-            'Accept': '*/*',
-            'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
-            'Range': 'bytes=0-'
-          };
-          if (downloadUrl.includes('googlevideo.com') || downloadUrl.includes('youtube.com')) {
-            reqHeaders['Referer'] = 'https://www.youtube.com/';
-            reqHeaders['Origin'] = 'https://www.youtube.com';
-          }
-
-          const resAttempt = await fetchWithTimeout(downloadUrl, {
-            headers: reqHeaders
-          }, 30000);
-
-          if (resAttempt.ok || resAttempt.status === 206) {
-            streamRes = resAttempt;
-            break;
-          }
-
-          if (resAttempt.status === 403 && (downloadUrl.includes('googlevideo.com') || downloadUrl.includes('youtube.com'))) {
-            return res.status(429).json({
-              error: 'RATE_LIMIT_429',
-              code: 429,
-              message: 'O link de transmissão do YouTube expirou ou foi restringido pelo Google Anti-Bot. Utilize links diretos de outras redes (TikTok, Instagram, Facebook, Vimeo) ou configure cookies no servidor.'
-            });
-          }
-
-          if (attempt <= 2 && (resAttempt.status === 500 || resAttempt.status === 502 || resAttempt.status === 503 || resAttempt.status === 504)) {
-            const delay = Math.pow(2, attempt - 1) * 1000;
-            console.warn(`Upstream returned ${resAttempt.status}. Retrying in ${delay}ms (attempt ${attempt}/3)...`);
-            await new Promise((r) => setTimeout(r, delay));
-            continue;
-          }
-
-          streamRes = resAttempt;
-          break;
-        } catch (err: any) {
-          streamError = err;
-          if (attempt <= 2) {
-            const delay = Math.pow(2, attempt - 1) * 1000;
-            console.warn(`Upstream stream connection error. Retrying in ${delay}ms (attempt ${attempt}/3)...`, err.message);
-            await new Promise((r) => setTimeout(r, delay));
-          }
-        }
-      }
-
-      if (!streamRes || (!streamRes.ok && streamRes.status !== 206)) {
-        return res.status(502).json({ 
-          error: 'STREAM_ERROR', 
-          message: streamError?.message || 'Não foi possível se conectar aos servidores de mídia do provedor após múltiplas tentativas.' 
-        });
-      }
-
-      res.header('Content-Disposition', `attachment; filename="${encodeURIComponent(title)}.${extension}"`);
-      res.header('Content-Type', streamRes.headers.get('content-type') || (extension === 'mp3' ? 'audio/mpeg' : 'video/mp4'));
-
-      if (streamRes.body) {
-        const nodeStream = Readable.fromWeb(streamRes.body as any);
-        nodeStream.pipe(res);
-      } else {
-        res.status(500).end();
-      }
-
-    } catch (error: any) {
-      console.log('Media Download Issue:', error.message);
-      res.status(500).json({
-        error: 'FETCH_ERROR',
-        code: 500,
-        message: error.message || 'Erro ao processar o download da mídia.'
-      });
-    }
-  });
-
-  // Server-Side High-Speed FFmpeg Converter for Large Files
-  const upload = multer({
-    dest: path.join(os.tmpdir(), 'audiomorph_uploads'),
-    limits: { fileSize: 1024 * 1024 * 1024 } // 1GB limit
-  });
-
-  
-
-  // =========================================================================
-  // CONTROLADOR CENTRAL DE COMUNICAÇÃO COM IA LLM (GEMINI)
-  // TODAS as requisições de inteligência artificial do site DEVEM passar por aqui
-  // =========================================================================
-  app.post('/api/ai/chat', express.json(), async (req, res) => {
-    try {
-      const { prompt, systemInstruction, temperature = 0.7, apiKey } = req.body;
-      const geminiApiKey = apiKey || process.env.GEMINI_API_KEY;
-
-      if (!geminiApiKey) {
-        return res.status(401).json({ error: 'Nenhuma chave de API Gemini foi configurada no servidor ou fornecida.' });
-      }
-
-      if (!prompt) {
-        return res.status(400).json({ error: 'O prompt é obrigatório para comunicação com a IA.' });
-      }
-
-      const ai = new GoogleGenAI({ 
-        apiKey: geminiApiKey,
-        httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
-      });
-
-      const config: any = { temperature: Number(temperature) };
-      if (systemInstruction) {
-        config.systemInstruction = systemInstruction;
-      }
-
-      let responseText = '';
-      try {
-        const response = await ai.models.generateContent({
-          model: 'gemini-3.6-flash',
-          contents: prompt,
-          config
-        });
-        responseText = response.text || '';
-      } catch (err36: any) {
-        console.warn('Fallback para gemini-3.8-flash após erro:', err36?.message);
-        const fallbackRes = await ai.models.generateContent({
-          model: 'gemini-3.8-flash',
-          contents: prompt,
-          config
-        });
-        responseText = fallbackRes.text || '';
-      }
-
-      return res.json({
-        success: true,
-        text: responseText
-      });
-    } catch (err: any) {
-      console.error('Erro na comunicação central com a IA:', err);
-      return res.status(500).json({ error: err.message || 'Erro interno no processamento da IA.' });
-    }
-  });
-
-  // =========================================================================
-  // TRANSCRIÇÃO DE ÁUDIO/VÍDEO (RÁPIDA SEM CHAVE & LENTA COM GEMINI)
-  // =========================================================================
-  app.post('/api/transcribe', upload.single('file'), async (req, res) => {
-    if (!req.file) {
-      return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
-    }
-
-    const mode = req.body.mode || 'fast';
-    const userApiKey = req.body.apiKey ? String(req.body.apiKey).trim() : '';
-    const inputPath = req.file.path;
-    const originalName = req.file.originalname || 'midia';
-    const safeTmp = path.join(os.tmpdir(), `transcribe_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`);
-
-    try {
-      if (mode === 'fast') {
-        // =====================================================================
-        // OPÇÃO 1: TRANSCRIÇÃO RÁPIDA (SEM USAR CHAVE DO GEMINI)
-        // =====================================================================
-        // 1. Tenta extrair legendas/faixas de texto embutidas se houver (MP4, MKV, etc.)
-        let subtitleText = '';
-        try {
-          const srtPath = `${safeTmp}.srt`;
-          await new Promise<void>((resolve) => {
-            const subProcess = spawn('ffmpeg', ['-y', '-i', inputPath, '-map', '0:s:0', srtPath]);
-            subProcess.on('close', (code) => {
-              if (code === 0 && fs.existsSync(srtPath)) {
-                subtitleText = fs.readFileSync(srtPath, 'utf8').trim();
-                try { fs.unlinkSync(srtPath); } catch {}
-              }
-              resolve();
-            });
-            subProcess.on('error', () => resolve());
-          });
-        } catch {}
-
-        if (subtitleText && subtitleText.length > 20) {
-          // Limpa numeração e timestamps de SRT para texto corrido limpo
-          const cleanedText = subtitleText
-            .replace(/\d+\r?\n\d{2}:\d{2}:\d{2},\d{3}\s-->\s\d{2}:\d{2}:\d{2},\d{3}\r?\n/g, '')
-            .replace(/<[^>]*>/g, '')
-            .replace(/\n{2,}/g, '\n')
-            .trim();
-
-          if (fs.existsSync(inputPath)) fs.unlink(inputPath, () => {});
-          return res.json({
-            success: true,
-            mode: 'fast',
-            source: 'embedded_subtitles',
-            text: cleanedText
-          });
-        }
-
-        // 2. Extrai relatório de fala e silêncios via detecção de voz do FFmpeg (sem IA/sem chave)
-        let silenceLogs = '';
-        const silencedetect = spawn('ffmpeg', [
-          '-i', inputPath,
-          '-af', 'silencedetect=noise=-30dB:d=0.6',
-          '-f', 'null', '-'
-        ]);
-
-        silencedetect.stderr.on('data', (d) => {
-          silenceLogs += d.toString();
-        });
-
-        await new Promise<void>((resolve) => {
-          silencedetect.on('close', () => resolve());
-          silencedetect.on('error', () => resolve());
-        });
-
-        // Parse dos blocos de fala detectados
-        const durationMatch = silenceLogs.match(/Duration:\s*(\d{2}):(\d{2}):(\d{2}\.\d+)/);
-        let totalSecs = 0;
-        if (durationMatch) {
-          totalSecs = (parseInt(durationMatch[1]) * 3600) + (parseInt(durationMatch[2]) * 60) + parseFloat(durationMatch[3]);
-        }
-
-        const segments: string[] = [];
-        const silenceStarts = [...silenceLogs.matchAll(/silence_start:\s*([\d\.]+)/g)].map(m => parseFloat(m[1]));
-        const silenceEnds = [...silenceLogs.matchAll(/silence_end:\s*([\d\.]+)/g)].map(m => parseFloat(m[1]));
-
-        let cur = 0;
-        for (let i = 0; i < silenceStarts.length; i++) {
-          const start = cur;
-          const end = silenceStarts[i];
-          if (end - start > 0.5) {
-            const formatT = (s: number) => {
-              const m = Math.floor(s / 60);
-              const sec = Math.floor(s % 60);
-              return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
-            };
-            segments.push(`[${formatT(start)} - ${formatT(end)}] Trecho de fala identificado.`);
-          }
-          cur = silenceEnds[i] || end;
-        }
-
-        if (totalSecs > cur + 0.5) {
-          const formatT = (s: number) => {
-            const m = Math.floor(s / 60);
-            const sec = Math.floor(s % 60);
-            return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
-          };
-          segments.push(`[${formatT(cur)} - ${formatT(totalSecs)}] Trecho de fala identificado.`);
-        }
-
-        const fastResult = segments.length > 0 
-          ? `[Transcrição Rápida - Análise de Áudio & Fala]\nArquivo: ${originalName}\nDuração estimada: ${Math.round(totalSecs)}s\nSegmentos de voz detectados:\n\n` + segments.join('\n') + `\n\n💡 Dica: Para transcrição de texto literal e inteligência fonética avançada (com pontuação e remoção de ruídos, especial para mensagens de voz do WhatsApp), utilize a opção "Transcrição Lenta (com IA Gemini)".`
-          : `[Transcrição Rápida]\nArquivo: ${originalName}\nÁudio analisado com sucesso (${Math.round(totalSecs)}s). Não foram encontradas legendas embutidas. Para transcrição textual completa com pontuação e reconhecimento de palavras, utilize a opção "Transcrição Lenta (com IA Gemini)".`;
-
-        if (fs.existsSync(inputPath)) fs.unlink(inputPath, () => {});
-        return res.json({
-          success: true,
-          mode: 'fast',
-          text: fastResult
-        });
-
-      } else {
-        // =====================================================================
-        // OPÇÃO 2: TRANSCRIÇÃO LENTA COM MAIOR QUALIDADE (USANDO CHAVE GEMINI)
-        // =====================================================================
-        const geminiApiKey = userApiKey || process.env.GEMINI_API_KEY;
-        if (!geminiApiKey) {
-          if (fs.existsSync(inputPath)) fs.unlink(inputPath, () => {});
-          return res.status(400).json({
-            error: 'Nenhuma chave Gemini disponível. Insira sua chave Gemini API no campo fornecido ou configure a variável GEMINI_API_KEY. Você também pode usar a opção "Transcrição Rápida (sem chave)".'
-          });
-        }
-
-        // Converte previamente qualquer formato (especialmente ogg/opus do WhatsApp ou vídeos grandes)
-        // para um arquivo de áudio MP3 otimizado (16kHz mono), garantindo envio ultra-rápido e compatibilidade total
-        const audioExtractedPath = `${safeTmp}_norm.mp3`;
-        await new Promise<void>((resolve, reject) => {
-          const proc = spawn('ffmpeg', [
-            '-y',
-            '-i', inputPath,
-            '-vn',
-            '-ac', '1',
-            '-ar', '16000',
-            '-b:a', '48k',
-            audioExtractedPath
-          ]);
-          proc.on('close', (code) => {
-            if (code === 0) resolve();
-            else reject(new Error('Falha na preparação do áudio com FFmpeg.'));
-          });
-          proc.on('error', (err) => reject(err));
-        });
-
-        let durationSecs = 0;
-        try {
-          const probeOut = await new Promise<string>((resolve) => {
-            const probe = spawn('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', audioExtractedPath]);
-            let out = '';
-            probe.stdout.on('data', d => out += d.toString());
-            probe.on('close', () => resolve(out.trim()));
-            probe.on('error', () => resolve(''));
-          });
-          if (probeOut && !isNaN(Number(probeOut))) {
-            durationSecs = parseFloat(probeOut);
-          }
-        } catch {}
-
-        const audioBuffer = fs.readFileSync(audioExtractedPath);
-        const base64Audio = audioBuffer.toString('base64');
-
-        const ai = new GoogleGenAI({ 
-          apiKey: geminiApiKey,
-          httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
-        });
-
-        const prompt = "Você é um especialista em transcrição e processamento de áudio em língua portuguesa e idiomas universais. " +
-          "Transcreva o áudio a seguir na íntegra com máxima fidelidade e precisão fonética. " +
-          "Identifique quebras de parágrafo naturais e pontuação gramatical correta (vírgulas, pontos, interrogações). " +
-          "Se for mensagem de áudio do WhatsApp (formato ogg/opus) ou gravação com ruído ambiente, remova ruídos de fundo e capture com clareza o que foi falado. " +
-          "Não inclua resumos nem textos como 'Aqui está a transcrição:'. Retorne estritamente o texto transcrito literal.";
-
-        const response = await ai.models.generateContent({
-          model: 'gemini-3.8-flash',
-          contents: {
-            parts: [
-              {
-                inlineData: {
-                  mimeType: 'audio/mp3',
-                  data: base64Audio,
-                }
-              },
-              { text: prompt }
-            ]
+        const q = query(collection(db, 'phone_comparisons'), limit(30));
+        const snap = await getDocs(q);
+        snap.forEach((docSnap) => {
+          const d = docSnap.data() as PhoneComparisonRecord;
+          if (!list.some(c => c.id === d.id)) {
+            list.push(d);
           }
         });
-
-        // Limpeza dos arquivos temporários
-        if (fs.existsSync(inputPath)) fs.unlink(inputPath, () => {});
-        if (fs.existsSync(audioExtractedPath)) fs.unlink(audioExtractedPath, () => {});
-
-        const resultText = response.text?.trim() || 'Nenhuma fala audível foi identificada no arquivo enviado.';
-
-        return res.json({
-          success: true,
-          mode: 'slow',
-          model: 'gemini-3.8-flash',
-          text: resultText,
-          duration: durationSecs
-        });
+      } catch (fbErr) {
+        // Firestore silencioso se indisponível
       }
 
-    } catch (err: any) {
-      console.error('Erro na transcrição:', err);
-      if (fs.existsSync(inputPath)) fs.unlink(inputPath, () => {});
-      try {
-        const cleanupPattern = `${safeTmp}*`;
-        // tentativa de remover qualquer sobra
-      } catch {}
-      return res.status(500).json({ error: err.message || 'Erro ao processar a transcrição do áudio.' });
-    }
-  });
-
-  // Função auxiliar para gerar legendas .srt mesmo em caso de falha de conexão com IA
-  function generateFallbackSrt(text: string, durationSecs: number = 60): string {
-    const clean = text.replace(/\[.*?\]/g, '').trim();
-    const sentences = clean
-      .split(/(?<=[.?!;:\n])\s+/)
-      .map(s => s.trim())
-      .filter(s => s.length > 0);
-
-    if (sentences.length === 0) {
-      return `1\n00:00:01,000 --> 00:00:04,000\n[Áudio sem falas identificadas]`;
-    }
-
-    const effectiveDuration = durationSecs && durationSecs > 0 ? durationSecs : Math.max(10, sentences.length * 4);
-    const timePerSegment = Math.max(2.5, effectiveDuration / sentences.length);
-
-    const formatSrtTime = (seconds: number) => {
-      const hrs = Math.floor(seconds / 3600);
-      const mins = Math.floor((seconds % 3600) / 60);
-      const secs = Math.floor(seconds % 60);
-      const ms = Math.floor((seconds % 1) * 1000);
-      return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')},${String(ms).padStart(3, '0')}`;
-    };
-
-    return sentences.map((sent, idx) => {
-      const startSec = idx * timePerSegment;
-      const endSec = Math.min(effectiveDuration, (idx + 1) * timePerSegment - 0.2);
-      let formattedSent = sent;
-      if (formattedSent.length > 50) {
-        const mid = Math.floor(formattedSent.length / 2);
-        const spaceIdx = formattedSent.indexOf(' ', mid);
-        if (spaceIdx !== -1) {
-          formattedSent = formattedSent.slice(0, spaceIdx) + '\n' + formattedSent.slice(spaceIdx + 1);
-        }
-      }
-      return `${idx + 1}\n${formatSrtTime(startSec)} --> ${formatSrtTime(endSec)}\n${formattedSent}`;
-    }).join('\n\n');
-  }
-
-  // =========================================================================
-  // PÓS-PROCESSAMENTO DE TRANSCRIÇÃO COM GEMMA IA
-  // Ações: 'summary' (Resumidor), 'email' (Formal/Corporativo), 'minutes' (Ata de Reunião), 'srt' (Legendar Vídeo)
-  // =========================================================================
-  app.post('/api/transcribe/process', async (req, res) => {
-    try {
-      const { text, action, duration, apiKey } = req.body || {};
-      if (!text || typeof text !== 'string' || text.trim().length === 0) {
-        return res.status(400).json({ error: 'Texto da transcrição é obrigatório.' });
-      }
-
-      const validActions = ['summary', 'email', 'minutes', 'srt'];
-      if (!validActions.includes(action)) {
-        return res.status(400).json({ error: `Ação inválida. Escolha entre: ${validActions.join(', ')}` });
-      }
-
-      const geminiApiKey = apiKey || process.env.GEMINI_API_KEY;
-
-      // Se não houver chave de API configurada, fornecer fallback inteligente local
-      if (!geminiApiKey) {
-        if (action === 'srt') {
-          const fallbackSrt = generateFallbackSrt(text, duration);
-          return res.json({ success: true, action, result: fallbackSrt, isFallback: true });
-        } else if (action === 'summary') {
-          const sentences = text.split(/(?<=[.?!])\s+/).filter(Boolean);
-          const topSentences = sentences.slice(0, Math.min(6, Math.ceil(sentences.length * 0.4)));
-          const fallbackSummary = `📌 **Síntese Geral:**\n${topSentences.slice(0, 2).join(' ')}\n\n💡 **Principais Pontos Discutidos:**\n${topSentences.map(s => `• ${s.trim()}`).join('\n')}\n\n🎯 **Conclusão:**\nPontos registrados e consolidados com base no áudio.`;
-          return res.json({ success: true, action, result: fallbackSummary, isFallback: true });
-        } else if (action === 'email') {
-          const fallbackEmail = `**Assunto:** Resumo formal e encaminhamentos sobre assuntos tratados\n\nPrezado(a),\n\nGostaria de compartilhar os principais pontos discutidos no áudio:\n\n${text.trim()}\n\nPermanecemos à disposição para eventuais alinhamentos.\n\nAtenciosamente,\nEquipe`;
-          return res.json({ success: true, action, result: fallbackEmail, isFallback: true });
-        } else if (action === 'minutes') {
-          const fallbackMinutes = `📋 **ATA DE REUNIÃO EXECUTIVA**\n\n• **Objetivo:** Registro e deliberação dos temas abordados\n\n• **Tópicos e Discussões:**\n${text.trim().split(/(?<=[.?!])\s+/).slice(0, 8).map(s => ` - ${s.trim()}`).join('\n')}\n\n• **Decisões:** Ações acordadas entre os participantes.`;
-          return res.json({ success: true, action, result: fallbackMinutes, isFallback: true });
-        }
-      }
-
-      const ai = new GoogleGenAI({
-        apiKey: geminiApiKey,
-        httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
-      });
-
-      let prompt = '';
-      if (action === 'summary') {
-        prompt = "Você é a inteligência artificial Gemma, especialista em síntese textual, compreensão fonética e produtividade.\n" +
-          "Analise a transcrição de áudio a seguir e elabore um RESUMO EXECUTIVO COMPLETO, CLARO E OBJETIVO.\n" +
-          "Se o áudio for longo (acima de 3 minutos), capture a essência dos tópicos principais com precisão cirúrgica.\n\n" +
-          "Estrutura obrigatória da resposta:\n" +
-          "📌 **Síntese Geral:**\n" +
-          "[1 ou 2 parágrafos resumindo com clareza o tema central e objetivo do áudio]\n\n" +
-          "💡 **Principais Pontos e Assuntos Tratados:**\n" +
-          "• [Ponto importante 1]\n" +
-          "• [Ponto importante 2]\n" +
-          "• [Ponto importante 3]\n\n" +
-          "🎯 **Conclusão & Encaminhamentos:**\n" +
-          "[Resumo prático dos desfechos, acordos ou ações finais recomendadas]";
-      } else if (action === 'email') {
-        prompt = "Você é a inteligência artificial Gemma, especialista em redação corporativa, comunicação executiva e eliminação de vícios de linguagem.\n" +
-          "Abaixo está a transcrição literal de uma fala ou mensagem de áudio (que pode conter gírias, pausas, hesitações e vícios como 'tipo', 'né', 'daí', 'aí', 'tá ligado', 'então', 'hum').\n\n" +
-          "Sua missão é transformar essa transcrição em um E-MAIL FORMAL E PROFISSIONAL impecável.\n" +
-          "- Elimine completamente todas as gírias, coloquialismos e vícios de fala.\n" +
-          "- Converta o conteúdo para uma linguagem culta, cortês, direta e polida.\n" +
-          "- Organize as ideias em parágrafos claros ou tópicos de fácil leitura.\n\n" +
-          "Estruture a resposta no seguinte formato:\n" +
-          "**Assunto:** [Assunto claro, formal e descritivo]\n\n" +
-          "Prezado(a) [Destinatário],\n\n" +
-          "[Corpo do e-mail com redação formal e elegante]\n\n" +
-          "[Tópicos organizados com solicitações, prazos ou detalhes, se aplicável]\n\n" +
-          "Atenciosamente,\n[Seu Nome / Cargo]";
-      } else if (action === 'minutes') {
-        prompt = "Você é a inteligência artificial Gemma, especialista em governança corporativa e redação de atas de reuniões.\n" +
-          "Abaixo está a transcrição falada de uma reunião ou conversa de trabalho, frequentemente cheia de pausas, digressões e linguagem informal.\n\n" +
-          "Sua missão é transformar essa transcrição em uma ATA DE REUNIÃO estruturada, formal e dividida em tópicos claros.\n" +
-          "- Elimine gírias, hesitações e conversas paralelas desnecessárias.\n" +
-          "- Destaque o objetivo, pontos debatidos, deliberações e plano de ação.\n\n" +
-          "Estruture a resposta assim:\n" +
-          "📋 **ATA DE REUNIÃO EXECUTIVA**\n\n" +
-          "• **Objetivo / Pauta Central:**\n[Finalidade central do encontro]\n\n" +
-          "• **Pontos Discutidos:**\n- [Tópico 1 com descrição clara]\n- [Tópico 2...]\n\n" +
-          "• **Decisões e Deliberações Firmadas:**\n- [O que foi aprovado, decidido ou acordado entre as partes]\n\n" +
-          "• **Plano de Ação e Próximos Passos:**\n- [Ação 1 - Responsável / Prazo quando aplicável]\n- [Ação 2...]";
-      } else if (action === 'srt') {
-        prompt = `Você é a inteligência artificial Gemma, especialista em legendagem e sincronização audiovisual profissional.\n` +
-          `Abaixo está a transcrição textual de um áudio/vídeo${duration ? ` com duração aproximada de ${Math.round(duration)} segundos` : ''}.\n\n` +
-          `Sua tarefa é gerar um arquivo de legendas no formato SubRip (.srt) estritamente válido.\n\n` +
-          `Regras obrigatórias:\n` +
-          `1. Siga estritamente a sintaxe padrão SubRip (.srt):\n` +
-          `1\n` +
-          `00:00:01,000 --> 00:00:04,500\n` +
-          `Primeira linha de texto da legenda\n\n` +
-          `2\n` +
-          `00:00:04,800 --> 00:00:08,200\n` +
-          `Segunda linha de texto da legenda\n\n` +
-          `2. Elimine gírias excessivas, hesitações e ruídos ('ééé', 'tipo'), ajustando para texto fluido e bem pontuado.\n` +
-          `3. Cada bloco deve conter de 1 a 2 linhas curtas (máximo 42 caracteres por linha).\n` +
-          `4. Distribua os blocos cronologicamente do início ao fim sem sobreposição de tempos.\n` +
-          `5. IMPORTANTE: Retorne ESTRITAMENTE o arquivo SRT cru. NÃO use crases de código (\`\`\`srt), NÃO inclua saudações, explicações ou notas antes ou depois.`;
-      }
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.8-flash',
-        contents: [
-          {
-            text: `${prompt}\n\n--- TRANSCRIÇÃO ORIGINAL ---\n${text.slice(0, 15000)}`
-          }
-        ]
-      });
-
-      let result = response.text?.trim() || '';
-
-      if (action === 'srt') {
-        result = result
-          .replace(/^```srt\s*/i, '')
-          .replace(/^```\s*/i, '')
-          .replace(/\s*```$/i, '')
-          .trim();
-
-        if (!/^\d+\r?\n\d{2}:\d{2}:\d{2}/.test(result)) {
-          result = generateFallbackSrt(text, duration);
-        }
-      }
-
-      return res.json({
-        success: true,
-        action,
-        model: 'gemini-3.8-flash',
-        result
-      });
-
-    } catch (err: any) {
-      console.error('Erro no pós-processamento Gemma:', err);
-      const { text, action, duration } = req.body || {};
-      if (action === 'srt' && text) {
-        const fallbackSrt = generateFallbackSrt(text, duration);
-        return res.json({ success: true, action, result: fallbackSrt, isFallback: true, warning: err.message });
-      }
-      return res.status(500).json({ error: err.message || 'Erro ao processar com Gemma IA.' });
-    }
-  });
-
-app.post('/api/convert-server', upload.single('file'), async (req, res) => {
-    if (!req.file) {
-      return res.status(400).json({ error: 'Nenhum arquivo de mídia enviado para conversão.' });
-    }
-
-    const inputPath = req.file.path;
-    const format = (req.body.format || 'mp4').toLowerCase();
-    const videoQuality = req.body.videoQuality || 'medium';
-    const bitrate = req.body.bitrate || '192';
-    const isVideo = ['mp4', 'webm', 'mkv', 'avi', 'mov', 'gif'].includes(format);
-
-    const safeId = Math.random().toString(36).substring(2, 8);
-    const outputFilename = `converted_${Date.now()}_${safeId}.${format}`;
-    const outputPath = path.join(os.tmpdir(), outputFilename);
-
-    const args: string[] = ['-y', '-i', inputPath];
-
-    if (isVideo) {
-      const preset = videoQuality === 'high' ? 'slow' : videoQuality === 'low' ? 'ultrafast' : 'medium';
-      const crf = videoQuality === 'high' ? '18' : videoQuality === 'low' ? '28' : '23';
-
-      const vFilters: string[] = [];
-      if (req.body.cropW && req.body.cropH) {
-        const cW = Math.max(2, Math.floor(Number(req.body.cropW) / 2) * 2);
-        const cH = Math.max(2, Math.floor(Number(req.body.cropH) / 2) * 2);
-        const cX = Math.max(0, Math.floor(Number(req.body.cropX) || 0));
-        const cY = Math.max(0, Math.floor(Number(req.body.cropY) || 0));
-        vFilters.push(`crop=${cW}:${cH}:${cX}:${cY}`);
-        
-        if (req.body.cropShape === 'circle') {
-          // Add a circular mask using geq filter. This will make pixels outside the circle black.
-          // Formula: (x - w/2)^2 + (y - h/2)^2 <= (min(w,h)/2)^2
-          vFilters.push(`geq=lum='if(lt((X-(W/2))^2+(Y-(H/2))^2,(min(W,H)/2)^2),p(X,Y),0)':cb='if(lt((X-(W/2))^2+(Y-(H/2))^2,(min(W,H)/2)^2),p(X,Y),128)':cr='if(lt((X-(W/2))^2+(Y-(H/2))^2,(min(W,H)/2)^2),p(X,Y),128)'`);
-        }
-      }
-
-      if (videoQuality === 'very_low') {
-        vFilters.push("scale='min(480,iw)':-2");
-      }
-      switch (format) {
-        case 'webm':
-          if (vFilters.length > 0) args.push('-vf', vFilters.join(','));
-          args.push('-c:v', 'libvpx-vp9', '-crf', crf, '-b:v', '0', '-c:a', 'libopus');
-          break;
-        case 'mp4':
-        case 'mkv':
-        case 'mov':
-          if (vFilters.length > 0) args.push('-vf', vFilters.join(','));
-          args.push('-c:v', 'libx264', '-preset', preset, '-crf', crf, '-c:a', 'aac', '-b:a', '128k', '-pix_fmt', 'yuv420p');
-          break;
-        case 'avi':
-          if (vFilters.length > 0) args.push('-vf', vFilters.join(','));
-          args.push('-c:v', 'mpeg4', '-q:v', '5', '-c:a', 'libmp3lame');
-          break;
-        default:
-          if (vFilters.length > 0) {
-            args.push('-vf', vFilters.join(','), '-c:v', 'libx264', '-preset', preset, '-c:a', 'copy');
-          } else {
-            args.push('-c:v', 'copy', '-c:a', 'copy');
-          }
-      }
-    } else {
-      // Audio conversion
-      if (req.body.title) args.push('-metadata', `title=${req.body.title}`);
-      if (req.body.artist) args.push('-metadata', `artist=${req.body.artist}`);
-      if (req.body.album) args.push('-metadata', `album=${req.body.album}`);
-      if (req.body.genre) args.push('-metadata', `genre=${req.body.genre}`);
-
-      switch (format) {
-        case 'mp3':
-          args.push('-vn', '-c:a', 'libmp3lame', '-b:a', `${bitrate}k`);
-          break;
-        case 'wav':
-          args.push('-vn', '-c:a', 'pcm_s16le');
-          break;
-        case 'aac':
-        case 'm4a':
-          args.push('-vn', '-c:a', 'aac', '-b:a', `${bitrate}k`);
-          break;
-        case 'flac':
-          args.push('-vn', '-c:a', 'flac');
-          break;
-        case 'ogg':
-          args.push('-vn', '-c:a', 'libvorbis', '-b:a', `${bitrate}k`);
-          break;
-        case 'wma':
-          args.push('-vn', '-c:a', 'wmav2', '-b:a', `${bitrate}k`);
-          break;
-        case 'aiff':
-          args.push('-vn', '-c:a', 'pcm_s16be');
-          break;
-        default:
-          args.push('-vn', '-b:a', `${bitrate}k`);
-      }
-    }
-
-    args.push(outputPath);
-
-    const cleanup = () => {
-      try {
-        if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
-      } catch {}
-      try {
-        if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
-      } catch {}
-    };
-
-    try {
-      const ffmpegProc = spawn('ffmpeg', args);
-
-      ffmpegProc.on('error', (err) => {
-        console.error('Erro ao executar FFmpeg no servidor:', err);
-        cleanup();
-        if (!res.headersSent) {
-          res.status(500).json({ error: 'FFmpeg não está disponível no servidor de hospedagem.' });
-        }
-      });
-
-      ffmpegProc.on('close', (code) => {
-        if (code !== 0) {
-          cleanup();
-          if (!res.headersSent) {
-            return res.status(500).json({ error: `Conversão no servidor falhou com código ${code}.` });
-          }
-          return;
-        }
-
-        let mimeType = 'application/octet-stream';
-        if (isVideo) {
-          mimeType = format === 'mkv' ? 'video/x-matroska' : `video/${format}`;
-        } else {
-          if (format === 'mp3') mimeType = 'audio/mpeg';
-          else if (format === 'wav') mimeType = 'audio/wav';
-          else if (format === 'aac') mimeType = 'audio/aac';
-          else if (format === 'ogg') mimeType = 'audio/ogg';
-          else if (format === 'flac') mimeType = 'audio/flac';
-        }
-
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Content-Disposition', `attachment; filename="${outputFilename}"`);
-
-        const readStream = fs.createReadStream(outputPath);
-        readStream.pipe(res);
-
-        readStream.on('end', () => {
-          cleanup();
-        });
-
-        readStream.on('error', (err) => {
-          console.error('Erro ao transmitir arquivo convertido:', err);
-          cleanup();
-        });
-      });
-    } catch (err: any) {
-      cleanup();
-      console.error('Erro fatal na conversão server-side:', err);
-      if (!res.headersSent) {
-        res.status(500).json({ error: err.message || 'Erro interno na conversão do arquivo.' });
-      }
-    }
-  });
-
-  // =========================================================================
-  // ADCASH MONETIZATION & ADVERTISING INTEGRATION MODULE
-  // =========================================================================
-
-  // Configuração padrão do AdCash (Popunder, Interstitial, Banners e Autotag)
-  let adCashConfig = {
-    enabled: true,
-    zoneId: process.env.ADCASH_ZONE_ID || '7528341', // ID de Zona padrão AdCash
-    siteId: process.env.ADCASH_SITE_ID || '104829',
-    popunderZoneId: process.env.ADCASH_POPUNDER_ZONE || '7528342',
-    interstitialZoneId: process.env.ADCASH_INTERSTITIAL_ZONE || '7528343',
-    bannerZoneId: process.env.ADCASH_BANNER_ZONE || '7528344',
-    nativeZoneId: process.env.ADCASH_NATIVE_ZONE || '7528345',
-    scriptCdnUrl: 'https://acscdn.com/script/aclib.js',
-    autotagUrl: '//whosauwha.net/tag.min.js',
-    frequencyCappingHours: 1, // Exibição a cada 1 hora por usuário
-    testMode: false
-  };
-
-  // Endpoint: Obter configurações ativas do AdCash
-  app.get('/api/ads/adcash', (req, res) => {
-    res.json({
-      success: true,
-      provider: 'AdCash',
-      config: adCashConfig,
-      tags: {
-        headerScript: `<script type="text/javascript" src="${adCashConfig.scriptCdnUrl}"></script>`,
-        popunderTag: `aclib.runPop({ zoneId: '${adCashConfig.popunderZoneId}' });`,
-        interstitialTag: `aclib.runInterstitial({ zoneId: '${adCashConfig.interstitialZoneId}' });`,
-        bannerTag: `aclib.runBanner({ zoneId: '${adCashConfig.bannerZoneId}' });`,
-        autotagScript: `<script type="text/javascript" src="${adCashConfig.autotagUrl}" data-zone="${adCashConfig.zoneId}" async></script>`
-      }
-    });
-  });
-
-  // Endpoint: Atualizar configurações ou Zonas do AdCash dinamicamente
-  app.post('/api/ads/adcash/config', express.json(), (req, res) => {
-    try {
-      const { zoneId, popunderZoneId, interstitialZoneId, bannerZoneId, nativeZoneId, enabled, scriptCdnUrl, autotagUrl } = req.body;
-      
-      adCashConfig = {
-        ...adCashConfig,
-        ...(zoneId && { zoneId: String(zoneId) }),
-        ...(popunderZoneId && { popunderZoneId: String(popunderZoneId) }),
-        ...(interstitialZoneId && { interstitialZoneId: String(interstitialZoneId) }),
-        ...(bannerZoneId && { bannerZoneId: String(bannerZoneId) }),
-        ...(nativeZoneId && { nativeZoneId: String(nativeZoneId) }),
-        ...(typeof enabled === 'boolean' && { enabled }),
-        ...(scriptCdnUrl && { scriptCdnUrl: String(scriptCdnUrl) }),
-        ...(autotagUrl && { autotagUrl: String(autotagUrl) })
-      };
-
-      res.json({
-        success: true,
-        message: 'Configurações do AdCash atualizadas com sucesso!',
-        config: adCashConfig
-      });
-    } catch (err: any) {
-      res.status(500).json({ error: err.message || 'Erro ao atualizar configurações do AdCash' });
-    }
-  });
-
-  // Endpoint: Proxy do Script SDK do AdCash (aclib.js) para contornar bloqueadores e garantir entrega
-  app.get('/api/ads/adcash/script', async (req, res) => {
-    try {
-      const scriptUrl = req.query.url as string || adCashConfig.scriptCdnUrl;
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
-
-      const response = await fetch(scriptUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
-        },
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        // Retorna fallback funcional do stub do aclib
-        res.setHeader('Content-Type', 'application/javascript');
-        return res.send(`
-          window.aclib = window.aclib || {
-            runPop: function(opts) { console.log('[AdCash Stub] runPop:', opts); },
-            runInterstitial: function(opts) { console.log('[AdCash Stub] runInterstitial:', opts); },
-            runBanner: function(opts) { console.log('[AdCash Stub] runBanner:', opts); },
-            runInPagePush: function(opts) { console.log('[AdCash Stub] runInPagePush:', opts); }
-          };
-        `);
-      }
-
-      const scriptContent = await response.text();
-      res.setHeader('Content-Type', 'application/javascript');
-      res.setHeader('Cache-Control', 'public, max-age=3600');
-      res.send(scriptContent);
-    } catch (err: any) {
-      // Fallback em caso de timeout
-      res.setHeader('Content-Type', 'application/javascript');
-      res.send(`
-        window.aclib = window.aclib || {
-          runPop: function(opts) { console.log('[AdCash] runPop standby'); },
-          runInterstitial: function(opts) { console.log('[AdCash] runInterstitial standby'); },
-          runBanner: function(opts) { console.log('[AdCash] runBanner standby'); }
-        };
-      `);
-    }
-  });
-
-  // Endpoint: Telemetria de Eventos do AdCash (Impressões, Cliques e Conversões)
-  app.post('/api/ads/adcash/event', express.json(), (req, res) => {
-    const { eventType, zoneId, timestamp, meta } = req.body;
-    console.log(`[AdCash Event] ${eventType || 'impression'} - Zone: ${zoneId || adCashConfig.zoneId} at ${timestamp || new Date().toISOString()}`, meta || '');
-    res.json({ status: 'ok', received: true });
-  });
-
-  // =========================================================================
-  // RSS & FEED IMPORTER COM VERIFICADOR AUTOMÁTICO DE ERRO 404 E LINKS VÁLIDOS
-  // =========================================================================
-
-  // Helper para testar se uma URL retorna status HTTP 200 (não é 404, 410, ou erro)
-  async function checkUrlAlive(url: string, timeoutMs = 6000): Promise<{ ok: boolean; status: number; message?: string }> {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-      
-      const res = await fetch(url, {
-        method: 'HEAD',
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-        },
-        signal: controller.signal
-      }).catch(async () => {
-        // Se HEAD falhar ou for bloqueado por alguns servidores, tenta GET com range
-        return await fetch(url, {
-          method: 'GET',
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-            'Range': 'bytes=0-2048'
-          },
-          signal: controller.signal
-        });
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!res) return { ok: false, status: 0, message: 'Falha de conexão com o servidor' };
-      
-      const is404 = res.status === 404 || res.status === 410;
-      const isOk = (res.status >= 200 && res.status < 400);
-
-      return {
-        ok: isOk && !is404,
-        status: res.status,
-        message: is404 ? 'Link Quebrado (Erro 404 / Não Encontrado)' : isOk ? 'Link Ativo (HTTP 200 OK)' : `Status HTTP ${res.status}`
-      };
-    } catch (err: any) {
-      return { ok: false, status: 0, message: err.message || 'Erro de conexão/timeout' };
-    }
-  }
-
-  // Endpoint: Verificar integridade de um link individual ou múltiplos links contra erro 404
-  app.post('/api/news/check-links', express.json(), async (req, res) => {
-    try {
-      const { links } = req.body;
-      if (!Array.isArray(links)) {
-        return res.status(400).json({ error: 'Array de links esperado.' });
-      }
-
-      const results: Record<string, { ok: boolean; status: number; message?: string }> = {};
-      
-      // Processa com concorrência controlada para evitar sobrecarga
-      await Promise.all(
-        links.slice(0, 50).map(async (url: string) => {
-          if (!url || typeof url !== 'string') return;
-          const status = await checkUrlAlive(url.trim());
-          results[url] = status;
-        })
-      );
-
-      res.json({ results });
-    } catch (err: any) {
-      res.status(500).json({ error: err.message || 'Erro ao checar links.' });
-    }
-  });
-
-  // Endpoint: Resumidor Inteligente de Notícias em Tópicos (Gemma AI)
-  app.post('/api/news/summarize', express.json(), async (req, res) => {
-    try {
-      const { title, subtitle, lead, link, author, language = 'PT', apiKey } = req.body;
-      const geminiApiKey = apiKey || process.env.GEMINI_API_KEY;
-
-      if (!geminiApiKey) {
-        return res.status(401).json({
-          error: 'Chave de API do Gemini não configurada no servidor. Configure a variável GEMINI_API_KEY no painel de segredos.'
-        });
-      }
-
-      if (!title) {
-        return res.status(400).json({ error: 'O título da notícia é obrigatório para o resumo.' });
-      }
-
-      // Se houver link válido, tenta obter o corpo textual do artigo de forma rápida (timeout 3.5s)
-      let articleBody = '';
-      if (link && typeof link === 'string' && (link.startsWith('http://') || link.startsWith('https://'))) {
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 3500);
-          const pageRes = await fetch(link, {
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-            },
-            signal: controller.signal
-          });
-          clearTimeout(timeoutId);
-          if (pageRes.ok) {
-            const html = await pageRes.text();
-            const textOnly = html
-              .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
-              .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')
-              .replace(/<[^>]+>/g, ' ')
-              .replace(/\s+/g, ' ')
-              .trim();
-            articleBody = textOnly.slice(0, 3500);
-          }
-        } catch {
-          // Usa os dados locais se falhar o fetch do link
-        }
-      }
-
-      const langNames: Record<string, string> = {
-        PT: 'Português',
-        EN: 'Inglês (English)',
-        RU: 'Russo (Русский)',
-        HI: 'Hindi (हिन्दी)',
-        KO: 'Coreano (한국어)'
-      };
-      const langName = langNames[language] || 'Português';
-
-      const prompt = `Você é a IA Gemma (Gemma 4 / Gemini), uma inteligência artificial especialista em síntese de notícias tecnológicas, invenções e gadgets.
-Analise a notícia abaixo e sintetize-a em formato de tópicos objetivos e escaneáveis para economizar o tempo do usuário.
-
-Dados da Notícia:
-Título: ${title}
-Subtítulo: ${subtitle || 'Nenhum'}
-Resumo/Lead: ${lead || 'Nenhum'}
-Fonte/Autor: ${author || 'TechViva'}
-${articleBody ? `Trecho do texto original: ${articleBody.slice(0, 2500)}` : ''}
-
-Retorne estritamente um JSON com a seguinte estrutura:
-{
-  "readTime": "30 seg",
-  "oneLineTake": "Uma frase de impacto sintetizando a grande novidade",
-  "topics": [
-    {
-      "icon": "⚡",
-      "title": "Título conciso do ponto-chave",
-      "detail": "Explicação em 1 ou 2 frases diretas explicando o impacto prático ou a novidade técnica."
-    }
-  ],
-  "whyItMatters": "Uma frase de conclusão explicando por que essa inovação importa para o usuário ou mercado.",
-  "keywords": ["tag1", "tag2", "tag3"]
-}
-
-Regras:
-1. Gere de 3 a 5 tópicos (topics) informativos e diretos.
-2. Cada tópico DEVE ter um emoji temático adequado em "icon", um "title" chamativo e o "detail" claro.
-3. Responda no idioma: ${langName}.
-4. Retorne apenas o objeto JSON válido, sem comentários ou markdown.`;
-
-      const ai = new GoogleGenAI({
-        apiKey: geminiApiKey,
-        httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
-      });
-
-      let rawText = '';
-      try {
-        const response = await ai.models.generateContent({
-          model: 'gemini-3.6-flash',
-          contents: prompt,
-          config: {
-            responseMimeType: 'application/json',
-            temperature: 0.3
-          }
-        });
-        rawText = response.text || '{}';
-      } catch (err36: any) {
-        console.warn('Fallback para gemini-3.8-flash em news/summarize:', err36?.message);
-        const fallbackRes = await ai.models.generateContent({
-          model: 'gemini-3.8-flash',
-          contents: prompt,
-          config: {
-            responseMimeType: 'application/json',
-            temperature: 0.3
-          }
-        });
-        rawText = fallbackRes.text || '{}';
-      }
-      let parsedJson: any;
-      try {
-        parsedJson = JSON.parse(rawText.trim());
-      } catch {
-        const cleaned = rawText.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
-        parsedJson = JSON.parse(cleaned);
-      }
-
-      return res.json({
-        success: true,
-        summary: parsedJson
-      });
-    } catch (err: any) {
-      console.error('Erro ao resumir notícia com Gemma:', err);
-      return res.status(500).json({ error: err.message || 'Erro ao gerar resumo da notícia.' });
-    }
-  });
-
-  // =========================================================================
-  // Assistente de Comparação de Smartphones "Qual eu compro?" com Gemma AI
-  // =========================================================================
-  const COMPARISONS_FILE_PATH = path.join(process.cwd(), 'data', 'phone_comparisons.json');
-
-  // Helper para ler comparações salvas no arquivo
-  function readSavedComparisons(): any[] {
-    try {
-      if (fs.existsSync(COMPARISONS_FILE_PATH)) {
-        const fileData = fs.readFileSync(COMPARISONS_FILE_PATH, 'utf-8');
-        const parsed = JSON.parse(fileData);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch (e) {
-      console.warn('Erro ao ler arquivo de comparações:', e);
-    }
-    return [];
-  }
-
-  // Helper para salvar nova comparação no arquivo
-  function appendSavedComparison(comparison: any): void {
-    try {
-      const dataDir = path.join(process.cwd(), 'data');
-      if (!fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true });
-      }
-      const existing = readSavedComparisons();
-      const filtered = existing.filter((c: any) => c.id !== comparison.id);
-      filtered.unshift(comparison);
-      fs.writeFileSync(COMPARISONS_FILE_PATH, JSON.stringify(filtered, null, 2), 'utf-8');
-    } catch (e) {
-      console.error('Erro ao gravar no arquivo de comparações:', e);
-    }
-  }
-
-  // Endpoint para listar comparações feitas por todos os usuários
-  app.get('/api/smartphones/comparisons', (req, res) => {
-    try {
-      const list = readSavedComparisons();
-      return res.json({ success: true, comparisons: list });
-    } catch (err: any) {
-      return res.status(500).json({ error: err.message || 'Erro ao carregar comparações.' });
-    }
-  });
-
-  // Endpoint para gerar análise e comparação de 2 ou 3 modelos com Gemma AI
-  app.post('/api/smartphones/compare', async (req, res) => {
-    try {
-      const { phones, language } = req.body;
-      if (!Array.isArray(phones) || phones.length < 2 || phones.length > 3) {
-        return res.status(400).json({ error: 'Selecione 2 ou 3 smartphones para comparar.' });
-      }
-
-      const geminiApiKey = process.env.GEMINI_API_KEY;
-      if (!geminiApiKey) {
-        return res.status(500).json({ error: 'Chave GEMINI_API_KEY não configurada no servidor.' });
-      }
-
-      // Prepara ficha técnica resumida em JSON para a IA
-      const specsSummary = phones.map((p: any) => ({
-        id: p.id,
-        name: `${p.brand} ${p.model}`,
-        brand: p.brand,
-        model: p.model,
-        year: p.releaseYear,
-        os: p.os,
-        screen: {
-          size: `${p.specs?.screen?.size}"`,
-          type: p.specs?.screen?.type,
-          resolution: p.specs?.screen?.resolution,
-          refreshRate: `${p.specs?.screen?.refreshRate}Hz`,
-          foldable: p.specs?.screen?.isFoldable
-        },
-        processor: {
-          chipset: p.specs?.processor?.chipset,
-          cores: p.specs?.processor?.cores,
-          cpuBrand: p.specs?.processor?.cpuBrand,
-          antutu: p.specs?.performance?.antutu
-        },
-        gpu: `${p.specs?.gpu?.brand} ${p.specs?.gpu?.model}`,
-        memory: {
-          ram: p.specs?.ram,
-          storage: p.specs?.storage?.options,
-          expandable: p.specs?.storage?.expandable
-        },
-        camera: {
-          rear: `${p.specs?.camera?.rear}MP`,
-          front: `${p.specs?.camera?.front}MP`,
-          opticalZoom: `${p.specs?.camera?.opticalZoom}x`,
-          stabilization: p.specs?.camera?.stabilization,
-          recording: p.specs?.camera?.recordingResolution
-        },
-        battery: {
-          capacity: `${p.specs?.battery?.capacity} mAh`,
-          charging: p.specs?.battery?.chargingTypes
-        },
-        features: {
-          network: p.specs?.features?.network,
-          nfc: p.specs?.features?.hasNfc,
-          gps: p.specs?.features?.hasGps,
-          fingerprint: p.specs?.features?.hasFingerprint
-        }
-      }));
-
-      const phoneNamesStr = specsSummary.map((p: any) => p.name).join(' vs ');
-      const targetLang = language === 'EN' ? 'Inglês' : language === 'ES' ? 'Espanhol' : 'Português (Brasil)';
-
-      const prompt = `Você é o especialista e consultor de tecnologia do assistente "Qual eu compro?".
-Sua missão é comparar os seguintes smartphones (${specsSummary.length} modelos) com base na ficha técnica em JSON fornecida e gerar uma análise completa, amigável, clara e objetiva para quem está em dúvida sobre qual modelo comprar.
-
-Ficha técnica dos modelos em JSON:
-${JSON.stringify(specsSummary, null, 2)}
-
-Você DEVE responder ESTRITAMENTE em formato JSON com o seguinte formato:
-{
-  "title": "Título chamativo do duelo (ex: ${phoneNamesStr}: Qual Vale Mais a Pena?)",
-  "winnerOverall": "Nome do modelo mais recomendado ou 'Empate Técnico'",
-  "winnerReason": "Explicação em 1 ou 2 frases resumindo a principal razão da escolha geral.",
-  "summary": "Texto introdutório amigável (2 a 3 parágrafos curtos) analisando o cenário e as principais diferenças de proposta de cada aparelho.",
-  "categories": [
-    {
-      "category": "Tela & Construção",
-      "winner": "Nome do vencedor ou Empate",
-      "detail": "Análise concisa comparando qualidade da tela, taxa de atualização e materiais."
-    },
-    {
-      "category": "Desempenho & Jogos",
-      "winner": "Nome do vencedor ou Empate",
-      "detail": "Comparação de chipset, GPU, RAM e pontuação Antutu para jogos e multitarefa."
-    },
-    {
-      "category": "Câmeras & Vídeo",
-      "winner": "Nome do vencedor ou Empate",
-      "detail": "Comparação da câmera principal, zoom óptico, selfies e qualidade de gravação."
-    },
-    {
-      "category": "Bateria & Autonomia",
-      "winner": "Nome do vencedor ou Empate",
-      "detail": "Comparação de capacidade em mAh, velocidade e tipos de carregamento."
-    }
-  ],
-  "bestFor": [
-    {
-      "phone": "Nome do modelo 1",
-      "badge": "Frase curta definindo o perfil (ex: Melhor Custo-Benefício / Melhor para Fotos)",
-      "profile": "Descrição de quem é o usuário ideal para este aparelho."
-    }
-  ],
-  "verdict": "Veredito final direto e amigável respondendo à pergunta 'Qual eu compro?': dê conselhos práticos considerando custo, prioridades do usuário e longevidade."
-}
-
-Regras:
-1. Idioma: ${targetLang}.
-2. Seja sincero, sem viés de marcas, destacando os pontos fortes e limitações reais de cada modelo.
-3. No array "bestFor", inclua exatamente uma entrada para cada um dos ${specsSummary.length} smartphones comparados.
-4. Retorne apenas JSON válido sem crases ou markdown adicionais.`;
-
-      const ai = new GoogleGenAI({
-        apiKey: geminiApiKey,
-        httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
-      });
-
-      let rawText = '';
-      try {
-        const response = await ai.models.generateContent({
-          model: 'gemini-3.6-flash',
-          contents: prompt,
-          config: {
-            responseMimeType: 'application/json',
-            temperature: 0.3
-          }
-        });
-        rawText = response.text || '{}';
-      } catch (err36: any) {
-        console.warn('Fallback para gemini-3.8-flash em /api/smartphones/compare:', err36?.message);
-        const fallbackRes = await ai.models.generateContent({
-          model: 'gemini-3.8-flash',
-          contents: prompt,
-          config: {
-            responseMimeType: 'application/json',
-            temperature: 0.3
-          }
-        });
-        rawText = fallbackRes.text || '{}';
-      }
-
-      let parsed: any;
-      try {
-        parsed = JSON.parse(rawText.trim());
-      } catch {
-        const cleaned = rawText.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
-        parsed = JSON.parse(cleaned);
-      }
-
-      const comparisonRecord = {
-        id: 'comp-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7),
-        createdAt: new Date().toISOString(),
-        phoneIds: phones.map((p: any) => p.id),
-        phoneNames: specsSummary.map((p: any) => p.name),
-        title: parsed.title || `${phoneNamesStr}: Qual Comprar?`,
-        winnerOverall: parsed.winnerOverall || 'Empate Técnico',
-        winnerReason: parsed.winnerReason || '',
-        summary: parsed.summary || '',
-        categories: parsed.categories || [],
-        bestFor: parsed.bestFor || [],
-        verdict: parsed.verdict || ''
-      };
-
-      // Salva no arquivo data/phone_comparisons.json
-      appendSavedComparison(comparisonRecord);
-
-      return res.json({
-        success: true,
-        comparison: comparisonRecord
-      });
-    } catch (err: any) {
-      console.error('Erro ao gerar comparação de smartphones:', err);
-      const errMsg = err.message || '';
-      if (
-        errMsg.includes('503') || 
-        errMsg.toLowerCase().includes('high demand') || 
-        errMsg.toLowerCase().includes('unavailable') || 
-        err.status === 503 ||
-        err.statusCode === 503
-      ) {
-        return res.status(503).json({ 
-          error: 'Error: code 503 - This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.',
-          isGemini503: true
-        });
-      }
-      return res.status(500).json({ error: err.message || 'Erro ao processar comparação com Gemma.' });
-    }
-  });
-
-  // Helper para decodificar entidades XML / HTML básicas
-  function cleanXmlText(str: string): string {
-    return str
-      .replace(/<!\[CDATA\[(.*?)\]\]>/gis, '$1')
-      .replace(/<[^>]+>/g, '') // remove tags HTML
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/&nbsp;/g, ' ')
-      .trim();
-  }
-
-  // Função auxiliar para identificar e filtrar notícias que possuem a palavra "jogo", "jogos", "game", "games" ou termos correlatos
-  function containsGameOrExcludedContent(title: string, lead?: string, category?: string, link?: string): boolean {
-    const cleanLink = (link || '').split('?')[0].replace(/[-_./]/g, ' ');
-    const combined = `${title || ''} ${lead || ''} ${category || ''} ${cleanLink}`.toLowerCase();
-
-    // Filtro estrito: palavra "jogo", "jogos", "game", "games" e termos correlatos
-    const gamePattern = /\b(jogos?|games?|gamer|gamers|gaming|gameplay|jogabilidade|jogador|jogadores|videogames?|video\s+games?)\b/i;
-    if (gamePattern.test(combined)) {
-      return true;
-    }
-
-    // Franquias, plataformas de games ou mídias não pertinentes (trailers, filmes)
-    const otherPattern = /\b(trailer|trailers|filme|filmes|playstation|ps5|ps4|ps3|ps2|xbox|nintendo|switch|pokemon|pokémon|gta|elden ring|god of war|voxel)\b/i;
-    if (otherPattern.test(combined)) {
-      return true;
-    }
-
-    return false;
-  }
-
-  // Parseador de RSS XML básico e robusto
-  function parseRssFeed(xmlText: string, defaultAuthor: string) {
-    const items: Array<{
-      title: string;
-      link: string;
-      pubDate: string;
-      lead: string;
-      author: string;
-      category: string;
-    }> = [];
-
-    // Suporta tanto <item> (RSS 2.0) quanto <entry> (Atom)
-    const itemRegex = /<(?:item|entry)[\s>](.*?)<\/(?:item|entry)>/gis;
-    let match;
-
-    while ((match = itemRegex.exec(xmlText)) !== null) {
-      const block = match[1];
-
-      // Título
-      const titleMatch = block.match(/<title[^>]*>(.*?)<\/title>/is);
-      const title = titleMatch ? cleanXmlText(titleMatch[1]) : '';
-
-      // Link (RSS <link>url</link> ou Atom <link href="url"/>)
-      let link = '';
-      const linkMatch = block.match(/<link[^>]*>(.*?)<\/link>/is);
-      if (linkMatch && linkMatch[1].trim()) {
-        link = cleanXmlText(linkMatch[1]);
-      } else {
-        const hrefMatch = block.match(/<link[^>]*href=["']([^"']+)["']/is);
-        if (hrefMatch) link = hrefMatch[1].trim();
-      }
-
-      // Descrição / Lead / Subtítulo
-      const descMatch = block.match(/<(?:description|summary|content)[^>]*>(.*?)<\/(?:description|summary|content)>/is);
-      let lead = descMatch ? cleanXmlText(descMatch[1]) : '';
-      if (lead.length > 280) {
-        lead = lead.slice(0, 277) + '...';
-      }
-
-      // Data de publicação
-      const dateMatch = block.match(/<(?:pubDate|published|updated|dc:date)[^>]*>(.*?)<\/(?:pubDate|published|updated|dc:date)>/is);
-      let pubDate = dateMatch ? cleanXmlText(dateMatch[1]) : new Date().toISOString();
-      try {
-        pubDate = new Date(pubDate).toISOString();
-      } catch {
-        pubDate = new Date().toISOString();
-      }
-
-      // Categoria ou autor
-      const catMatch = block.match(/<category[^>]*>(.*?)<\/category>/is);
-      const category = catMatch ? cleanXmlText(catMatch[1]) : 'gadgets';
-
-      const authorMatch = block.match(/<(?:dc:creator|author)[^>]*>(.*?)<\/(?:dc:creator|author)>/is);
-      const author = authorMatch ? cleanXmlText(authorMatch[1]) : defaultAuthor;
-
-      if (title && link) {
-        // Excluir notícias que contêm "jogo", "jogos", "game", "games", trailers, filmes, etc.
-        if (containsGameOrExcludedContent(title, lead, category, link)) {
-          continue;
-        }
-
-        const fullBlock = block.toLowerCase();
-        if (
-          fullBlock.includes('videogames') ||
-          fullBlock.includes('video games') ||
-          fullBlock.includes('/topic/videogames')
-        ) {
-          continue;
-        }
-
-        items.push({
-          title,
-          link,
-          pubDate,
-          lead,
-          author: author || defaultAuthor,
-          category
-        });
-      }
-    }
-
-    return items;
-  }
-
-  // =========================================================================
-  // IMPORTAÇÃO AUTOMÁTICA GADGET NEWS (TECHVIVA FLIPBOARD & PRINCIPAIS PORTAIS DE GADGETS E INVENÇÕES)
-  // =========================================================================
-  
-  async function fetchGadgetNewsData(hoursLimit) {
-    const maxAgeMs = hoursLimit * 60 * 60 * 1000;
-    const now = Date.now();
-
-    const feedSources = [
-      { url: 'https://flipboard.com/@elilopes/techviva-gadgets-e-games-brasil-79uavc9uy.rss', author: 'TechViva Flipboard', isPrimary: true },
-      { url: 'https://www.inovacaotecnologica.com.br/boletim/rss.xml', author: 'Inovação Tecnológica', isPrimary: false },
-      { url: 'https://olhardigital.com.br/feed/', author: 'Olhar Digital', isPrimary: false },
-      { url: 'https://rss.tecmundo.com.br/feed', author: 'TecMundo', isPrimary: false },
-      { url: 'https://www.showmetech.com.br/feed/', author: 'Showmetech', isPrimary: false },
-      { url: 'https://gizmodo.uol.com.br/feed/', author: 'Gizmodo Brasil', isPrimary: false }
-    ];
-
-    const rawItems = [];
-    await Promise.allSettled(
-      feedSources.map(async (source) => {
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 8000);
-          const feedRes = await fetch(source.url, {
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36',
-              'Accept': 'application/rss+xml, application/xml, text/xml, */*'
-            },
-            signal: controller.signal
-          });
-          clearTimeout(timeoutId);
-
-          if (feedRes.ok) {
-            const buf = Buffer.from(await feedRes.arrayBuffer());
-            const contentType = (feedRes.headers.get('content-type') || '').toLowerCase();
-            let isLatin = contentType.includes('8859') || contentType.includes('latin') || source.url.includes('inovacaotecnologica');
-            if (!isLatin) {
-              const preview = buf.subarray(0, 150).toString('latin1');
-              if (/encoding=["'](iso-8859-1|latin1)/i.test(preview)) {
-                isLatin = true;
-              }
-            }
-            let xmlText = '';
-            try {
-              const decoder = new TextDecoder(isLatin ? 'iso-8859-1' : 'utf-8');
-              xmlText = decoder.decode(buf);
-            } catch {
-              xmlText = buf.toString('utf-8');
-            }
-            const parsed = parseRssFeed(xmlText, source.author);
-            for (const it of parsed) {
-              rawItems.push({ ...it, isPrimary: source.isPrimary });
-            }
-          }
-        } catch (e) {
-          console.warn(`[Gadget News] Aviso ao carregar feed ${source.url}:`, e.message);
-        }
-      })
-    );
-
-    const uniqueMap = new Map();
-    for (const item of rawItems) {
-      if (!item.title || !item.link) continue;
-      if (uniqueMap.has(item.link)) continue;
-
-      if (item.pubDate) {
-        const itemTime = new Date(item.pubDate).getTime();
-        if (!isNaN(itemTime) && (now - itemTime) > maxAgeMs) continue;
-      }
-
-      if (item.title.toLowerCase().includes('perfil social') || item.link.includes('meli.la')) continue;
-      if (item.lead && item.lead.toLowerCase().includes('usamos cookies')) continue;
-      if (containsGameOrExcludedContent(item.title, item.lead, item.category, item.link)) continue;
-
-      uniqueMap.set(item.link, item);
-    }
-
-    const deduplicated = Array.from(uniqueMap.values());
-    const verifiedArticles = [];
-    let rejected404Count = 0;
-
-    await Promise.allSettled(
-      deduplicated.map(async (art) => {
-        try {
-          const check = await checkUrlAlive(art.link, 4500);
-          if (check.ok) {
-            verifiedArticles.push({ ...art, httpStatus: check.status, verifiedAt: new Date().toISOString(), linkStatus: '200_OK' });
-          } else {
-            rejected404Count++;
-          }
-        } catch {
-          verifiedArticles.push(art);
-        }
-      })
-    );
-
-    verifiedArticles.sort((a, b) => {
-      if (a.isPrimary && !b.isPrimary) return -1;
-      if (!a.isPrimary && b.isPrimary) return 1;
-      return new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime();
-    });
-
-    return { deduplicatedCount: deduplicated.length, verifiedArticles, rejected404Count };
-  }
-
-  app.get('/api/news/flipboard-auto-import', async (req, res) => {
-    try {
-      const hoursLimit = parseInt((req.query.hours) || '72', 10);
-      const { deduplicatedCount, verifiedArticles, rejected404Count } = await fetchGadgetNewsData(hoursLimit);
-      
-      res.json({
-        success: true,
-        source: 'Revista TechViva Flipboard & Portais de Gadgets e Inovações',
-        period: `${hoursLimit}h`,
-        totalFound: deduplicatedCount,
-        totalValid: verifiedArticles.length,
-        rejected404Count,
-        articles: verifiedArticles
-      });
+      // Ordena por data decrescente
+      list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setSavedComparisons(list);
     } catch (err) {
-      console.error('Erro na importação de notícias de gadgets e inovações:', err);
-      res.status(500).json({ success: false, error: err.message || 'Erro ao importar notícias' });
+      console.warn('Erro ao carregar histórico de comparações:', err);
+    } finally {
+      setIsLoadingCommunity(false);
     }
-  });
+  };
 
-  app.get(['/api/news/rss.xml', '/rss.xml'], async (req, res) => {
+  const handleStartComparison = async () => {
+    if (selectedPhones.length < 2) return;
+    setIsGenerating(true);
+    setAnalysisError(null);
+
     try {
-      const hoursLimit = parseInt((req.query.hours as string) || '72', 10);
-      const { verifiedArticles } = await fetchGadgetNewsData(hoursLimit);
-
-      const escapeXml = (str: string) => {
-        if (!str) return '';
-        return String(str)
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&apos;');
-      };
-
-      const cleanCdata = (str: string) => {
-        if (!str) return '';
-        // Remove caracteres de controle proibidos na especificação XML 1.0
-        const cleaned = String(str).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-        return cleaned.replace(/]]>/g, ']]]]><![CDATA[>');
-      };
-
-      const nowUtc = new Date().toUTCString();
-
-      let rssXml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-      rssXml += `<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n`;
-      rssXml += `<channel>\n`;
-      rssXml += `  <title>TechViva &amp; Gadgets - Down&amp;Convert</title>\n`;
-      rssXml += `  <link>https://downandconvert.onrender.com</link>\n`;
-      rssXml += `  <atom:link href="https://downandconvert.onrender.com/rss.xml" rel="self" type="application/rss+xml" />\n`;
-      rssXml += `  <description><![CDATA[Últimas notícias sobre gadgets, inovações e tecnologia curadas automaticamente.]]></description>\n`;
-      rssXml += `  <language>pt-BR</language>\n`;
-      rssXml += `  <lastBuildDate>${nowUtc}</lastBuildDate>\n`;
-      
-      verifiedArticles.forEach(art => {
-        const itemTitle = cleanCdata(art.title || '');
-        const itemLink = escapeXml(art.link || '');
-        const itemLead = cleanCdata(art.lead || '');
-        const itemAuthor = cleanCdata(art.author || '');
-        const itemCategory = cleanCdata(art.category || '');
-
-        let itemPubDate = nowUtc;
-        if (art.pubDate) {
-          const d = new Date(art.pubDate);
-          if (!isNaN(d.getTime())) {
-            itemPubDate = d.toUTCString();
-          }
-        }
-
-        rssXml += `  <item>\n`;
-        rssXml += `    <title><![CDATA[${itemTitle}]]></title>\n`;
-        rssXml += `    <link>${itemLink}</link>\n`;
-        rssXml += `    <guid isPermaLink="${(art.link && art.link.startsWith('http')) ? 'true' : 'false'}">${itemLink}</guid>\n`;
-        rssXml += `    <description><![CDATA[${itemLead}]]></description>\n`;
-        if (itemAuthor) rssXml += `    <author><![CDATA[${itemAuthor}]]></author>\n`;
-        if (itemCategory) rssXml += `    <category><![CDATA[${itemCategory}]]></category>\n`;
-        rssXml += `    <pubDate>${itemPubDate}</pubDate>\n`;
-        rssXml += `  </item>\n`;
-      });
-      
-      rssXml += `</channel>\n`;
-      rssXml += `</rss>\n`;
-
-      res.setHeader('Content-Type', 'application/rss+xml; charset=utf-8');
-      res.send(rssXml);
-    } catch (err) {
-      console.error('Erro na geração do RSS:', err);
-      res.status(500).send('Erro interno ao gerar RSS');
-    }
-  });
-
-  // Endpoint: Importar feeds RSS com Verificador Automático de Erro 404
-  app.get('/api/news/feed-import', async (req, res) => {
-    try {
-      const customFeedUrl = req.query.feedUrl as string;
-      const verify404 = req.query.verify404 !== 'false'; // Padrão: TRUE (ativa o verificador)
-
-      const feedSources = customFeedUrl
-        ? [{ url: customFeedUrl, author: 'Feed Personalizado' }]
-        : [
-            { url: 'https://www.showmetech.com.br/feed/', author: 'Showmetech' },
-            { url: 'https://olhardigital.com.br/feed/', author: 'Olhar Digital' },
-            { url: 'https://rss.tecmundo.com.br/feed', author: 'TecMundo' },
-            { url: 'https://www.inovacaotecnologica.com.br/boletim/rss.xml', author: 'Inovação Tecnológica' },
-            { url: 'https://canaltech.com.br/rss/', author: 'Canaltech' },
-            { url: 'https://flipboard.com/@elilopes/techviva-gadgets-e-games-brasil-79uavc9uy.rss', author: 'TechViva Flipboard' }
-          ];
-
-      const rawArticles: any[] = [];
-
-      // Faz o download de todos os feeds em paralelo
-      await Promise.allSettled(
-        feedSources.map(async (src) => {
-          try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 7000);
-            const feedRes = await fetch(src.url, {
-              headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-                'Accept': 'application/rss+xml, application/xml, text/xml, */*'
-              },
-              signal: controller.signal
-            });
-            clearTimeout(timeoutId);
-
-            if (feedRes.ok) {
-              const xmlText = await feedRes.text();
-              const parsed = parseRssFeed(xmlText, src.author);
-              rawArticles.push(...parsed);
-            }
-          } catch (e: any) {
-            console.warn(`Aviso ao importar feed ${src.url}:`, e.message);
-          }
+      const res = await fetch('/api/smartphones/compare', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phones: selectedPhones,
+          language: lang
         })
-      );
+      });
 
-      // Elimina itens duplicados e exclui notícias com trailer/filme/jogos no título ou links inválidos
-      const uniqueMap = new Map<string, any>();
-      for (const art of rawArticles) {
-        if (/trailer|filme|série|series|game|games|jogo|jogos|videogame|playstation|xbox|nintendo|pokemon|pokémon|gta|god of war|elden ring|voxel|mouses gamer/i.test(art.title + ' ' + (art.lead || ''))) continue;
-        if (art.link.includes('anuncios-do-gamescom') || art.link === 'https://canaltech.com.br/rss/' || art.link === 'https://canaltech.com.br/rss') continue;
-        if (!uniqueMap.has(art.link)) {
-          uniqueMap.set(art.link, art);
+      const data = await res.json();
+      if (!res.ok || !data.success || !data.comparison) {
+        if (res.status === 503 || data.isGemini503 || (data.error && data.error.includes('503'))) {
+          const customErr = new Error(data.error || 'Error: code 503 - This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.');
+          (customErr as any).isGemini503 = true;
+          throw customErr;
         }
+        throw new Error(data.error || 'Não foi possível gerar a análise.');
       }
-      const uniqueArticles = Array.from(uniqueMap.values());
 
-      let verifiedArticles: any[] = [];
-      let rejected404Count = 0;
-      const deadLinks: string[] = [];
+      const newRecord = data.comparison as PhoneComparisonRecord;
+      setCurrentComparison(newRecord);
 
-      if (verify404) {
-        // Executa o verificador automático de erro 404 em lote
-        const validationResults = await Promise.all(
-          uniqueArticles.map(async (article) => {
-            const check = await checkUrlAlive(article.link, 5000);
-            return {
-              article,
-              isAlive: check.ok,
-              status: check.status,
-              checkMessage: check.message
-            };
-          })
-        );
+      // Atualiza lista da comunidade localmente
+      setSavedComparisons(prev => [newRecord, ...prev.filter(c => c.id !== newRecord.id)]);
 
-        for (const item of validationResults) {
-          if (item.isAlive) {
-            verifiedArticles.push({
-              ...item.article,
-              httpStatus: item.status,
-              verifiedAt: new Date().toISOString(),
-              linkStatus: '200_OK'
-            });
-          } else {
-            rejected404Count++;
-            deadLinks.push(`${item.article.link} (Status: ${item.status} - ${item.checkMessage})`);
-          }
-        }
+      // Sincroniza com o Firestore
+      try {
+        await setDoc(doc(db, 'phone_comparisons', newRecord.id), newRecord);
+      } catch (fbErr) {
+        console.warn('Persistência Firestore em background:', fbErr);
+      }
+    } catch (err: any) {
+      console.error('Erro na comparação com Gemma:', err);
+      if (err.isGemini503 || err.message.includes('503') || err.message.includes('high demand') || err.message.includes('UNAVAILABLE')) {
+        setAnalysisError(t('error.gemini503'));
       } else {
-        verifiedArticles = uniqueArticles;
+        setAnalysisError(err.message || 'Erro ao conectar à inteligência artificial.');
       }
-
-      // Ordena pelas notícias mais recentes
-      verifiedArticles.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
-
-      res.json({
-        success: true,
-        totalFetched: uniqueArticles.length,
-        totalValid: verifiedArticles.length,
-        rejected404Count,
-        deadLinksRemoved: deadLinks,
-        verifierActive: verify404,
-        articles: verifiedArticles
-      });
-
-    } catch (err: any) {
-      console.error('Erro no importador de RSS/feed:', err);
-      res.status(500).json({ error: err.message || 'Erro ao processar importação de feeds.' });
+    } finally {
+      setIsGenerating(false);
     }
-  });
+  };
 
-  // =========================================================================
-  // EXTRATOR AUTOMÁTICO DE METADADOS DE NOTÍCIAS & LINKS (ANTI-404)
-  // =========================================================================
-  app.post('/api/news/extract-meta', express.json(), async (req, res) => {
+  const handleCopyFormattedAnalysis = async (comp: PhoneComparisonRecord) => {
+    const text = `🤖 *${comp.title}* (Análise Gemma IA - Down&Convert)\n\n` +
+      `🏆 *Vencedor Geral:* ${comp.winnerOverall}\n` +
+      `💡 _${comp.winnerReason || ''}_\n\n` +
+      `📌 *Resumo do Duelo:*\n${comp.summary}\n\n` +
+      `📊 *Comparativo por Categoria:*\n` +
+      comp.categories.map(c => `• *${c.category}:* Vencedor: ${c.winner}\n  ${c.detail}`).join('\n\n') +
+      `\n\n🎯 *Para Quem é Cada Aparelho:*\n` +
+      comp.bestFor.map(b => `• *${b.phone}* (${b.badge}): ${b.profile}`).join('\n\n') +
+      `\n\n🏁 *Veredito Final - Qual Eu Compro?*\n${comp.verdict}`;
+
     try {
-      const { url } = req.body;
-      if (!url || typeof url !== 'string') {
-        return res.status(400).json({ error: 'URL da notícia é obrigatória.' });
-      }
-
-      const cleanUrl = url.trim();
-      let parsedUrl: URL;
-      try {
-        parsedUrl = new URL(cleanUrl);
-      } catch {
-        return res.status(400).json({ error: 'Formato de URL inválido. Inclua http:// ou https://' });
-      }
-
-      // 1. Testa se o link está ativo e não é 404
-      const aliveCheck = await checkUrlAlive(cleanUrl, 7000);
-      if (!aliveCheck.ok) {
-        return res.status(400).json({
-          error: `O link fornecido está inacessível ou retornou erro (Status: ${aliveCheck.status} - ${aliveCheck.message}). Certifique-se de que a notícia existe e tente novamente.`
-        });
-      }
-
-      // 2. Faz o download do HTML da página para extrair metadados OpenGraph e tags
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
-      const pageRes = await fetch(cleanUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-        },
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-
-      const html = await pageRes.text();
-
-      // Extração de Título
-      const ogTitleMatch = html.match(/<meta\s+property=["']og:title["']\s+content=["'](.*?)["']/i) ||
-                           html.match(/<meta\s+content=["'](.*?)["']\s+property=["']og:title["']/i) ||
-                           html.match(/<meta\s+name=["']twitter:title["']\s+content=["'](.*?)["']/i);
-      const titleTagMatch = html.match(/<title[^>]*>(.*?)<\/title>/i);
-      let title = ogTitleMatch ? ogTitleMatch[1] : (titleTagMatch ? titleTagMatch[1] : '');
-      title = cleanXmlText(title);
-
-      // Limpeza de sufixos de sites comuns no título (ex: " | Showmetech", " - TecMundo")
-      title = title.replace(/\s*[-|–—]\s*(Showmetech|TecMundo|Olhar Digital|Canaltech|G1|Exame|TudoCelular|UOL|Gizmodo|The Verge|TechCrunch).*$/i, '').trim();
-
-      // Extração de Descrição / Lead
-      const ogDescMatch = html.match(/<meta\s+property=["']og:description["']\s+content=["'](.*?)["']/i) ||
-                          html.match(/<meta\s+content=["'](.*?)["']\s+property=["']og:description["']/i) ||
-                          html.match(/<meta\s+name=["']description["']\s+content=["'](.*?)["']/i) ||
-                          html.match(/<meta\s+name=["']twitter:description["']\s+content=["'](.*?)["']/i);
-      let lead = ogDescMatch ? ogDescMatch[1] : '';
-      lead = cleanXmlText(lead);
-      if (lead.length > 320) {
-        lead = lead.slice(0, 317) + '...';
-      }
-
-      // Extração de Autor / Nome do Site
-      const ogSiteMatch = html.match(/<meta\s+property=["']og:site_name["']\s+content=["'](.*?)["']/i) ||
-                          html.match(/<meta\s+name=["']author["']\s+content=["'](.*?)["']/i);
-      let author = ogSiteMatch ? cleanXmlText(ogSiteMatch[1]) : '';
-      if (!author) {
-        const host = parsedUrl.hostname.replace(/^www\./, '');
-        author = host.split('.')[0].toUpperCase();
-      }
-
-      // Inferência da Categoria com base em palavras-chave
-      const fullText = (title + ' ' + lead).toLowerCase();
-      let category = 'gadgets';
-      if (fullText.includes('invenç') || fullText.includes('desenvolve') || fullText.includes('patente') || fullText.includes('protótipo') || fullText.includes('robô') || fullText.includes('energia') || fullText.includes('bateria')) {
-        category = 'inventions';
-      } else if (fullText.includes('descoberta') || fullText.includes('pesquisa') || fullText.includes('ciência') || fullText.includes('quântic') || fullText.includes('espaço') || fullText.includes('astr') || fullText.includes('dna') || fullText.includes('físic')) {
-        category = 'discoveries';
-      }
-
-      res.json({
-        success: true,
-        data: {
-          url: cleanUrl,
-          title: title || 'Notícia sobre Tecnologia e Gadgets',
-          lead: lead || 'Confira os detalhes e destaques desta publicação recente de tecnologia.',
-          author: author || 'Fonte Web',
-          category,
-          pubDate: new Date().toISOString(),
-          httpStatus: pageRes.status,
-          verified: true
-        }
-      });
-
-    } catch (err: any) {
-      console.error('Erro na extração de metadados de notícia:', err);
-      res.status(500).json({ error: err.message || 'Erro ao analisar a página da notícia.' });
+      await navigator.clipboard.writeText(text);
+      setCopiedAnalysis(true);
+      setTimeout(() => setCopiedAnalysis(false), 2500);
+    } catch {
+      setCopiedAnalysis(true);
+      setTimeout(() => setCopiedAnalysis(false), 2500);
     }
-  });
+  };
 
-  // =========================================================================
-  // SUGESTÕES DE NOTÍCIAS CURADAS & EM ALTA (TRENDING GADGETS & TECH)
-  // =========================================================================
-  app.get('/api/news/suggestions', (req, res) => {
-    const suggestions = [
-      {
-        id: 'sug-1',
-        title: 'Intel detalha Core Série 3 Wildcat Lake, CPU para trazer IA a notebooks baratos',
-        lead: 'Nova arquitetura foca em eficiência energética e aceleração neural integrada para democratizar recursos de IA generativa em PCs portáteis.',
-        category: 'inventions',
-        categoryLabel: 'Processadores & IA',
-        author: 'Showmetech',
-        link: 'https://www.showmetech.com.br/intel-detalha-core-serie-3-wildcat-lake/',
-        pubDate: new Date(Date.now() - 3600000 * 2).toISOString(),
-        trendingTag: '🔥 Processadores & IA'
-      },
-      {
-        id: 'sug-2',
-        title: 'Baterias de Lítio-Enxofre com Eletrólito Sólido quadruplicam autonomia de Drones',
-        lead: 'Pesquisadores alcançam marca histórica de 1.200 ciclos de recarga sem degradação térmica em testes de bancada de alta potência.',
-        category: 'inventions',
-        categoryLabel: 'Invenções & Energia',
-        author: 'Inovação Tecnológica',
-        link: 'https://www.inovacaotecnologica.com.br/noticias/noticia.php?artigo=flexoeletricidade-enrugar-grafeno-produz-eletricidade&id=010115260819',
-        pubDate: new Date(Date.now() - 3600000 * 5).toISOString(),
-        trendingTag: '⚡ Energia Limpa'
-      },
-      {
-        id: 'sug-3',
-        title: 'Xiaomi 18 Fold tem imagens oficiais reveladas antes do lançamento',
-        lead: 'Novo dobrável topo de linha exibe corpo ultrafino com dobradiça de fibra de carbono, câmeras Leica e bateria de silício-carbono.',
-        category: 'gadgets',
-        categoryLabel: 'Smartphones & Dobráveis',
-        author: 'TecMundo',
-        link: 'https://www.tecmundo.com.br/produto/415736-xiaomi-18-fold-tem-imagens-oficiais-reveladas-antes-do-lancamento.htm',
-        pubDate: new Date(Date.now() - 3600000 * 7).toISOString(),
-        trendingTag: '📱 Mobile Tech'
-      },
-      {
-        id: 'sug-4',
-        title: 'Chinesa lança fone com ANC para desafiar Sony por apenas R$ 220',
-        lead: 'Novo fone sem fio traz cancelamento ativo de ruído híbrido de 45 dB, drivers de titânio e autonomia de até 60 horas com estojo de recarga rápida.',
-        category: 'gadgets',
-        categoryLabel: 'Áudio & Gadgets',
-        author: 'Canaltech',
-        link: 'https://canaltech.com.br/fone-de-ouvido/chinesa-lanca-fone-com-anc-para-desafiar-sony-por-apenas-r-220/',
-        pubDate: new Date(Date.now() - 3600000 * 12).toISOString(),
-        trendingTag: '🎧 Áudio & Gadgets'
-      },
-      {
-        id: 'sug-5',
-        title: 'Novos relógios Huawei GT 7 e GT 7 Pro são lançados com até 21 dias de bateria',
-        lead: 'Smartwatches chegam com sensores ópticos aprimorados, medição de ECG de nível médico e resistência militar contra água e impactos.',
-        category: 'gadgets',
-        categoryLabel: 'Smartwatches & Gadgets',
-        author: 'TecMundo',
-        link: 'https://www.tecmundo.com.br/produto/415733-novos-relogios-huawei-gt-7-e-gt-7-pro-sao-lancados-com-ate-21-dias-de-bateria.htm',
-        pubDate: new Date(Date.now() - 3600000 * 16).toISOString(),
-        trendingTag: '⌚ Bateria Estendida'
+  const openPhonePicker = (slotIdx: number) => {
+    setSelectorSlotIndex(slotIdx);
+    setSelectorSearch('');
+    setSelectorBrandFilter('all');
+    setIsSelectorOpen(true);
+  };
+
+  const selectPhoneIntoSlot = (phone: SmartphoneType) => {
+    setSelectedPhones(prev => {
+      const next = [...prev];
+      // Se já estava selecionado em outro slot, remove
+      const existingIdx = next.findIndex(p => p.id === phone.id);
+      if (existingIdx !== -1 && existingIdx !== selectorSlotIndex) {
+        next.splice(existingIdx, 1);
       }
-    ];
-
-    res.json({
-      success: true,
-      suggestions
+      next[selectorSlotIndex] = phone;
+      return next.slice(0, 3);
     });
-  });
+    setIsSelectorOpen(false);
+    setCurrentComparison(null); // Reseta para nova análise
+  };
 
-  const isProd = process.env.NODE_ENV === 'production';
-  if (!isProd) {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'custom',
+  const removePhoneSlot = (idx: number) => {
+    setSelectedPhones(prev => prev.filter((_, i) => i !== idx));
+    setCurrentComparison(null);
+  };
+
+  // Lista de marcas disponíveis para o filtro do picker
+  const availableBrands = useMemo(() => {
+    return Array.from(new Set(mockedSmartphones.map(p => p.brand))).sort();
+  }, []);
+
+  // Telefones filtrados no seletor
+  const filteredPickerPhones = useMemo(() => {
+    const q = selectorSearch.toLowerCase().trim();
+    return mockedSmartphones.filter(p => {
+      const matchesBrand = selectorBrandFilter === 'all' || p.brand === selectorBrandFilter;
+      const matchesSearch = !q || p.brand.toLowerCase().includes(q) || p.model.toLowerCase().includes(q) || (p.specs?.processor?.chipset || '').toLowerCase().includes(q);
+      return matchesBrand && matchesSearch;
     });
-    app.use(vite.middlewares);
+  }, [selectorSearch, selectorBrandFilter]);
 
-    app.use('*', async (req, res, next) => {
-      const url = req.originalUrl;
-      if (url.startsWith('/api') || url.includes('.')) {
-        return next();
-      }
-      try {
-        let template = fs.readFileSync(path.resolve(process.cwd(), 'index.html'), 'utf-8');
-        template = await vite.transformIndexHtml(url, template);
-        const finalHtml = injectSEO(template, req.originalUrl);
-        res.status(200).set({ 'Content-Type': 'text/html' }).end(finalHtml);
-      } catch (e: any) {
-        vite.ssrFixStacktrace(e);
-        next(e);
-      }
-    });
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    
-    app.get('/robots.txt', (req, res) => {
-      res.setHeader('Content-Type', 'text/plain');
-      res.sendFile(path.join(distPath, 'robots.txt'));
-    });
+  // Comparações da comunidade filtradas
+  const filteredCommunity = useMemo(() => {
+    const q = communitySearch.toLowerCase().trim();
+    if (!q) return savedComparisons;
+    return savedComparisons.filter(c => 
+      c.title.toLowerCase().includes(q) ||
+      c.phoneNames.some(n => n.toLowerCase().includes(q)) ||
+      c.winnerOverall.toLowerCase().includes(q)
+    );
+  }, [communitySearch, savedComparisons]);
 
-    app.use(express.static(distPath, { index: false }));
+  if (!isOpen) return null;
 
-    const indexHtmlPath = path.join(distPath, 'index.html');
-    let baseHtml = '';
-    if (fs.existsSync(indexHtmlPath)) {
-      baseHtml = fs.readFileSync(indexHtmlPath, 'utf-8');
-    }
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative w-full max-w-5xl max-h-[92vh] bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl shadow-cyan-950/40 flex flex-col overflow-hidden">
+        
+        {/* Header com Abas */}
+        <div className="px-5 py-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0 bg-slate-900/90">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-cyan-500/20 via-indigo-500/20 to-purple-500/20 border border-cyan-500/30 text-cyan-300">
+              <Sparkles className="w-5 h-5 text-cyan-400 animate-pulse" />
+            </div>
+            <div>
+              <h3 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
+                <span>Qual eu compro?</span>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 font-bold uppercase tracking-wider">
+                  Gemma AI
+                </span>
+              </h3>
+              <p className="text-xs text-slate-400">
+                Assistente inteligente de comparação e consultoria técnica de smartphones
+              </p>
+            </div>
+          </div>
 
-    app.use('*', (req, res, next) => {
-      if (req.originalUrl.startsWith('/api') || req.originalUrl.includes('.')) {
-        return res.status(404).end();
-      }
-      const finalHtml = injectSEO(baseHtml, req.originalUrl);
-      res.status(200).set({ 'Content-Type': 'text/html' }).end(finalHtml);
-    });
-  }
+          <div className="flex items-center gap-2">
+            {/* Navegação de Abas */}
+            <div className="flex items-center p-1 bg-slate-950/60 border border-slate-800 rounded-xl">
+              <button
+                type="button"
+                onClick={() => setActiveTab('duel')}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === 'duel'
+                    ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Scale className="w-3.5 h-3.5" />
+                <span>Novo Duelo</span>
+              </button>
 
-  const port = process.env.PORT || 3000;
-  app.listen(port, () => {
-    console.log(`🚀 Server started at http://localhost:${port}`);
-  });
-}
+              <button
+                type="button"
+                onClick={() => setActiveTab('community')}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === 'community'
+                    ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span>Duelos da Comunidade</span>
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300">
+                  {savedComparisons.length}
+                </span>
+              </button>
+            </div>
 
-const logError = (error: Error | any) => {
-  try {
-    const errorMsg = `[${new Date().toISOString()}] ${error?.stack || error}\n`;
-    fs.appendFileSync(path.join(process.cwd(), 'error.log'), errorMsg);
-  } catch (e) {
-    console.error('Failed to write to error.log', e);
-  }
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-2 text-slate-400 hover:text-white bg-slate-800/60 hover:bg-slate-700 rounded-xl transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Corpo do Modal */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+          {activeTab === 'duel' ? (
+            <>
+              {/* Seleção dos 2 ou 3 Modelos */}
+              <div className="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 sm:p-5">
+                <div className="flex items-center justify-between gap-2 mb-4">
+                  <div>
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Scale className="w-4 h-4 text-cyan-400" />
+                      Selecione 2 ou 3 modelos para o confronto
+                    </h4>
+                    <p className="text-xs text-slate-400">
+                      O site envia a ficha técnica completa em JSON para o modelo Gemma analisar ponto a ponto.
+                    </p>
+                  </div>
+                  <span className="text-xs font-semibold text-slate-400">
+                    {selectedPhones.length}/3 selecionados
+                  </span>
+                </div>
+
+                {/* Grid dos Slots de Aparelhos */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {[0, 1, 2].map((slotIdx) => {
+                    const phone = selectedPhones[slotIdx];
+                    if (phone) {
+                      return (
+                        <div
+                          key={slotIdx}
+                          className="relative p-4 rounded-2xl bg-slate-900 border border-cyan-500/30 shadow-md shadow-cyan-950/20 flex flex-col justify-between group hover:border-cyan-400 transition-all"
+                        >
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                              Modelo {slotIdx + 1}
+                            </span>
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => openPhonePicker(slotIdx)}
+                                className="text-[11px] font-semibold text-cyan-300 hover:text-white px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 transition-colors cursor-pointer"
+                              >
+                                Trocar
+                              </button>
+                              {selectedPhones.length > 2 && (
+                                <button
+                                  type="button"
+                                  onClick={() => removePhoneSlot(slotIdx)}
+                                  className="p-1 text-slate-500 hover:text-red-400 rounded transition-colors cursor-pointer"
+                                  title="Remover 3º modelo"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="my-2">
+                            <h5 className="text-base font-extrabold text-white leading-tight">
+                              {phone.brand} {phone.model}
+                            </h5>
+                            <p className="text-xs text-slate-400 mt-0.5">
+                              {phone.releaseYear} • {phone.os}
+                            </p>
+                          </div>
+
+                          {/* Destaques Rápidos da Ficha Técnica */}
+                          <div className="grid grid-cols-2 gap-1.5 text-[11px] text-slate-300 pt-2 border-t border-slate-800/80">
+                            <div>
+                              <span className="text-slate-500 block text-[10px]">Tela:</span>
+                              <strong>{phone.specs.screen.size}" {phone.specs.screen.refreshRate}Hz</strong>
+                            </div>
+                            <div>
+                              <span className="text-slate-500 block text-[10px]">CPU:</span>
+                              <strong className="truncate block" title={phone.specs.processor.chipset}>
+                                {phone.specs.processor.chipset}
+                              </strong>
+                            </div>
+                            <div>
+                              <span className="text-slate-500 block text-[10px]">Câmera:</span>
+                              <strong>{phone.specs.camera.rear}MP</strong> ({phone.specs.camera.opticalZoom}x zoom)
+                            </div>
+                            <div>
+                              <span className="text-slate-500 block text-[10px]">Bateria:</span>
+                              <strong>{phone.specs.battery.capacity} mAh</strong>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // Slot Vazio
+                    return (
+                      <button
+                        key={slotIdx}
+                        type="button"
+                        onClick={() => openPhonePicker(slotIdx)}
+                        className={`p-6 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center text-center transition-all cursor-pointer min-h-[160px] ${
+                          slotIdx < 2
+                            ? 'border-cyan-500/40 bg-cyan-950/10 hover:bg-cyan-950/20 text-cyan-300 hover:border-cyan-400'
+                            : 'border-slate-800 bg-slate-950/30 hover:bg-slate-900/50 text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        <div className="p-3 rounded-2xl bg-slate-800/80 text-cyan-400 mb-2">
+                          <Plus className="w-5 h-5" />
+                        </div>
+                        <span className="text-xs font-bold">
+                          {slotIdx === 2 ? '+ Adicionar 3º Modelo (Opcional)' : `Escolher Modelo ${slotIdx + 1}`}
+                        </span>
+                        <span className="text-[10px] text-slate-500 mt-0.5">
+                          Clique para abrir a lista de smartphones
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Botão de Disparo do Confronto */}
+                <div className="mt-5 flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-800/80">
+                  <div className="text-xs text-slate-400 flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-cyan-400" />
+                    <span>Gemma compara câmeras, telas, processador, bateria e custo-benefício</span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleStartComparison}
+                    disabled={selectedPhones.length < 2 || isGenerating}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black bg-gradient-to-r from-cyan-500 via-indigo-500 to-purple-600 hover:from-cyan-400 hover:via-indigo-400 hover:to-purple-500 text-white shadow-lg shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+                  >
+                    <Sparkles className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
+                    <span>
+                      {isGenerating
+                        ? 'Gemma Analisando Fichas Técnicas...'
+                        : 'Analisar com Gemma: Qual Eu Compro?'}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Estado de Carregamento da IA */}
+              {isGenerating && (
+                <div className="p-6 rounded-2xl bg-gradient-to-br from-slate-950 via-indigo-950/30 to-slate-950 border border-indigo-500/30 animate-pulse text-center space-y-3">
+                  <div className="inline-flex p-3 rounded-2xl bg-indigo-500/20 text-indigo-400">
+                    <Sparkles className="w-8 h-8 animate-spin" />
+                  </div>
+                  <h4 className="text-base font-extrabold text-white">
+                    Gemma IA está cruzando as especificações...
+                  </h4>
+                  <p className="text-xs text-indigo-300/80 max-w-md mx-auto leading-relaxed">
+                    Avaliando pontuações Antutu, qualidade da tela, tecnologias de zoom e sensores fotográficos, autonomia estimada e longevidade de software.
+                  </p>
+                </div>
+              )}
+
+              {/* Mensagem de Erro */}
+              {analysisError && (
+                <div className="p-4 rounded-2xl bg-red-950/30 border border-red-500/30 text-red-200 flex items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                    <span>{analysisError}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleStartComparison}
+                    className="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-200 rounded-lg font-semibold transition-colors cursor-pointer"
+                  >
+                    Tentar Novamente
+                  </button>
+                </div>
+              )}
+
+              {/* Relatório Completo de Comparação */}
+              {currentComparison && !isGenerating && (
+                <div className="space-y-5 animate-in fade-in slide-in-from-top-3 duration-300">
+                  {/* Banner do Vencedor */}
+                  <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-amber-500/15 via-slate-900 to-indigo-950/40 border border-amber-500/40 shadow-xl shadow-amber-950/20 relative overflow-hidden">
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div className="space-y-1 flex-1 min-w-[260px]">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-extrabold">
+                            <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                            Recomendação Geral da IA
+                          </span>
+                        </div>
+                        <h3 className="text-xl sm:text-2xl font-black text-white">
+                          {currentComparison.title}
+                        </h3>
+                        <p className="text-base font-bold text-amber-300 mt-1">
+                          🏆 Vencedor: {currentComparison.winnerOverall}
+                        </p>
+                        {currentComparison.winnerReason && (
+                          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed mt-2">
+                            {currentComparison.winnerReason}
+                          </p>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleCopyFormattedAnalysis(currentComparison)}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 hover:text-white rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 border border-slate-700"
+                        title="Copiar análise formatada para WhatsApp ou redes"
+                      >
+                        {copiedAnalysis ? (
+                          <>
+                            <CheckCheck className="w-4 h-4 text-emerald-400" />
+                            <span className="text-emerald-400">Copiado com Sucesso!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-4 h-4" />
+                            <span>Copiar Análise</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Resumo da Análise */}
+                  <div className="p-5 rounded-2xl bg-slate-950/70 border border-slate-800">
+                    <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-cyan-400" />
+                      Visão Geral do Confronto
+                    </h4>
+                    <p className="text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-line">
+                      {currentComparison.summary}
+                    </p>
+                  </div>
+
+                  {/* Perfis de Usuário ("Ideal Para Quem...") */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                      <Users className="w-4 h-4 text-indigo-400" />
+                      Perfil de Cada Aparelho: Para Quem é Indicado?
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {currentComparison.bestFor?.map((bf, idx) => (
+                        <div
+                          key={idx}
+                          className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex flex-col justify-between"
+                        >
+                          <div>
+                            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 inline-block mb-2">
+                              {bf.badge}
+                            </span>
+                            <h5 className="text-sm font-bold text-white mb-1.5">{bf.phone}</h5>
+                            <p className="text-xs text-slate-300 leading-relaxed">{bf.profile}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Tabela de Categorias */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                      <Zap className="w-4 h-4 text-cyan-400" />
+                      Comparativo Detalhado por Categoria
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {currentComparison.categories?.map((cat, idx) => (
+                        <div
+                          key={idx}
+                          className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800/90 hover:border-slate-700 transition-colors"
+                        >
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <span className="text-xs font-bold text-cyan-300">{cat.category}</span>
+                            <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                              🏆 {cat.winner}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-300 leading-relaxed">{cat.detail}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Veredito Final: Qual Eu Compro? */}
+                  <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-emerald-950/30 via-slate-900 to-cyan-950/30 border border-emerald-500/30">
+                    <h4 className="text-sm font-black text-emerald-300 flex items-center gap-2 mb-2">
+                      <ArrowRight className="w-4 h-4 text-emerald-400" />
+                      Veredito Final: Qual eu compro?
+                    </h4>
+                    <p className="text-xs sm:text-sm text-slate-100 leading-relaxed whitespace-pre-line">
+                      {currentComparison.verdict}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            /* Aba da Comunidade */
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+                <div>
+                  <h4 className="text-base font-extrabold text-white flex items-center gap-2">
+                    <Users className="w-4 h-4 text-cyan-400" />
+                    Comparações Feitas por Todos os Usuários
+                  </h4>
+                  <p className="text-xs text-slate-400">
+                    Arquivo coletivo de todos os confrontos de smartphones gerados com Gemma AI
+                  </p>
+                </div>
+
+                {/* Campo de Busca nos Duelos */}
+                <div className="relative w-full sm:w-64">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={communitySearch}
+                    onChange={(e) => setCommunitySearch(e.target.value)}
+                    placeholder="Filtrar modelos (ex: S24, iPhone)..."
+                    className="w-full pl-9 pr-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                  />
+                </div>
+              </div>
+
+              {isLoadingCommunity ? (
+                <div className="py-12 text-center text-xs text-slate-400">
+                  <Sparkles className="w-6 h-6 text-cyan-400 animate-spin mx-auto mb-2" />
+                  Carregando histórico de comparações...
+                </div>
+              ) : filteredCommunity.length === 0 ? (
+                <div className="py-12 text-center bg-slate-950/40 rounded-2xl border border-slate-800/80">
+                  <Scale className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                  <p className="text-sm font-bold text-slate-300">Nenhuma comparação encontrada</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Crie o primeiro confronto na aba "Novo Duelo"!
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredCommunity.map((comp) => (
+                    <div
+                      key={comp.id}
+                      className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 hover:border-cyan-500/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
+                    >
+                      <div className="space-y-1 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-black text-white group-hover:text-cyan-300 transition-colors">
+                            {comp.title}
+                          </span>
+                          <span className="text-[10px] text-slate-500">
+                            • {new Date(comp.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                          <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                            🏆 {comp.winnerOverall}
+                          </span>
+                          {comp.phoneNames?.map((name, i) => (
+                            <span
+                              key={i}
+                              className="text-[10px] text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800"
+                            >
+                              {name}
+                            </span>
+                          ))}
+                        </div>
+                        {comp.summary && (
+                          <p className="text-xs text-slate-400 line-clamp-2 mt-1">
+                            {comp.summary}
+                          </p>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCurrentComparison(comp);
+                          setActiveTab('duel');
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-cyan-300 text-xs font-bold transition-all cursor-pointer shrink-0"
+                      >
+                        <span>Ver Análise</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Modal Pop-up do Seletor de Smartphones */}
+        {isSelectorOpen && (
+          <div className="absolute inset-0 z-50 bg-slate-950/90 backdrop-blur-md p-4 sm:p-6 flex flex-col">
+            <div className="flex items-center justify-between gap-3 pb-4 border-b border-slate-800 shrink-0">
+              <div>
+                <h4 className="text-base font-extrabold text-white flex items-center gap-2">
+                  <Smartphone className="w-4 h-4 text-cyan-400" />
+                  Escolher Smartphone para o Slot {selectorSlotIndex + 1}
+                </h4>
+                <p className="text-xs text-slate-400">
+                  Pesquise por modelo ou filtre por marca no catálogo
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSelectorOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-white bg-slate-800 rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Barra de Filtro e Busca */}
+            <div className="py-3 flex flex-wrap items-center gap-2 shrink-0">
+              <div className="relative flex-1 min-w-[220px]">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={selectorSearch}
+                  onChange={(e) => setSelectorSearch(e.target.value)}
+                  placeholder="Pesquisar smartphone, processador..."
+                  className="w-full pl-9 pr-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                  autoFocus
+                />
+              </div>
+
+              {/* Filtro por Marca */}
+              <select
+                value={selectorBrandFilter}
+                onChange={(e) => setSelectorBrandFilter(e.target.value)}
+                className="px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-cyan-500 cursor-pointer"
+              >
+                <option value="all">Todas as Marcas</option>
+                {availableBrands.map((b) => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Lista Scrollável de Aparelhos */}
+            <div className="flex-1 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 pr-1">
+              {filteredPickerPhones.map((phone) => {
+                const isAlreadySelected = selectedPhones.some(p => p.id === phone.id);
+                return (
+                  <button
+                    key={phone.id}
+                    type="button"
+                    onClick={() => selectPhoneIntoSlot(phone)}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                      isAlreadySelected
+                        ? 'bg-cyan-500/10 border-cyan-500/40'
+                        : 'bg-slate-900/90 border-slate-800 hover:border-cyan-500/30 hover:bg-slate-800/80'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-1 mb-1">
+                      <span className="text-[10px] text-cyan-400 font-bold uppercase">
+                        {phone.brand}
+                      </span>
+                      {isAlreadySelected && (
+                        <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-0.5">
+                          <Check className="w-3 h-3" /> Selecionado
+                        </span>
+                      )}
+                    </div>
+                    <h5 className="text-xs sm:text-sm font-bold text-white mb-1">
+                      {phone.model}
+                    </h5>
+                    <div className="text-[10px] text-slate-400 space-y-0.5 pt-1 border-t border-slate-800/80">
+                      <div>Tela: {phone.specs.screen.size}" • {phone.specs.screen.refreshRate}Hz</div>
+                      <div className="truncate">CPU: {phone.specs.processor.chipset}</div>
+                      <div>Câmera: {phone.specs.camera.rear}MP • Bateria: {phone.specs.battery.capacity}mAh</div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
 };
-
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception:', err);
-  logError(err);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  logError(reason);
-});
-
-startServer().catch(err => {
-  console.error('Failed to start server:', err);
-  logError(err);
-  process.exit(1);
-});
