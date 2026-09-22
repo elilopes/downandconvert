@@ -2688,6 +2688,13 @@ const dict: Translations = {
     RU: "Описание скопировано!",
     HI: "जानकारी कॉपी की गई!",
     KO: "정보가 복사되었습니다!"
+  },
+  "error.gemini503": {
+    PT: "Error: code 503 - Este modelo está passando por alta demanda no momento. Picos de demanda geralmente são temporários. Por favor, tente novamente mais tarde.",
+    EN: "Error: code 503 - This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.",
+    RU: "Error: code 503 - Эта модель в настоящее время испытывает высокий спрос. Всплески спроса обычно носят временный характер. Пожалуйста, повторите попытку позже.",
+    HI: "Error: code 503 - इस 모델 में वर्तमान में अत्यधिक माँग है। माँग में उछाल आमतौर पर अस्थायी होता है। कृपया बाद में पुनः प्रयास करें।",
+    KO: "Error: code 503 - 이 모델은 현재 대기 시간이 깁니다. 이러한 사용량 급증은 일시적입니다. 나중에 다시 시도해 주세요."
   }
 };
 
