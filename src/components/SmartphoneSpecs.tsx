@@ -3,6 +3,7 @@ import { Smartphone, Watch, Tablet, Cpu, Camera, Battery, Monitor, HardDrive, Se
 import { useLanguage } from '../contexts/LanguageContext';
 import { mockedSmartphones, Smartphone as SmartphoneType } from '../data/smartphones';
 import { PhoneComparisonModal } from './PhoneComparisonModal';
+import { SimilarDevicesModal } from './SimilarDevicesModal';
 
 interface GameCompatibility {
   title: string;
@@ -262,6 +263,7 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
   const [isGamesExpanded, setIsGamesExpanded] = useState<boolean>(true);
   const [selectedGames, setSelectedGames] = useState<string[]>([]);
   const [selectedPhoneForGames, setSelectedPhoneForGames] = useState<SmartphoneType | null>(null);
+  const [selectedPhoneForSimilar, setSelectedPhoneForSimilar] = useState<SmartphoneType | null>(null);
   
   // Assistente de Comparação "Qual eu compro?" com Gemma IA
   const [isComparisonModalOpen, setIsComparisonModalOpen] = useState<boolean>(false);
@@ -514,7 +516,13 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
       const matchesSearch = term === '' || 
                             normalizeTextForSearch(phone.model).includes(term) || 
                             normalizeTextForSearch(phone.brand).includes(term) ||
-                            normalizedTier.includes(term) ||
+                            normalizeTextForSearch(phone.id).includes(term) ||
+                            normalizeTextForSearch(p.processor.chipset).includes(term) ||
+                            normalizeTextForSearch(p.processor.cpuBrand).includes(term) ||
+                            normalizeTextForSearch(p.gpu.model).includes(term) ||
+                            normalizeTextForSearch(phone.os).includes(term) ||
+                            (phone.osVersion && normalizeTextForSearch(phone.osVersion).includes(term)) ||
+                            normalizedTier === term ||
                             ((term === 'tv' || term.includes('tv digital') || term.includes('digital tv') || term.includes('televisao')) && p.features.hasDigitalTv);
                             
       const matchesCategoryTier = selectedCategoryTier === 'all' || tier === selectedCategoryTier;
@@ -639,7 +647,7 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
         </div>
       )}
 
-      {/* Assistente de Comparação "Qual eu compro?" com Gemma IA */}
+      {/* Assistente de Comparação "Qual eu compro?" */}
       {!focusedDeviceId && (
         <div className="w-full max-w-3xl mx-auto flex flex-wrap items-center justify-center gap-3 my-1">
           <button
@@ -648,7 +656,7 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
             className="inline-flex items-center gap-2.5 px-5 py-2.5 bg-gradient-to-r from-cyan-500 via-indigo-500 to-purple-600 hover:from-cyan-400 hover:via-indigo-400 hover:to-purple-500 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-cyan-500/20 transition-all cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
           >
             <Sparkles className="w-4 h-4 text-cyan-200 animate-pulse" />
-            <span>Qual eu compro? 🤖 Assistente Gemma</span>
+            <span>Qual eu compro?</span>
             {selectedForComparison.length > 0 && (
               <span className="px-2 py-0.5 rounded-full bg-slate-950/40 text-cyan-200 text-xs font-black border border-cyan-400/30">
                 {selectedForComparison.length}/3 selecionados
@@ -1707,6 +1715,17 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
                       <Gamepad2 className="w-3.5 h-3.5 text-purple-400" />
                       <span>🎮 Jogos</span>
                     </button>
+
+                    {/* Similar Devices Button */}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPhoneForSimilar(phone)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm print:hidden"
+                      title="Ver aparelhos com ficha técnica e desempenho semelhantes"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Semelhantes</span>
+                    </button>
                   </div>
                 </div>
                 
@@ -1869,8 +1888,8 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
               <Sparkles className="w-3.5 h-3.5 text-cyan-200" />
               <span>
                 {selectedForComparison.length >= 2
-                  ? `Comparar com Gemma (${selectedForComparison.length})`
-                  : 'Abrir Comparador'}
+                  ? `Comparar dispositivos (${selectedForComparison.length})`
+                  : 'Comparar dispositivos'}
               </span>
             </button>
           </div>
@@ -1883,6 +1902,25 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
         onClose={() => setIsComparisonModalOpen(false)}
         initialSelectedPhones={selectedForComparison}
       />
+
+      {/* Modal de Dispositivos Semelhantes */}
+      {selectedPhoneForSimilar && (
+        <SimilarDevicesModal
+          targetPhone={selectedPhoneForSimilar}
+          allPhones={mockedSmartphones}
+          onClose={() => setSelectedPhoneForSimilar(null)}
+          onCompareWith={(target, similar) => {
+            setSelectedForComparison([target, similar]);
+            setSelectedPhoneForSimilar(null);
+            setIsComparisonModalOpen(true);
+          }}
+          onViewSpecs={(phone) => {
+            setSelectedPhoneForSimilar(null);
+            window.history.pushState({}, '', `/${phone.id}`);
+            window.dispatchEvent(new PopStateEvent('popstate'));
+          }}
+        />
+      )}
 
     </div>
   );
