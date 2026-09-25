@@ -2512,8 +2512,8 @@ Regras:
       return true;
     }
 
-    // 3. Política / Eleições / Votação / Aplicativos Governamentais Eleitorais (e-Título)
-    const politicsPattern = /\b(eleição|eleições|eleicao|eleicoes|votação|votacao|e-título|e-titulo|justiça\s+eleitoral|urna\s+eletrônica|urnas\s+eletrônicas|candidatos?|partido\s+político)\b/i;
+    // 3. Política / Governo / Eleições / Votação / Apostas / Bets / Governo Lula / Ministérios / Legislação Governamental
+    const politicsPattern = /\b(eleição|eleições|eleicao|eleicoes|votação|votacao|e-título|e-titulo|justiça\s+eleitoral|urna\s+eletrônica|urnas\s+eletrônicas|candidatos?|partido\s+político|governo|governo\s+lula|lula|presidência|presidencia|ministério|ministerio|ministros?|senado|câmara|camara|congresso\s+nacional|medida\s+provisória|decreto|bets?|apostas?|mercado\s+ilegal\s+de\s+apostas|proibição\s+de\s+bets|proibicao\s+de\s+bets|jogos\s+de\s+azar|jogos\s+de\s+fortuna)\b/i;
     if (politicsPattern.test(combined)) {
       return true;
     }
