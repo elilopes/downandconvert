@@ -60,7 +60,7 @@ export const isGameOrExcludedNews = (itemOrTitle?: any): boolean => {
     subtitleText = extractString(itemOrTitle.subtitle);
     leadText = extractString(itemOrTitle.lead);
     if (itemOrTitle.link) {
-      // Remove parâmetros de rastreamento/UTM que podem conter o nome da revista
+      // Remove parâmetros de rastreamento/UTM
       linkClean = itemOrTitle.link.split('?')[0].replace(/[-_./]/g, ' ');
     }
   }
@@ -68,15 +68,38 @@ export const isGameOrExcludedNews = (itemOrTitle?: any): boolean => {
   const combinedText = `${titleText} ${subtitleText} ${leadText}`.toLowerCase();
   const cleanLink = linkClean.toLowerCase();
 
-  // Filtro estrito: palavra "jogo", "jogos", "game", "games" e termos correlatos de jogos
+  // 1. Jogos / Games / Consoles / Trailers / Filmes
   const gamePattern = /\b(jogos?|games?|gamer|gamers|gaming|gameplay|jogabilidade|jogador|jogadores|videogames?|video\s+games?)\b/i;
   if (gamePattern.test(combinedText) || gamePattern.test(cleanLink)) {
     return true;
   }
 
-  // Termos adicionais excluídos: trailers, filmes, consoles e franquias de games
   const otherPattern = /\b(trailer|trailers|filme|filmes|playstation|ps5|ps4|ps3|ps2|xbox|nintendo|switch|pokemon|pokémon|gta|elden ring|god of war|voxel)\b/i;
   if (otherPattern.test(combinedText) || otherPattern.test(cleanLink)) {
+    return true;
+  }
+
+  // 2. Processos Judiciais / Investigações Legais / Escândalos / Cambridge Analytica
+  const legalPattern = /\b(cambridge\s+analytica|departamento\s+de\s+justiça|sem\s+nenhuma\s+acusação|sem\s+nenhuma\s+acusacao|culpada?\s+nos?\s+eua|investigação\s+sobre|investigacao\s+sobre|processo\s+judicial|tribunal|julgamento|suprema\s+corte)\b/i;
+  if (legalPattern.test(combinedText) || legalPattern.test(cleanLink)) {
+    return true;
+  }
+
+  // 3. Política / Eleições / Votação / Aplicativos Governamentais Eleitorais (e-Título)
+  const politicsPattern = /\b(eleição|eleições|eleicao|eleicoes|votação|votacao|e-título|e-titulo|justiça\s+eleitoral|urna\s+eletrônica|urnas\s+eletrônicas|candidatos?|partido\s+político)\b/i;
+  if (politicsPattern.test(combinedText) || politicsPattern.test(cleanLink)) {
+    return true;
+  }
+
+  // 4. Setor Automotivo / Recalls de Carros / Montadoras
+  const automotivePattern = /\b(recall|volkswagen|audi|toyota|chevrolet|fiat|ford|renault|risco\s+na\s+direção|risco\s+na\s+direcao|risco\s+de\s+incêndio|montadoras?|veículos\s+convocados)\b/i;
+  if (automotivePattern.test(combinedText) || automotivePattern.test(cleanLink)) {
+    return true;
+  }
+
+  // 5. Listas de Lançamentos de Streaming / Colunas de Opinião Genérica de Entretenimento
+  const streamingPattern = /\b(lançamentos?\s+d[ao]|lancamentos?\s+d[ao]|o\s+que\s+chega\s+n[ao]|você\s+não\s+precisa\s+assistir|voce\s+nao\s+precisa\s+assistir|o\s+que\s+assistir|dicas\s+de\s+filmes|séries\s+da\s+semana|series\s+da\s+semana)\b/i;
+  if (streamingPattern.test(combinedText) || streamingPattern.test(cleanLink)) {
     return true;
   }
 
