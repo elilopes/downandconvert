@@ -506,6 +506,447 @@ export const mockedSmartphones: Smartphone[] = [
     }
   },
   {
+    id: "samsung-galaxy-a33-5g",
+    deviceType: "smartphone",
+    categoryTier: "intermediário",
+    brand: "Samsung",
+    model: "Galaxy A33 5G",
+    os: "Android",
+    osVersion: "Android 12 (One UI 4.1), atualizável para Android 16",
+    releaseYear: 2022,
+    specs: {
+      screen: { type: "Super AMOLED 90Hz (Gorilla Glass 5)", size: 6.4, resolution: "1080 x 2400", refreshRate: 90, isFoldable: false },
+      processor: { chipset: "Exynos 1280", cpuBrand: "Samsung", cores: 8, architecture: 64 },
+      gpu: { model: "Mali-G68", brand: "Mali" },
+      ram: [6, 8],
+      storage: { options: [128, 256], expandable: true },
+      camera: { rear: 48, front: 13, opticalZoom: 0, stabilization: true, faceDetection: true, recordingResolution: '4K', slowMotion: true, maxFocusAngle: 123, touchFocus: true },
+      battery: { capacity: 5000, chargingTypes: ['USB tipo C', 'Turbo'] },
+      performance: { antutu: 430000, geekbench: '740/1900', tdMark: 2100 },
+      features: { hasGps: true, hasNfc: true, network: '5G', simCards: 2, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: true, supportsWhatsApp: true, simTypes: ['Nano-SIM (4FF)'], hasCompass: true, hasUsbOtg: true }
+    }
+  },
+  {
+    id: "samsung-galaxy-a06",
+    deviceType: "smartphone",
+    categoryTier: "entrada",
+    brand: "Samsung",
+    model: "Galaxy A06",
+    os: "Android",
+    osVersion: "Android 14 (One UI 6.1)",
+    releaseYear: 2024,
+    specs: {
+      screen: { type: "PLS LCD", size: 6.7, resolution: "720 x 1600", refreshRate: 60, isFoldable: false },
+      processor: { chipset: "MediaTek Helio G85", cpuBrand: "MediaTek", cores: 8, architecture: 64 },
+      gpu: { model: "Mali-G52 MC2", brand: "Mali" },
+      ram: [4, 6],
+      storage: { options: [64, 128], expandable: true },
+      camera: { rear: 50, front: 8, opticalZoom: 0, stabilization: false, faceDetection: true, recordingResolution: 'FHD', slowMotion: true, maxFocusAngle: 118, touchFocus: true },
+      battery: { capacity: 5000, chargingTypes: ['USB tipo C', 'Turbo'] },
+      performance: { antutu: 240000, geekbench: '420/1350', tdMark: 1200 },
+      features: { hasGps: true, hasNfc: false, network: '4G', simCards: 2, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: true, supportsWhatsApp: true, simTypes: ['Nano-SIM (4FF)'], hasCompass: true, hasUsbOtg: true }
+    }
+  },
+  {
+    id: "samsung-galaxy-a07-4g",
+    deviceType: "smartphone",
+    categoryTier: "entrada",
+    brand: "Samsung",
+    model: "Galaxy A07 4G",
+    os: "Android",
+    osVersion: "Android 15 (One UI 7.0)",
+    releaseYear: 2025,
+    specs: {
+      screen: { type: "PLS LCD 90Hz", size: 6.7, resolution: "720 x 1600", refreshRate: 90, isFoldable: false },
+      processor: { chipset: "MediaTek Helio G99", cpuBrand: "MediaTek", cores: 8, architecture: 64 },
+      gpu: { model: "Mali-G57 MC2", brand: "Mali" },
+      ram: [4, 6],
+      storage: { options: [64, 128], expandable: true },
+      camera: { rear: 50, front: 8, opticalZoom: 0, stabilization: false, faceDetection: true, recordingResolution: 'FHD', slowMotion: true, maxFocusAngle: 118, touchFocus: true },
+      battery: { capacity: 5000, chargingTypes: ['USB tipo C', 'Turbo'] },
+      performance: { antutu: 380000, geekbench: '710/1850', tdMark: 1800 },
+      features: { hasGps: true, hasNfc: true, network: '4G', simCards: 2, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: true, supportsWhatsApp: true, simTypes: ['Nano-SIM (4FF)'], hasCompass: true, hasUsbOtg: true }
+    }
+  },
+  {
+    id: "samsung-galaxy-a15-5g",
+    deviceType: "smartphone",
+    categoryTier: "intermediário",
+    brand: "Samsung",
+    model: "Galaxy A15 5G",
+    os: "Android",
+    osVersion: "Android 14 (One UI 6.0)",
+    releaseYear: 2024,
+    specs: {
+      screen: { type: "Super AMOLED 90Hz", size: 6.5, resolution: "1080 x 2340", refreshRate: 90, isFoldable: false },
+      processor: { chipset: "MediaTek Dimensity 6100+", cpuBrand: "MediaTek", cores: 8, architecture: 64 },
+      gpu: { model: "Mali-G57 MC2", brand: "Mali" },
+      ram: [4, 8],
+      storage: { options: [128, 256], expandable: true },
+      camera: { rear: 50, front: 13, opticalZoom: 0, stabilization: false, faceDetection: true, recordingResolution: 'FHD', slowMotion: true, maxFocusAngle: 120, touchFocus: true },
+      battery: { capacity: 5000, chargingTypes: ['USB tipo C', 'Turbo'] },
+      performance: { antutu: 400000, geekbench: '690/1900', tdMark: 1900 },
+      features: { hasGps: true, hasNfc: true, network: '5G', simCards: 2, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: true, supportsWhatsApp: true, simTypes: ['Nano-SIM (4FF)'], hasCompass: true, hasUsbOtg: true }
+    }
+  },
+  {
+    id: "samsung-galaxy-a16-5g",
+    deviceType: "smartphone",
+    categoryTier: "intermediário",
+    brand: "Samsung",
+    model: "Galaxy A16 5G",
+    os: "Android",
+    osVersion: "Android 14 (One UI 6.1)",
+    releaseYear: 2024,
+    specs: {
+      screen: { type: "Super AMOLED 90Hz", size: 6.7, resolution: "1080 x 2340", refreshRate: 90, isFoldable: false },
+      processor: { chipset: "Exynos 1330", cpuBrand: "Samsung", cores: 8, architecture: 64 },
+      gpu: { model: "Mali-G68 MP2", brand: "Mali" },
+      ram: [4, 8],
+      storage: { options: [128, 256], expandable: true },
+      camera: { rear: 50, front: 13, opticalZoom: 0, stabilization: false, faceDetection: true, recordingResolution: 'FHD', slowMotion: true, maxFocusAngle: 120, touchFocus: true },
+      battery: { capacity: 5000, chargingTypes: ['USB tipo C', 'Turbo'] },
+      performance: { antutu: 430000, geekbench: '740/2000', tdMark: 2000 },
+      features: { hasGps: true, hasNfc: true, network: '5G', simCards: 2, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: true, supportsWhatsApp: true, simTypes: ['Nano-SIM (4FF)'], hasCompass: true, hasUsbOtg: true }
+    }
+  },
+  {
+    id: "samsung-galaxy-a17-5g",
+    deviceType: "smartphone",
+    categoryTier: "intermediário",
+    brand: "Samsung",
+    model: "Galaxy A17 5G",
+    os: "Android",
+    osVersion: "Android 16 (One UI 8.0)",
+    releaseYear: 2026,
+    specs: {
+      screen: { type: "Super AMOLED 120Hz", size: 6.6, resolution: "1080 x 2340", refreshRate: 120, isFoldable: false },
+      processor: { chipset: "Exynos 1380", cpuBrand: "Samsung", cores: 8, architecture: 64 },
+      gpu: { model: "Mali-G68 MP5", brand: "Mali" },
+      ram: [6, 8],
+      storage: { options: [128, 256], expandable: true },
+      camera: { rear: 50, front: 13, opticalZoom: 0, stabilization: true, faceDetection: true, recordingResolution: '4K', slowMotion: true, maxFocusAngle: 120, touchFocus: true },
+      battery: { capacity: 5000, chargingTypes: ['USB tipo C', 'Turbo'] },
+      performance: { antutu: 540000, geekbench: '1020/2850', tdMark: 2900 },
+      features: { hasGps: true, hasNfc: true, network: '5G', simCards: 2, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: true, supportsWhatsApp: true, simTypes: ['Nano-SIM (4FF)', 'eSIM'], hasCompass: true, hasUsbOtg: true }
+    }
+  },
+  {
+    id: "samsung-galaxy-a36-5g",
+    deviceType: "smartphone",
+    categoryTier: "intermediário",
+    brand: "Samsung",
+    model: "Galaxy A36 5G",
+    os: "Android",
+    osVersion: "Android 15 (One UI 7.0)",
+    releaseYear: 2025,
+    specs: {
+      screen: { type: "Super AMOLED 120Hz", size: 6.6, resolution: "1080 x 2340", refreshRate: 120, isFoldable: false },
+      processor: { chipset: "Snapdragon 6 Gen 3", cpuBrand: "Qualcomm", cores: 8, architecture: 64 },
+      gpu: { model: "Adreno 710", brand: "Adreno" },
+      ram: [6, 8],
+      storage: { options: [128, 256], expandable: true },
+      camera: { rear: 50, front: 12, opticalZoom: 0, stabilization: true, faceDetection: true, recordingResolution: '4K', slowMotion: true, maxFocusAngle: 120, touchFocus: true },
+      battery: { capacity: 5000, chargingTypes: ['USB tipo C', 'Turbo'] },
+      performance: { antutu: 620000, geekbench: '1050/2950', tdMark: 3200 },
+      features: { hasGps: true, hasNfc: true, network: '5G', simCards: 2, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: true, supportsWhatsApp: true, simTypes: ['Nano-SIM (4FF)', 'eSIM'], hasCompass: true, hasUsbOtg: true }
+    }
+  },
+  {
+    id: "samsung-galaxy-a55-5g",
+    deviceType: "smartphone",
+    categoryTier: "intermediário",
+    brand: "Samsung",
+    model: "Galaxy A55 5G",
+    os: "Android",
+    osVersion: "Android 14 (One UI 6.1)",
+    releaseYear: 2024,
+    specs: {
+      screen: { type: "Super AMOLED 120Hz (Gorilla Glass Victus+)", size: 6.6, resolution: "1080 x 2340", refreshRate: 120, isFoldable: false },
+      processor: { chipset: "Exynos 1480", cpuBrand: "Samsung", cores: 8, architecture: 64 },
+      gpu: { model: "Xclipse 530 (AMD RDNA 2)", brand: "Xclipse" },
+      ram: [8, 12],
+      storage: { options: [128, 256], expandable: true },
+      camera: { rear: 50, front: 32, opticalZoom: 0, stabilization: true, faceDetection: true, recordingResolution: '4K', slowMotion: true, maxFocusAngle: 123, touchFocus: true },
+      battery: { capacity: 5000, chargingTypes: ['USB tipo C', 'Turbo'] },
+      performance: { antutu: 720000, geekbench: '1150/3350', tdMark: 4100 },
+      features: { hasGps: true, hasNfc: true, network: '5G', simCards: 2, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: true, supportsWhatsApp: true, simTypes: ['Nano-SIM (4FF)', 'eSIM'], hasCompass: true, hasUsbOtg: true }
+    }
+  },
+  {
+    id: "samsung-galaxy-a56-5g",
+    deviceType: "smartphone",
+    categoryTier: "intermediário",
+    brand: "Samsung",
+    model: "Galaxy A56 5G",
+    os: "Android",
+    osVersion: "Android 15 (One UI 7.0)",
+    releaseYear: 2025,
+    specs: {
+      screen: { type: "Super AMOLED 120Hz (1600 nits)", size: 6.6, resolution: "1080 x 2340", refreshRate: 120, isFoldable: false },
+      processor: { chipset: "Exynos 1580", cpuBrand: "Samsung", cores: 8, architecture: 64 },
+      gpu: { model: "Xclipse 540", brand: "Xclipse" },
+      ram: [8, 12],
+      storage: { options: [128, 256], expandable: true },
+      camera: { rear: 50, front: 12, opticalZoom: 0, stabilization: true, faceDetection: true, recordingResolution: '4K', slowMotion: true, maxFocusAngle: 123, touchFocus: true },
+      battery: { capacity: 5000, chargingTypes: ['USB tipo C', 'Turbo'] },
+      performance: { antutu: 890000, geekbench: '1320/3800', tdMark: 5200 },
+      features: { hasGps: true, hasNfc: true, network: '5G', simCards: 2, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: true, supportsWhatsApp: true, simTypes: ['Nano-SIM (4FF)', 'eSIM'], hasCompass: true, hasUsbOtg: true }
+    }
+  },
+  {
+    id: "apple-iphone-16",
+    deviceType: "smartphone",
+    categoryTier: "topo de linha",
+    brand: "Apple",
+    model: "iPhone 16",
+    os: "iOS",
+    osVersion: "iOS 18",
+    releaseYear: 2024,
+    specs: {
+      screen: { type: "Super Retina XDR OLED (Ceramic Shield)", size: 6.1, resolution: "1179 x 2556", refreshRate: 60, isFoldable: false },
+      processor: { chipset: "Apple A18", cpuBrand: "Apple", cores: 6, architecture: 64 },
+      gpu: { model: "Apple A18 GPU 5-core", brand: "Apple GPU" },
+      ram: [8],
+      storage: { options: [128, 256, 512], expandable: false },
+      camera: { rear: 48, front: 12, opticalZoom: 2, stabilization: true, faceDetection: true, recordingResolution: '4K', slowMotion: true, maxFocusAngle: 120, touchFocus: true },
+      battery: { capacity: 3561, chargingTypes: ['USB tipo C', 'Sem fio', 'Turbo'] },
+      performance: { antutu: 1650000, geekbench: '3200/8100', tdMark: 16000 },
+      features: { hasGps: true, hasNfc: true, network: '5G', simCards: 2, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: false, supportsWhatsApp: true, simTypes: ['Nano-SIM (4FF)', 'eSIM'], hasCompass: true, hasUsbOtg: false }
+    }
+  },
+  {
+    id: "apple-iphone-17",
+    deviceType: "smartphone",
+    categoryTier: "topo de linha",
+    brand: "Apple",
+    model: "iPhone 17",
+    os: "iOS",
+    osVersion: "iOS 19",
+    releaseYear: 2025,
+    specs: {
+      screen: { type: "LTPO Super Retina XDR OLED 120Hz", size: 6.3, resolution: "1206 x 2622", refreshRate: 120, isFoldable: false },
+      processor: { chipset: "Apple A19", cpuBrand: "Apple", cores: 6, architecture: 64 },
+      gpu: { model: "Apple A19 GPU 5-core", brand: "Apple GPU" },
+      ram: [8],
+      storage: { options: [128, 256, 512], expandable: false },
+      camera: { rear: 48, front: 24, opticalZoom: 2, stabilization: true, faceDetection: true, recordingResolution: '4K', slowMotion: true, maxFocusAngle: 120, touchFocus: true },
+      battery: { capacity: 3700, chargingTypes: ['USB tipo C', 'Sem fio', 'Turbo'] },
+      performance: { antutu: 1950000, geekbench: '3600/9200', tdMark: 19000 },
+      features: { hasGps: true, hasNfc: true, network: '5G', simCards: 2, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: false, supportsWhatsApp: true, simTypes: ['Nano-SIM (4FF)', 'eSIM'], hasCompass: true, hasUsbOtg: false }
+    }
+  },
+  {
+    id: "apple-iphone-6",
+    deviceType: "smartphone",
+    categoryTier: "entrada",
+    brand: "Apple",
+    model: "iPhone 6",
+    os: "iOS",
+    osVersion: "iOS 8.0, atualizável para iOS 12.5.7",
+    releaseYear: 2014,
+    specs: {
+      screen: { type: "IPS Retina HD", size: 4.7, resolution: "750 x 1334", refreshRate: 60, isFoldable: false },
+      processor: { chipset: "Apple A8", cpuBrand: "Apple", cores: 2, architecture: 64 },
+      gpu: { model: "PowerVR GX6450", brand: "PowerVR" },
+      ram: [1],
+      storage: { options: [16, 32, 64, 128], expandable: false },
+      camera: { rear: 8, front: 1.2, opticalZoom: 0, stabilization: false, faceDetection: true, recordingResolution: 'FHD', slowMotion: true, maxFocusAngle: 85, touchFocus: true },
+      battery: { capacity: 1810, chargingTypes: ['Lightning'] },
+      performance: { antutu: 80000, geekbench: '320/610', tdMark: 1100 },
+      features: { hasGps: true, hasNfc: true, network: '4G', simCards: 1, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: true, supportsWhatsApp: false, simTypes: ['Nano-SIM (4FF)'], hasCompass: true, hasUsbOtg: false }
+    }
+  },
+  {
+    id: "apple-iphone-6-plus",
+    deviceType: "smartphone",
+    categoryTier: "entrada",
+    brand: "Apple",
+    model: "iPhone 6 Plus",
+    os: "iOS",
+    osVersion: "iOS 8.0, atualizável para iOS 12.5.7",
+    releaseYear: 2014,
+    specs: {
+      screen: { type: "IPS Retina HD", size: 5.5, resolution: "1080 x 1920", refreshRate: 60, isFoldable: false },
+      processor: { chipset: "Apple A8", cpuBrand: "Apple", cores: 2, architecture: 64 },
+      gpu: { model: "PowerVR GX6450", brand: "PowerVR" },
+      ram: [1],
+      storage: { options: [16, 64, 128], expandable: false },
+      camera: { rear: 8, front: 1.2, opticalZoom: 0, stabilization: true, faceDetection: true, recordingResolution: 'FHD', slowMotion: true, maxFocusAngle: 85, touchFocus: true },
+      battery: { capacity: 2915, chargingTypes: ['Lightning'] },
+      performance: { antutu: 82000, geekbench: '325/620', tdMark: 1120 },
+      features: { hasGps: true, hasNfc: true, network: '4G', simCards: 1, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: true, supportsWhatsApp: false, simTypes: ['Nano-SIM (4FF)'], hasCompass: true, hasUsbOtg: false }
+    }
+  },
+  {
+    id: "apple-iphone-6s",
+    deviceType: "smartphone",
+    categoryTier: "entrada",
+    brand: "Apple",
+    model: "iPhone 6s",
+    os: "iOS",
+    osVersion: "iOS 9.0, atualizável para iOS 15.8.3",
+    releaseYear: 2015,
+    specs: {
+      screen: { type: "IPS Retina HD (3D Touch)", size: 4.7, resolution: "750 x 1334", refreshRate: 60, isFoldable: false },
+      processor: { chipset: "Apple A9", cpuBrand: "Apple", cores: 2, architecture: 64 },
+      gpu: { model: "PowerVR GT7600", brand: "PowerVR" },
+      ram: [2],
+      storage: { options: [16, 32, 64, 128], expandable: false },
+      camera: { rear: 12, front: 5, opticalZoom: 0, stabilization: false, faceDetection: true, recordingResolution: '4K', slowMotion: true, maxFocusAngle: 90, touchFocus: true },
+      battery: { capacity: 1715, chargingTypes: ['Lightning'] },
+      performance: { antutu: 170000, geekbench: '550/1020', tdMark: 1800 },
+      features: { hasGps: true, hasNfc: true, network: '4G', simCards: 1, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: true, supportsWhatsApp: true, simTypes: ['Nano-SIM (4FF)'], hasCompass: true, hasUsbOtg: false }
+    }
+  },
+  {
+    id: "apple-iphone-6s-plus",
+    deviceType: "smartphone",
+    categoryTier: "entrada",
+    brand: "Apple",
+    model: "iPhone 6s Plus",
+    os: "iOS",
+    osVersion: "iOS 9.0, atualizável para iOS 15.8.3",
+    releaseYear: 2015,
+    specs: {
+      screen: { type: "IPS Retina HD (3D Touch)", size: 5.5, resolution: "1080 x 1920", refreshRate: 60, isFoldable: false },
+      processor: { chipset: "Apple A9", cpuBrand: "Apple", cores: 2, architecture: 64 },
+      gpu: { model: "PowerVR GT7600", brand: "PowerVR" },
+      ram: [2],
+      storage: { options: [16, 32, 64, 128], expandable: false },
+      camera: { rear: 12, front: 5, opticalZoom: 0, stabilization: true, faceDetection: true, recordingResolution: '4K', slowMotion: true, maxFocusAngle: 90, touchFocus: true },
+      battery: { capacity: 2750, chargingTypes: ['Lightning'] },
+      performance: { antutu: 175000, geekbench: '560/1040', tdMark: 1850 },
+      features: { hasGps: true, hasNfc: true, network: '4G', simCards: 1, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: true, supportsWhatsApp: true, simTypes: ['Nano-SIM (4FF)'], hasCompass: true, hasUsbOtg: false }
+    }
+  },
+  {
+    id: "xiaomi-redmi-a5",
+    deviceType: "smartphone",
+    categoryTier: "entrada",
+    brand: "Xiaomi",
+    model: "Redmi A5",
+    os: "Android",
+    osVersion: "Android 15 (Go Edition)",
+    releaseYear: 2025,
+    specs: {
+      screen: { type: "IPS LCD 90Hz", size: 6.71, resolution: "720 x 1650", refreshRate: 90, isFoldable: false },
+      processor: { chipset: "Unisoc T606", cpuBrand: "Unisoc", cores: 8, architecture: 64 },
+      gpu: { model: "Mali-G57 MP1", brand: "Mali" },
+      ram: [3, 4],
+      storage: { options: [64, 128], expandable: true },
+      camera: { rear: 13, front: 5, opticalZoom: 0, stabilization: false, faceDetection: true, recordingResolution: 'FHD', slowMotion: false, maxFocusAngle: 100, touchFocus: true },
+      battery: { capacity: 5000, chargingTypes: ['USB tipo C'] },
+      performance: { antutu: 220000, geekbench: '380/1250', tdMark: 950 },
+      features: { hasGps: true, hasNfc: false, network: '4G', simCards: 2, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: true, supportsWhatsApp: true, simTypes: ['Nano-SIM (4FF)'], hasCompass: true, hasUsbOtg: true }
+    }
+  },
+  {
+    id: "xiaomi-redmi-14c",
+    deviceType: "smartphone",
+    categoryTier: "entrada",
+    brand: "Xiaomi",
+    model: "Redmi 14C",
+    os: "Android",
+    osVersion: "Android 14 (HyperOS)",
+    releaseYear: 2024,
+    specs: {
+      screen: { type: "IPS LCD 120Hz", size: 6.88, resolution: "720 x 1640", refreshRate: 120, isFoldable: false },
+      processor: { chipset: "MediaTek Helio G81 Ultra", cpuBrand: "MediaTek", cores: 8, architecture: 64 },
+      gpu: { model: "Mali-G52 MC2", brand: "Mali" },
+      ram: [4, 8],
+      storage: { options: [128, 256], expandable: true },
+      camera: { rear: 50, front: 13, opticalZoom: 0, stabilization: false, faceDetection: true, recordingResolution: 'FHD', slowMotion: true, maxFocusAngle: 118, touchFocus: true },
+      battery: { capacity: 5160, chargingTypes: ['USB tipo C', 'Turbo'] },
+      performance: { antutu: 260000, geekbench: '430/1400', tdMark: 1150 },
+      features: { hasGps: true, hasNfc: true, network: '4G', simCards: 2, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: true, supportsWhatsApp: true, simTypes: ['Nano-SIM (4FF)'], hasCompass: true, hasUsbOtg: true }
+    }
+  },
+  {
+    id: "xiaomi-redmi-note-14-5g",
+    deviceType: "smartphone",
+    categoryTier: "intermediário",
+    brand: "Xiaomi",
+    model: "Redmi Note 14 5G",
+    os: "Android",
+    osVersion: "Android 14 (HyperOS)",
+    releaseYear: 2024,
+    specs: {
+      screen: { type: "OLED 120Hz (2100 nits)", size: 6.67, resolution: "1080 x 2400", refreshRate: 120, isFoldable: false },
+      processor: { chipset: "MediaTek Dimensity 7025 Ultra", cpuBrand: "MediaTek", cores: 8, architecture: 64 },
+      gpu: { model: "IMG BXM-8-256", brand: "PowerVR" },
+      ram: [6, 12],
+      storage: { options: [128, 256], expandable: true },
+      camera: { rear: 50, front: 16, opticalZoom: 0, stabilization: true, faceDetection: true, recordingResolution: 'FHD', slowMotion: true, maxFocusAngle: 120, touchFocus: true },
+      battery: { capacity: 5110, chargingTypes: ['USB tipo C', 'Turbo'] },
+      performance: { antutu: 480000, geekbench: '820/2200', tdMark: 2400 },
+      features: { hasGps: true, hasNfc: true, network: '5G', simCards: 2, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: true, supportsWhatsApp: true, simTypes: ['Nano-SIM (4FF)'], hasCompass: true, hasUsbOtg: true }
+    }
+  },
+  {
+    id: "xiaomi-redmi-15c",
+    deviceType: "smartphone",
+    categoryTier: "entrada",
+    brand: "Xiaomi",
+    model: "Redmi 15C",
+    os: "Android",
+    osVersion: "Android 15 (HyperOS 2.0)",
+    releaseYear: 2025,
+    specs: {
+      screen: { type: "IPS LCD 120Hz", size: 6.88, resolution: "720 x 1640", refreshRate: 120, isFoldable: false },
+      processor: { chipset: "MediaTek Helio G85 Ultra", cpuBrand: "MediaTek", cores: 8, architecture: 64 },
+      gpu: { model: "Mali-G52 MC2", brand: "Mali" },
+      ram: [4, 8],
+      storage: { options: [128, 256], expandable: true },
+      camera: { rear: 50, front: 13, opticalZoom: 0, stabilization: false, faceDetection: true, recordingResolution: 'FHD', slowMotion: true, maxFocusAngle: 118, touchFocus: true },
+      battery: { capacity: 5200, chargingTypes: ['USB tipo C', 'Turbo'] },
+      performance: { antutu: 280000, geekbench: '460/1480', tdMark: 1250 },
+      features: { hasGps: true, hasNfc: true, network: '4G', simCards: 2, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: true, supportsWhatsApp: true, simTypes: ['Nano-SIM (4FF)'], hasCompass: true, hasUsbOtg: true }
+    }
+  },
+  {
+    id: "xiaomi-poco-x6-5g",
+    deviceType: "smartphone",
+    categoryTier: "intermediário",
+    brand: "Xiaomi",
+    model: "POCO X6 5G",
+    os: "Android",
+    osVersion: "Android 14 (HyperOS)",
+    releaseYear: 2024,
+    specs: {
+      screen: { type: "AMOLED 120Hz (1800 nits, Dolby Vision)", size: 6.67, resolution: "1220 x 2712", refreshRate: 120, isFoldable: false },
+      processor: { chipset: "Snapdragon 7s Gen 2", cpuBrand: "Qualcomm", cores: 8, architecture: 64 },
+      gpu: { model: "Adreno 710", brand: "Adreno" },
+      ram: [8, 12],
+      storage: { options: [256, 512], expandable: false },
+      camera: { rear: 64, front: 16, opticalZoom: 0, stabilization: true, faceDetection: true, recordingResolution: '4K', slowMotion: true, maxFocusAngle: 120, touchFocus: true },
+      battery: { capacity: 5100, chargingTypes: ['USB tipo C', 'Turbo'] },
+      performance: { antutu: 600000, geekbench: '1020/2980', tdMark: 3100 },
+      features: { hasGps: true, hasNfc: true, network: '5G', simCards: 2, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: true, supportsWhatsApp: true, simTypes: ['Nano-SIM (4FF)'], hasCompass: true, hasUsbOtg: true }
+    }
+  },
+  {
+    id: "xiaomi-poco-x7-5g",
+    deviceType: "smartphone",
+    categoryTier: "intermediário",
+    brand: "Xiaomi",
+    model: "POCO X7 5G",
+    os: "Android",
+    osVersion: "Android 15 (HyperOS 2.0)",
+    releaseYear: 2025,
+    specs: {
+      screen: { type: "AMOLED 120Hz (3000 nits)", size: 6.67, resolution: "1220 x 2712", refreshRate: 120, isFoldable: false },
+      processor: { chipset: "MediaTek Dimensity 7300 Ultra", cpuBrand: "MediaTek", cores: 8, architecture: 64 },
+      gpu: { model: "Mali-G615 MC2", brand: "Mali" },
+      ram: [8, 12],
+      storage: { options: [256, 512], expandable: false },
+      camera: { rear: 50, front: 20, opticalZoom: 0, stabilization: true, faceDetection: true, recordingResolution: '4K', slowMotion: true, maxFocusAngle: 120, touchFocus: true },
+      battery: { capacity: 5500, chargingTypes: ['USB tipo C', 'Turbo'] },
+      performance: { antutu: 710000, geekbench: '1120/3250', tdMark: 3900 },
+      features: { hasGps: true, hasNfc: true, network: '5G', simCards: 2, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: true, supportsWhatsApp: true, simTypes: ['Nano-SIM (4FF)'], hasCompass: true, hasUsbOtg: true }
+    }
+  },
+  {
     id: "iphone-13",
     brand: "Apple",
     model: "iPhone 13",
@@ -647,6 +1088,69 @@ export const mockedSmartphones: Smartphone[] = [
       battery: { capacity: 4500, chargingTypes: ['USB tipo C', 'Sem fio', 'Turbo'] },
       performance: { antutu: 800000, geekbench: '1100/3100', tdMark: 6000 },
       features: { hasGps: true, hasNfc: true, network: '5G', simCards: 2, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: true, supportsWhatsApp: true, simTypes: ['Nano-SIM (4FF)', 'eSIM'], hasCompass: true, hasUsbOtg: true }
+    }
+  },
+  {
+    id: "motorola-moto-g35-5g",
+    deviceType: "smartphone",
+    categoryTier: "intermediário",
+    brand: "Motorola",
+    model: "Moto G35 5G",
+    os: "Android",
+    osVersion: "Android 14 (Hello UI)",
+    releaseYear: 2024,
+    specs: {
+      screen: { type: "IPS LCD 120Hz (1000 nits)", size: 6.72, resolution: "1080 x 2400", refreshRate: 120, isFoldable: false },
+      processor: { chipset: "Unisoc T760", cpuBrand: "Unisoc", cores: 8, architecture: 64 },
+      gpu: { model: "Mali-G57 MC4", brand: "Mali" },
+      ram: [4, 8],
+      storage: { options: [128, 256], expandable: true },
+      camera: { rear: 50, front: 16, opticalZoom: 0, stabilization: false, faceDetection: true, recordingResolution: '4K', slowMotion: true, maxFocusAngle: 120, touchFocus: true },
+      battery: { capacity: 5000, chargingTypes: ['USB tipo C', 'Turbo'] },
+      performance: { antutu: 460000, geekbench: '760/2150', tdMark: 2200 },
+      features: { hasGps: true, hasNfc: true, network: '5G', simCards: 2, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: true, supportsWhatsApp: true, simTypes: ['Nano-SIM (4FF)', 'eSIM'], hasCompass: true, hasUsbOtg: true }
+    }
+  },
+  {
+    id: "motorola-moto-g53-5g",
+    deviceType: "smartphone",
+    categoryTier: "intermediário",
+    brand: "Motorola",
+    model: "Moto G53 5G",
+    os: "Android",
+    osVersion: "Android 13 (My UX), atualizável para Android 14",
+    releaseYear: 2023,
+    specs: {
+      screen: { type: "IPS LCD 120Hz", size: 6.5, resolution: "720 x 1600", refreshRate: 120, isFoldable: false },
+      processor: { chipset: "Snapdragon 480+ 5G", cpuBrand: "Qualcomm", cores: 8, architecture: 64 },
+      gpu: { model: "Adreno 619", brand: "Adreno" },
+      ram: [4, 8],
+      storage: { options: [128], expandable: true },
+      camera: { rear: 50, front: 8, opticalZoom: 0, stabilization: false, faceDetection: true, recordingResolution: 'FHD', slowMotion: true, maxFocusAngle: 118, touchFocus: true },
+      battery: { capacity: 5000, chargingTypes: ['USB tipo C', 'Turbo'] },
+      performance: { antutu: 370000, geekbench: '680/1750', tdMark: 1750 },
+      features: { hasGps: true, hasNfc: true, network: '5G', simCards: 2, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: true, supportsWhatsApp: true, simTypes: ['Nano-SIM (4FF)', 'eSIM'], hasCompass: true, hasUsbOtg: true }
+    }
+  },
+  {
+    id: "motorola-moto-g62-5g",
+    deviceType: "smartphone",
+    categoryTier: "intermediário",
+    brand: "Motorola",
+    model: "Moto G62 5G",
+    os: "Android",
+    osVersion: "Android 12 (My UX), atualizável para Android 13",
+    releaseYear: 2022,
+    specs: {
+      screen: { type: "IPS LCD 120Hz", size: 6.5, resolution: "1080 x 2400", refreshRate: 120, isFoldable: false },
+      processor: { chipset: "Snapdragon 480 Plus Qualcomm SM4350-AC", cpuBrand: "Qualcomm", cores: 8, architecture: 64 },
+      gpu: { model: "Adreno 619", brand: "Adreno" },
+      ram: [4, 6],
+      storage: { options: [128], expandable: true },
+      camera: { rear: 50, front: 16, opticalZoom: 0, stabilization: false, faceDetection: true, recordingResolution: 'FHD', slowMotion: true, maxFocusAngle: 118, touchFocus: true },
+      battery: { capacity: 5000, chargingTypes: ['USB tipo C', 'Turbo'] },
+      performance: { antutu: 385000, geekbench: '700/1800', tdMark: 1800 },
+      features: { hasGps: true, hasNfc: true, network: '5G', simCards: 2, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: true, supportsWhatsApp: true, simTypes: ['Nano-SIM (4FF)'], hasCompass: true, hasUsbOtg: true }
     }
   },
   {
@@ -2948,27 +3452,6 @@ export const mockedSmartphones: Smartphone[] = [
     }
   },
   {
-    id: "moto-g35-5g",
-    deviceType: "smartphone",
-    categoryTier: "intermediário",
-    brand: "Motorola",
-    model: "Moto G35 5G",
-    os: "Android",
-    osVersion: "Android 14 / Hello UI",
-    releaseYear: 2024,
-    specs: {
-      screen: { type: "IPS LCD 120Hz", size: 6.72, resolution: "1080 x 2400", refreshRate: 120, isFoldable: false },
-      processor: { chipset: "Unisoc T760 5G", cpuBrand: "Unisoc", cores: 8, architecture: 64 },
-      gpu: { model: "Mali-G57 MC4", brand: "Mali" },
-      ram: [4, 8],
-      storage: { options: [128, 256], expandable: true },
-      camera: { rear: 50, front: 16, opticalZoom: 0, stabilization: true, faceDetection: true, recordingResolution: '4K', slowMotion: true, maxFocusAngle: 85, touchFocus: true },
-      battery: { capacity: 5000, chargingTypes: ['USB tipo C', 'Turbo'] },
-      performance: { antutu: 460000, geekbench: '740/2150', tdMark: 2800 },
-      features: { hasGps: true, hasNfc: true, network: '5G', simCards: 2, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: true, supportsWhatsApp: true, simTypes: ['Nano-SIM (4FF)', 'eSIM'], hasCompass: true, hasUsbOtg: true }
-    }
-  },
-  {
     id: "motorola-razr-60-ultra",
     deviceType: "smartphone",
     categoryTier: "topo de linha",
@@ -3621,27 +4104,6 @@ export const mockedSmartphones: Smartphone[] = [
       battery: { capacity: 5000, chargingTypes: ['USB tipo C', 'Turbo'] },
       performance: { antutu: 820000, geekbench: '1220/3500', tdMark: 5800 },
       features: { hasGps: true, hasNfc: true, network: '5G', simCards: 2, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: true, supportsWhatsApp: true, simTypes: ['Nano-SIM (4FF)', 'eSIM'], hasCompass: true, hasUsbOtg: true }
-    }
-  },
-  {
-    id: "apple-iphone-17",
-    deviceType: "smartphone",
-    categoryTier: "topo de linha",
-    brand: "Apple",
-    model: "iPhone 17",
-    os: "iOS",
-    osVersion: "iOS 19",
-    releaseYear: 2025,
-    specs: {
-      screen: { type: "LTPO Super Retina XDR OLED ProMotion 120Hz", size: 6.3, resolution: "1179 x 2556", refreshRate: 120, isFoldable: false },
-      processor: { chipset: "Apple A19 Bionic", cpuBrand: "Apple", cores: 6, architecture: 64 },
-      gpu: { model: "Apple GPU (5-core)", brand: "Apple" },
-      ram: [8],
-      storage: { options: [128, 256, 512], expandable: false },
-      camera: { rear: 48, front: 24, opticalZoom: 2, stabilization: true, faceDetection: true, recordingResolution: '4K', slowMotion: true, maxFocusAngle: 120, touchFocus: true },
-      battery: { capacity: 3600, chargingTypes: ['USB tipo C', 'Sem fio', 'MagSafe', 'Turbo'] },
-      performance: { antutu: 1850000, geekbench: '3250/8100', tdMark: 16500 },
-      features: { hasGps: true, hasNfc: true, network: '5G', simCards: 2, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: false, supportsWhatsApp: true, simTypes: ['eSIM', 'Nano-SIM (4FF)'], hasCompass: true, hasUsbOtg: true }
     }
   },
   {
