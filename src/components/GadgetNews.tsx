@@ -28,11 +28,13 @@ import {
   Copy,
   Maximize2,
   ChevronUp,
-  BookOpen
+  BookOpen,
+  Zap
 } from 'lucide-react';
-import { mockedGadgetNews, LocalizedString, NewsCategory, GadgetNewsItem } from '../data/gadgetNews';
+import { mockedGadgetNews, LocalizedString, NewsCategory, GadgetNewsItem, NewsSummaryData } from '../data/gadgetNews';
 import { AddNewsModal } from './AddNewsModal';
 import { RssImporterModal } from './RssImporterModal';
+import { generateAlgorithmicNewsSummary } from '../utils/newsSummarizer';
 
 const STORAGE_KEY_CUSTOM_NEWS = 'user_custom_gadget_news_v1';
 
@@ -153,20 +155,6 @@ export const generateNewsItemId = (prefix: string, link: string = '', title?: st
   const hashHex = Math.abs(hash).toString(36);
   return `${prefix}-${slug}-${hashHex}-${index ?? 0}`;
 };
-
-export interface NewsTopic {
-  icon: string;
-  title: string;
-  detail: string;
-}
-
-export interface NewsSummaryData {
-  readTime: string;
-  oneLineTake?: string;
-  topics: NewsTopic[];
-  whyItMatters?: string;
-  keywords?: string[];
-}
 
 export const GadgetNews: React.FC = () => {
   const { t, lang } = useLanguage();
@@ -623,10 +611,10 @@ export const GadgetNews: React.FC = () => {
     return localizedString[lang] || localizedString.PT || localizedString.EN || '';
   };
 
-  // Função para solicitar à IA Gemma o resumo inteligente da notícia em tópicos
-  const handleSummarizeNews = async (item: GadgetNewsItem) => {
-    // Se já foi gerado o resumo para esta notícia, apenas alterna visibilidade
-    if (summaries[item.id]) {
+  // Função para gerar o resumo da notícia usando inicialmente funções React/JS locais e Node.js, com IA como fallback
+  const handleSummarizeNews = async (item: GadgetNewsItem, forceAi: boolean = false) => {
+    // Se já foi gerado e não está forçando refinamento por IA, apenas alterna visibilidade
+    if (summaries[item.id] && !forceAi) {
       setExpandedSummaryIds((prev) => ({
         ...prev,
         [item.id]: !prev[item.id]
@@ -641,27 +629,20 @@ export const GadgetNews: React.FC = () => {
       const title = getLocalizedText(item.title);
       const subtitle = getLocalizedText(item.subtitle);
       const lead = getLocalizedText(item.lead);
+      const category = getLocalizedText(item.categoryLabel);
 
-      const res = await fetch('/api/news/summarize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title,
-          subtitle,
-          lead,
-          link: item.link,
-          author: item.author,
-          language: lang
-        })
-      });
+      // 1. Gera INSTANTANEAMENTE o resumo técnico local usando funções React/JS (0ms, 100% offline)
+      const localAlgoSummary = generateAlgorithmicNewsSummary({
+        title: item.title,
+        subtitle: item.subtitle,
+        lead: item.lead,
+        category: item.categoryLabel || item.category,
+        author: item.author
+      }, lang);
 
-      const data = await res.json();
-      if (!res.ok || !data.success || !data.summary) {
-        throw new Error(data.error || 'Não foi possível gerar o resumo da notícia.');
-      }
-
+      // Define e exibe imediatamente o resumo local
       setSummaries((prev) => {
-        const updated = { ...prev, [item.id]: data.summary };
+        const updated = { ...prev, [item.id]: localAlgoSummary };
         try {
           localStorage.setItem('gemma_news_summaries_v1', JSON.stringify(updated));
         } catch {}
@@ -672,12 +653,37 @@ export const GadgetNews: React.FC = () => {
         ...prev,
         [item.id]: true
       }));
+
+      // 2. Se forçado refinamento por IA, consulta o servidor Node.js/Gemma AI
+      if (forceAi) {
+        const res = await fetch('/api/news/summarize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title,
+            subtitle,
+            lead,
+            category,
+            link: item.link,
+            author: item.author,
+            language: lang,
+            useAi: true
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success && data.summary) {
+          setSummaries((prev) => {
+            const updated = { ...prev, [item.id]: data.summary };
+            try {
+              localStorage.setItem('gemma_news_summaries_v1', JSON.stringify(updated));
+            } catch {}
+            return updated;
+          });
+        }
+      }
     } catch (err: any) {
-      console.error('Falha ao resumir notícia com Gemma:', err);
-      setSummaryErrors((prev) => ({
-        ...prev,
-        [item.id]: err.message || 'Erro ao conectar à IA para gerar tópicos.'
-      }));
+      console.warn('Mantendo o resumo técnico algorítmico local:', err);
     } finally {
       setLoadingSummaryId(null);
     }
@@ -986,10 +992,19 @@ export const GadgetNews: React.FC = () => {
                   {/* Cabeçalho do Resumo */}
                   <div className="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-800/80">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 text-indigo-300 text-xs font-bold">
-                        <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-                        Gemma AI • {t('news.summaryTitle')}
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gradient-to-r from-cyan-500/20 to-indigo-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-bold">
+                        <Zap className="w-3.5 h-3.5 text-cyan-400" />
+                        Resumo Técnico Escaneável
                       </span>
+                      <button
+                        type="button"
+                        onClick={() => handleSummarizeNews(item, true)}
+                        className="inline-flex items-center gap-1 text-[11px] text-purple-300 hover:text-purple-200 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 px-2 py-0.5 rounded-md transition-colors cursor-pointer"
+                        title="Refinar este resumo com Gemma IA"
+                      >
+                        <Sparkles className={`w-3 h-3 text-purple-400 ${loadingSummaryId === item.id ? 'animate-spin' : ''}`} />
+                        <span>Refinar com IA</span>
+                      </button>
                       {summaries[item.id].readTime && (
                         <span className="inline-flex items-center gap-1 text-[11px] text-slate-400 bg-slate-900 px-2 py-0.5 rounded-md border border-slate-800">
                           <Clock className="w-3 h-3 text-cyan-400" />
