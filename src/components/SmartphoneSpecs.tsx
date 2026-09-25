@@ -1634,17 +1634,30 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
                 </div>
 
                 {/* Share Actions Footer */}
-                <div className="mt-4 pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-[11px] text-slate-500 font-medium truncate">
-                    {phone.brand} {phone.model}
-                  </span>
+                <div className="mt-4 pt-3 border-t border-slate-800/80 flex flex-col gap-2">
+                  <div className="flex items-center justify-between text-[11px] text-slate-400 font-medium px-0.5">
+                    <span className="truncate">
+                      {phone.brand} {phone.model}
+                    </span>
+                    <span className="text-[10px] text-cyan-400/80 uppercase tracking-wider font-semibold shrink-0">
+                      Ações
+                    </span>
+                  </div>
 
-                  <div className="flex items-center gap-2 ml-auto">
+                  {/* Barra de Rolagem Horizontal para Ações */}
+                  <div 
+                    className="flex items-center gap-2 overflow-x-auto pb-2 pt-0.5 px-0.5 scrollbar-thin scrollbar-thumb-cyan-500/30 scrollbar-track-slate-800/50 touch-pan-x snap-x w-full"
+                    style={{
+                      WebkitOverflowScrolling: 'touch',
+                      scrollbarWidth: 'thin',
+                      scrollbarColor: 'rgba(6, 182, 212, 0.4) rgba(30, 41, 59, 0.5)'
+                    }}
+                  >
                     {/* Botão de Comparação de Smartphone */}
                     <button
                       type="button"
                       onClick={() => handleToggleCompare(phone)}
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer print:hidden ${
+                      className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer snap-start print:hidden ${
                         selectedForComparison.some(p => p.id === phone.id)
                           ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
                           : 'bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
@@ -1663,18 +1676,18 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
                     <button
                       type="button"
                       onClick={(e) => handleShareWhatsAppPhone(phone, e)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-xl text-xs font-semibold transition-all cursor-pointer"
+                      className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-xl text-xs font-semibold transition-all cursor-pointer snap-start"
                       title="Compartilhar no WhatsApp"
                     >
                       <MessageSquareShare className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">WhatsApp</span>
+                      <span>WhatsApp</span>
                     </button>
 
                     {/* Share / Copy Specs button */}
                     <button
                       type="button"
                       onClick={() => handleSharePhone(phone)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer print:hidden ${
+                      className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer snap-start print:hidden ${
                         copiedPhoneId === phone.id
                           ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
                           : 'bg-slate-800 hover:bg-slate-700 text-cyan-300 hover:text-white border border-slate-700'
@@ -1698,7 +1711,7 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
                     <button
                       type="button"
                       onClick={() => window.print()}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/20 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm print:hidden"
+                      className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/20 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm snap-start print:hidden"
                       title="Salvar em PDF"
                     >
                       <FileDown className="w-3.5 h-3.5 text-rose-400" />
@@ -1709,7 +1722,7 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
                     <button
                       type="button"
                       onClick={() => setSelectedPhoneForGames(phone)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm print:hidden"
+                      className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm snap-start print:hidden"
                       title="Jogos pesados suportados com fluidez"
                     >
                       <Gamepad2 className="w-3.5 h-3.5 text-purple-400" />
@@ -1720,7 +1733,7 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
                     <button
                       type="button"
                       onClick={() => setSelectedPhoneForSimilar(phone)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm print:hidden"
+                      className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm snap-start print:hidden"
                       title="Ver aparelhos com ficha técnica e desempenho semelhantes"
                     >
                       <Sparkles className="w-3.5 h-3.5 text-amber-400" />
