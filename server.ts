@@ -35,6 +35,7 @@ import ytdl from '@distube/ytdl-core';
 import multer from 'multer';
 import { mockedSmartphones } from './src/data/smartphones';
 import { USSD_DATABASE } from './src/data/ussdcodes';
+import { generateAlgorithmicNewsSummary } from './src/utils/newsSummarizer';
 import os from 'os';
 import { spawn } from 'child_process';
 import youtubedl from 'youtube-dl-exec';
@@ -2112,17 +2113,10 @@ app.post('/api/convert-server', upload.single('file'), async (req, res) => {
     }
   });
 
-  // Endpoint: Resumidor Inteligente de Notícias em Tópicos (Gemma AI)
+  // Endpoint: Resumidor Inteligente de Notícias em Tópicos (Algorítmico + IA Fallback)
   app.post('/api/news/summarize', express.json(), async (req, res) => {
     try {
-      const { title, subtitle, lead, link, author, language = 'PT', apiKey } = req.body;
-      const geminiApiKey = apiKey || process.env.GEMINI_API_KEY;
-
-      if (!geminiApiKey) {
-        return res.status(401).json({
-          error: 'Chave de API do Gemini não configurada no servidor. Configure a variável GEMINI_API_KEY no painel de segredos.'
-        });
-      }
+      const { title, subtitle, lead, link, author, category, language = 'PT', useAi = false, apiKey } = req.body;
 
       if (!title) {
         return res.status(400).json({ error: 'O título da notícia é obrigatório para o resumo.' });
@@ -2155,6 +2149,35 @@ app.post('/api/convert-server', upload.single('file'), async (req, res) => {
         } catch {
           // Usa os dados locais se falhar o fetch do link
         }
+      }
+
+      // 1. Gera inicialmente o resumo técnico estruturado usando funções Node.js (Sem IA)
+      const algoSummary = generateAlgorithmicNewsSummary({
+        title,
+        subtitle,
+        lead,
+        category,
+        author,
+        articleBody
+      }, language);
+
+      // Se o cliente não solicitou explicitamente refinamento por IA, retorna imediatamente o resumo algorítmico Node.js
+      if (!useAi) {
+        return res.json({
+          success: true,
+          summary: algoSummary,
+          source: 'algorithmic'
+        });
+      }
+
+      // 2. IA Gemma / Gemini usada como FALLBACK ou refinamento adicional se solicitado
+      const geminiApiKey = apiKey || process.env.GEMINI_API_KEY;
+      if (!geminiApiKey) {
+        return res.json({
+          success: true,
+          summary: algoSummary,
+          source: 'algorithmic'
+        });
       }
 
       const langNames: Record<string, string> = {
@@ -2197,31 +2220,41 @@ Regras:
 3. Responda no idioma: ${langName}.
 4. Retorne apenas o objeto JSON válido, sem comentários ou markdown.`;
 
-      const ai = new GoogleGenAI({
-        apiKey: geminiApiKey,
-        httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
-      });
-
-      const rawText = await generateContentWithMultiFallback(
-        ai,
-        prompt,
-        'Você é uma IA especialista em síntese de notícias tecnológicas. Responda estritamente em JSON válido.',
-        'application/json'
-      );
-      let parsedJson: any;
       try {
-        parsedJson = JSON.parse(rawText.trim());
-      } catch {
-        const cleaned = rawText.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
-        parsedJson = JSON.parse(cleaned);
-      }
+        const ai = new GoogleGenAI({
+          apiKey: geminiApiKey,
+          httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
+        });
 
-      return res.json({
-        success: true,
-        summary: parsedJson
-      });
+        const rawText = await generateContentWithMultiFallback(
+          ai,
+          prompt,
+          'Você é uma IA especialista em síntese de notícias tecnológicas. Responda estritamente em JSON válido.',
+          'application/json'
+        );
+        let parsedJson: any;
+        try {
+          parsedJson = JSON.parse(rawText.trim());
+        } catch {
+          const cleaned = rawText.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
+          parsedJson = JSON.parse(cleaned);
+        }
+
+        return res.json({
+          success: true,
+          summary: parsedJson,
+          source: 'ai'
+        });
+      } catch (aiErr) {
+        console.warn('Falha na IA Gemma, utilizando o resumo algorítmico Node.js como fallback:', aiErr);
+        return res.json({
+          success: true,
+          summary: algoSummary,
+          source: 'algorithmic-fallback'
+        });
+      }
     } catch (err: any) {
-      console.error('Erro ao resumir notícia com Gemma:', err);
+      console.error('Erro ao resumir notícia:', err);
       return res.status(500).json({ error: err.message || 'Erro ao gerar resumo da notícia.' });
     }
   });
