@@ -17,12 +17,16 @@ import {
   Clock,
   Zap,
   ArrowRight,
-  Filter
+  Filter,
+  Table,
+  Layers
 } from 'lucide-react';
 import { Smartphone as SmartphoneType, mockedSmartphones } from '../data/smartphones';
 import { useLanguage } from '../contexts/LanguageContext';
 import { db } from '../lib/firebase';
 import { collection, getDocs, setDoc, doc, query, limit, orderBy } from 'firebase/firestore';
+import { compareDevicesAlgorithmically } from '../utils/deviceComparison';
+import { DeviceSpecsComparisonTable } from './DeviceSpecsComparisonTable';
 
 export interface ComparisonCategory {
   category: string;
@@ -62,8 +66,8 @@ export const PhoneComparisonModal: React.FC<PhoneComparisonModalProps> = ({
   onClose,
   initialSelectedPhones = []
 }) => {
-  const { lang } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'duel' | 'community'>('duel');
+  const { lang, t } = useLanguage();
+  const [activeTab, setActiveTab] = useState<'table' | 'duel' | 'community'>('table');
   const [selectedPhones, setSelectedPhones] = useState<SmartphoneType[]>([]);
   
   // Selector popup state
@@ -136,6 +140,47 @@ export const PhoneComparisonModal: React.FC<PhoneComparisonModalProps> = ({
     }
   };
 
+  const handleStartComparisonAlgorithmically = () => {
+    if (selectedPhones.length < 2) return;
+    setIsGenerating(true);
+    setAnalysisError(null);
+
+    try {
+      const result = compareDevicesAlgorithmically(selectedPhones, lang);
+      
+      const newRecord: PhoneComparisonRecord = {
+        id: result.id,
+        createdAt: result.createdAt,
+        phoneIds: result.phoneIds,
+        phoneNames: result.phoneNames,
+        title: result.title + ' (Análise Algorítmica)',
+        winnerOverall: result.winnerOverall,
+        winnerReason: result.winnerReason,
+        summary: result.summary,
+        categories: result.categories,
+        bestFor: result.bestFor,
+        verdict: result.verdict
+      };
+
+      setCurrentComparison(newRecord);
+
+      // Atualiza lista da comunidade localmente
+      setSavedComparisons(prev => [newRecord, ...prev.filter(c => c.id !== newRecord.id)]);
+
+      // Sincroniza com o Firestore
+      try {
+        setDoc(doc(db, 'phone_comparisons', newRecord.id), newRecord);
+      } catch (fbErr) {
+        console.warn('Persistência Firestore em background:', fbErr);
+      }
+    } catch (err: any) {
+      console.error('Erro na comparação algorítmica:', err);
+      setAnalysisError(err.message || 'Erro ao realizar a comparação técnica.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const handleStartComparison = async () => {
     if (selectedPhones.length < 2) return;
     setIsGenerating(true);
@@ -151,9 +196,23 @@ export const PhoneComparisonModal: React.FC<PhoneComparisonModalProps> = ({
         })
       });
 
-      const data = await res.json();
+      const contentType = res.headers.get('content-type') || '';
+      let data: any = null;
+      if (contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        console.warn('API /api/smartphones/compare retornou resposta não-JSON:', text.slice(0, 150));
+        throw new Error('Serviço de IA temporariamente indisponível.');
+      }
+
       if (!res.ok || !data.success || !data.comparison) {
-        throw new Error(data.error || 'Não foi possível gerar a análise.');
+        if (res.status === 503 || data.isGemini503 || (data.error && data.error.includes('503'))) {
+          const customErr = new Error(data.error || 'Error: code 503 - This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.');
+          (customErr as any).isGemini503 = true;
+          throw customErr;
+        }
+        throw new Error(data.error || 'Não foi possível gerar a análise com IA.');
       }
 
       const newRecord = data.comparison as PhoneComparisonRecord;
@@ -169,8 +228,43 @@ export const PhoneComparisonModal: React.FC<PhoneComparisonModalProps> = ({
         console.warn('Persistência Firestore em background:', fbErr);
       }
     } catch (err: any) {
-      console.error('Erro na comparação com Gemma:', err);
-      setAnalysisError(err.message || 'Erro ao conectar à inteligência artificial.');
+      console.error('Erro na comparação com IA. Acionando Fallback Algorítmico Técnico:', err);
+      
+      try {
+        const fallback = compareDevicesAlgorithmically(selectedPhones, lang);
+        const fallbackRecord: PhoneComparisonRecord = {
+          id: fallback.id,
+          createdAt: fallback.createdAt,
+          phoneIds: fallback.phoneIds,
+          phoneNames: fallback.phoneNames,
+          title: fallback.title,
+          winnerOverall: fallback.winnerOverall,
+          winnerReason: fallback.winnerReason,
+          summary: fallback.summary,
+          categories: fallback.categories,
+          bestFor: fallback.bestFor,
+          verdict: fallback.verdict
+        };
+        setCurrentComparison(fallbackRecord);
+        
+        // Atualiza lista da comunidade localmente
+        setSavedComparisons(prev => [fallbackRecord, ...prev.filter(c => c.id !== fallbackRecord.id)]);
+        
+        // Sincroniza com o Firestore
+        try {
+          await setDoc(doc(db, 'phone_comparisons', fallbackRecord.id), fallbackRecord);
+        } catch (fbErr) {
+          console.warn('Persistência Firestore em background:', fbErr);
+        }
+        
+        if (err?.isGemini503 || err?.message?.includes('503') || err?.message?.includes('high demand') || err?.message?.includes('UNAVAILABLE')) {
+          setAnalysisError(`IA temporariamente em alta demanda. Duelo Técnico Algorítmico gerado com sucesso.`);
+        } else {
+          setAnalysisError(`Duelo Técnico Algorítmico gerado com sucesso.`);
+        }
+      } catch (fallbackErr) {
+        setAnalysisError('Erro ao realizar a comparação técnica de fallback.');
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -265,12 +359,9 @@ export const PhoneComparisonModal: React.FC<PhoneComparisonModalProps> = ({
             <div>
               <h3 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
                 <span>Qual eu compro?</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 font-bold uppercase tracking-wider">
-                  Gemma AI
-                </span>
               </h3>
               <p className="text-xs text-slate-400">
-                Assistente inteligente de comparação e consultoria técnica de smartphones
+                Assistente de comparação e consultoria técnica de smartphones
               </p>
             </div>
           </div>
@@ -278,6 +369,19 @@ export const PhoneComparisonModal: React.FC<PhoneComparisonModalProps> = ({
           <div className="flex items-center gap-2">
             {/* Navegação de Abas */}
             <div className="flex items-center p-1 bg-slate-950/60 border border-slate-800 rounded-xl">
+              <button
+                type="button"
+                onClick={() => setActiveTab('table')}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === 'table'
+                    ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Table className="w-3.5 h-3.5" />
+                <span>Tabela Comparativa</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => setActiveTab('duel')}
@@ -288,7 +392,7 @@ export const PhoneComparisonModal: React.FC<PhoneComparisonModalProps> = ({
                 }`}
               >
                 <Scale className="w-3.5 h-3.5" />
-                <span>Novo Duelo</span>
+                <span>Duelo Técnico & IA</span>
               </button>
 
               <button
@@ -301,7 +405,7 @@ export const PhoneComparisonModal: React.FC<PhoneComparisonModalProps> = ({
                 }`}
               >
                 <Users className="w-3.5 h-3.5" />
-                <span>Duelos da Comunidade</span>
+                <span>Comunidade</span>
                 <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300">
                   {savedComparisons.length}
                 </span>
@@ -320,7 +424,137 @@ export const PhoneComparisonModal: React.FC<PhoneComparisonModalProps> = ({
 
         {/* Corpo do Modal */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
-          {activeTab === 'duel' ? (
+          {activeTab === 'table' ? (
+            /* Aba Tabela Comparativa Lado a Lado (Estilo TudoCelular) */
+            <div className="space-y-6">
+              {/* Seleção dos 2 ou 3 Modelos */}
+              <div className="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 sm:p-5">
+                <div className="flex items-center justify-between gap-2 mb-4">
+                  <div>
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Table className="w-4 h-4 text-cyan-400" />
+                      Aparelhos Selecionados para a Comparação
+                    </h4>
+                    <p className="text-xs text-slate-400">
+                      Exibição direta de especificações técnicas lado a lado em colunas paralelas.
+                    </p>
+                  </div>
+                  <span className="text-xs font-semibold text-slate-400">
+                    {selectedPhones.length}/3 selecionados
+                  </span>
+                </div>
+
+                {/* Grid dos Slots de Aparelhos */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {[0, 1, 2].map((slotIdx) => {
+                    const phone = selectedPhones[slotIdx];
+                    if (phone) {
+                      return (
+                        <div
+                          key={slotIdx}
+                          className="relative p-4 rounded-2xl bg-slate-900 border border-cyan-500/30 shadow-md shadow-cyan-950/20 flex flex-col justify-between group hover:border-cyan-400 transition-all"
+                        >
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                              Coluna {slotIdx + 1}
+                            </span>
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => openPhonePicker(slotIdx)}
+                                className="text-[11px] font-semibold text-cyan-300 hover:text-white px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 transition-colors cursor-pointer"
+                              >
+                                Trocar
+                              </button>
+                              {selectedPhones.length > 2 && (
+                                <button
+                                  type="button"
+                                  onClick={() => removePhoneSlot(slotIdx)}
+                                  className="p-1 text-slate-500 hover:text-red-400 rounded transition-colors cursor-pointer"
+                                  title="Remover 3º modelo"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="my-1">
+                            <span className="text-[10px] font-extrabold uppercase text-cyan-400">{phone.brand}</span>
+                            <h5 className="text-base font-extrabold text-white leading-tight">
+                              {phone.model}
+                            </h5>
+                            <p className="text-xs text-slate-400 mt-0.5">
+                              {phone.releaseYear} • {phone.os}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <button
+                        key={slotIdx}
+                        type="button"
+                        onClick={() => openPhonePicker(slotIdx)}
+                        className={`p-5 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center text-center transition-all cursor-pointer min-h-[130px] ${
+                          slotIdx < 2
+                            ? 'border-cyan-500/40 bg-cyan-950/10 hover:bg-cyan-950/20 text-cyan-300 hover:border-cyan-400'
+                            : 'border-slate-800 bg-slate-950/30 hover:bg-slate-900/50 text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        <div className="p-2.5 rounded-2xl bg-slate-800/80 text-cyan-400 mb-1.5">
+                          <Plus className="w-4 h-4" />
+                        </div>
+                        <span className="text-xs font-bold">
+                          {slotIdx === 2 ? '+ Adicionar 3º Modelo (Opcional)' : `Escolher Modelo ${slotIdx + 1}`}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Tabela Comparativa de Especificações Lado a Lado */}
+              <DeviceSpecsComparisonTable
+                phones={selectedPhones}
+                onSelectPhoneToChange={openPhonePicker}
+                onRemovePhone={removePhoneSlot}
+              />
+
+              {/* Ações para Gerar Duelo / IA a partir da Tabela */}
+              <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                <div className="text-xs text-slate-300 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <span>Deseja um parecer aprofundado com vencedor, perfis de uso e veredito?</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('duel');
+                      handleStartComparisonAlgorithmically();
+                    }}
+                    disabled={selectedPhones.length < 2}
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-cyan-300 hover:text-white border border-slate-700 transition-all cursor-pointer"
+                  >
+                    Duelo Instantâneo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('duel');
+                      handleStartComparison();
+                    }}
+                    disabled={selectedPhones.length < 2}
+                    className="px-4 py-2 rounded-xl text-xs font-black bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white shadow-md transition-all cursor-pointer"
+                  >
+                    Análise com IA
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : activeTab === 'duel' ? (
             <>
               {/* Seleção dos 2 ou 3 Modelos */}
               <div className="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 sm:p-5">
@@ -437,23 +671,35 @@ export const PhoneComparisonModal: React.FC<PhoneComparisonModalProps> = ({
                 {/* Botão de Disparo do Confronto */}
                 <div className="mt-5 flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-800/80">
                   <div className="text-xs text-slate-400 flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-cyan-400" />
-                    <span>Gemma compara câmeras, telas, processador, bateria e custo-benefício</span>
+                    <Sparkles className="w-4 h-4 text-cyan-400 animate-pulse" />
+                    <span>Compare especificações técnicas com ou sem Inteligência Artificial</span>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={handleStartComparison}
-                    disabled={selectedPhones.length < 2 || isGenerating}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black bg-gradient-to-r from-cyan-500 via-indigo-500 to-purple-600 hover:from-cyan-400 hover:via-indigo-400 hover:to-purple-500 text-white shadow-lg shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
-                  >
-                    <Sparkles className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
-                    <span>
-                      {isGenerating
-                        ? 'Gemma Analisando Fichas Técnicas...'
-                        : 'Analisar com Gemma: Qual Eu Compro?'}
-                    </span>
-                  </button>
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <button
+                      type="button"
+                      onClick={handleStartComparisonAlgorithmically}
+                      disabled={selectedPhones.length < 2 || isGenerating}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold bg-slate-900 hover:bg-slate-800 text-cyan-300 hover:text-white border border-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer shadow-md"
+                    >
+                      <Scale className="w-4 h-4 text-cyan-400" />
+                      <span>Duelo Técnico Instantâneo (Sem IA)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleStartComparison}
+                      disabled={selectedPhones.length < 2 || isGenerating}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black bg-gradient-to-r from-cyan-500 via-indigo-500 to-purple-600 hover:from-cyan-400 hover:via-indigo-400 hover:to-purple-500 text-white shadow-lg shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+                    >
+                      <Sparkles className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
+                      <span>
+                        {isGenerating
+                          ? 'Analisando Fichas Técnicas...'
+                          : 'Análise Inteligente (Com IA)'}
+                      </span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -515,24 +761,36 @@ export const PhoneComparisonModal: React.FC<PhoneComparisonModalProps> = ({
                         )}
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => handleCopyFormattedAnalysis(currentComparison)}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 hover:text-white rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 border border-slate-700"
-                        title="Copiar análise formatada para WhatsApp ou redes"
-                      >
-                        {copiedAnalysis ? (
-                          <>
-                            <CheckCheck className="w-4 h-4 text-emerald-400" />
-                            <span className="text-emerald-400">Copiado com Sucesso!</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-4 h-4" />
-                            <span>Copiar Análise</span>
-                          </>
-                        )}
-                      </button>
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('table')}
+                          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 hover:text-white rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 border border-slate-700"
+                          title="Ver especificações detalhadas lado a lado"
+                        >
+                          <Table className="w-4 h-4 text-cyan-400" />
+                          <span>Ver Tabela</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleCopyFormattedAnalysis(currentComparison)}
+                          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 hover:text-white rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 border border-slate-700"
+                          title="Copiar análise formatada para WhatsApp ou redes"
+                        >
+                          {copiedAnalysis ? (
+                            <>
+                              <CheckCheck className="w-4 h-4 text-emerald-400" />
+                              <span className="text-emerald-400">Copiado!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-4 h-4" />
+                              <span>Copiar</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
 
