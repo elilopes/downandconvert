@@ -28,7 +28,7 @@ export const ShareLanguageModal: React.FC<ShareLanguageModalProps> = ({ isOpen, 
     const langInfo = SUPPORTED_LANGUAGES.find(l => l.code === targetLang) || currentLangInfo;
     const url = getLanguageUrl(targetLang, false);
     const title = `${t(`seo.title.converter`)} (${langInfo.name})`;
-    const text = `${t('seo.desc.converter')} - Acesse em ${langInfo.name}:`;
+    const text = `${t('seo.desc.converter')} - ${t('share.field.visitNow')}`;
 
     if (navigator.share) {
       try {
@@ -53,7 +53,7 @@ export const ShareLanguageModal: React.FC<ShareLanguageModalProps> = ({ isOpen, 
   const getWhatsAppShareUrl = (targetLang: Language) => {
     const langInfo = SUPPORTED_LANGUAGES.find(l => l.code === targetLang) || currentLangInfo;
     const url = getLanguageUrl(targetLang, false);
-    const msg = `⚡ *Down&Convert* (${langInfo.name})\n${t('seo.desc.converter')}\n\n👉 Acesse agora: ${url}`;
+    const msg = `⚡ *Down&Convert* (${langInfo.name})\n${t('seo.desc.converter')}\n\n👉 ${t('share.field.visitNow')} ${url}`;
     return `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
   };
 

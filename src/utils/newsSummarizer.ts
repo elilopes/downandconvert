@@ -63,8 +63,8 @@ export function generateAlgorithmicNewsSummary(
     detail: titleText
   });
 
-  // Tópico 2: Subtítulo / Detalhe Secundário
-  if (subtitleText && subtitleText !== titleText) {
+  // Tópico 2: Subtítulo / Detalhe Secundário (apenas se for diferente do título e do lead)
+  if (subtitleText && subtitleText !== titleText && subtitleText !== leadText) {
     topics.push({
       icon: detectIcon(subtitleText),
       title: 'Contexto & Aplicação',

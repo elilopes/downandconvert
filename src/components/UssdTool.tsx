@@ -10,7 +10,7 @@ interface UssdToolProps {
 }
 
 export const UssdTool: React.FC<UssdToolProps> = ({ focusedUssdId }) => {
-  const { t } = useLanguage();
+  const { t, lang, getItemShareUrl } = useLanguage();
   const [search, setSearch] = useState('');
   const [selectedCarrier, setSelectedCarrier] = useState<string>('todos');
   const [selectedCategory, setSelectedCategory] = useState<string>('todos');
@@ -19,7 +19,7 @@ export const UssdTool: React.FC<UssdToolProps> = ({ focusedUssdId }) => {
   const [copiedUssdId, setCopiedUssdId] = useState<string | null>(null);
 
   const handleCopyLink = (item: UssdCode) => {
-    const url = `${window.location.origin}/${item.id}`;
+    const url = getItemShareUrl(item.id);
     navigator.clipboard.writeText(url);
     setCopiedLink(item.id);
     setTimeout(() => setCopiedLink(null), 2000);
@@ -50,25 +50,37 @@ export const UssdTool: React.FC<UssdToolProps> = ({ focusedUssdId }) => {
       pixel: 'Pixel',
       samsung: 'Samsung',
       iphone: 'iPhone',
-      android: 'Android'
+      android: 'Android',
+      vivo: 'Vivo',
+      claro: 'Claro',
+      tim: 'TIM',
+      oi: 'Oi',
+      vodafone: 'Vodafone',
+      correios: 'Correios Celular',
+      geral: t('ussd.universal'),
+      mts: 'MTS',
+      megafon: 'MegaFon',
+      tele2: 'Tele2',
+      beeline: 'Beeline'
     };
     const carrierName = prettyCarriers[item.carrier] || (item.carrier.charAt(0).toUpperCase() + item.carrier.slice(1));
     const codeType = item.type || 'USSD/MMI';
-    const ussdUrl = `${window.location.origin}/${item.id}`;
+    const ussdUrl = getItemShareUrl(item.id);
+    const categoryLabel = t(`ussd.cat.${item.category}`) || item.category;
 
     const text = `📱 *${title}* (${carrierName} • ${codeType})\n\n` +
-      `• 🔢 *Código:* ${item.code}\n` +
-      `• 📋 *Serviço:* ${desc}\n` +
-      `• 🏷️ *Categoria:* ${item.category}\n` +
-      `• 🌐 *Operadora / Sistema:* ${carrierName}\n\n` +
-      `🔗 *Ver ficha do código:*\n${ussdUrl}`;
+      `• 🔢 *${t('share.field.code')}:* ${item.code}\n` +
+      `• 📋 *${t('share.field.service')}:* ${desc}\n` +
+      `• 🏷️ *${t('share.field.category')}:* ${categoryLabel}\n` +
+      `• 🌐 *${t('share.field.carrier')}:* ${carrierName}\n\n` +
+      `🔗 *${t('share.field.viewCode')}*\n${ussdUrl}`;
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `${title} - Código ${item.code} (Down&Convert)`,
-          text: text,
-          url: ussdUrl
+          title: `${title} - ${item.code} (Down&Convert)`,
+          text: text
+          // Avoid passing url: ussdUrl because Web Share API concatenates text + url on WhatsApp/Android, causing duplicate links
         });
         setCopiedUssdId(item.id);
         setTimeout(() => setCopiedUssdId(null), 2500);

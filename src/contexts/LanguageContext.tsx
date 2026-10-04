@@ -3948,6 +3948,139 @@ const dict: Translations = {
     RU: "Поделиться в WhatsApp / соцсетях",
     HI: "व्हाट्सएप / सोशल पर साझा करें",
     KO: "WhatsApp / SNS로 공유하기"
+  },
+  "share.field.code": {
+    PT: "Código",
+    EN: "Code",
+    RU: "Код",
+    HI: "कोड",
+    KO: "코드"
+  },
+  "share.field.service": {
+    PT: "Serviço",
+    EN: "Service",
+    RU: "Услуга",
+    HI: "सेवा",
+    KO: "서비스"
+  },
+  "share.field.category": {
+    PT: "Categoria",
+    EN: "Category",
+    RU: "Категория",
+    HI: "श्रेणी",
+    KO: "카테고리"
+  },
+  "share.field.carrier": {
+    PT: "Operadora / Sistema",
+    EN: "Carrier / System",
+    RU: "Оператор / Система",
+    HI: "ऑपरेटर / सिस्टम",
+    KO: "통신사 / 시스템"
+  },
+  "share.field.viewCode": {
+    PT: "Ver ficha do código:",
+    EN: "View code details:",
+    RU: "Посмотреть карточку кода:",
+    HI: "कोड विवरण देखें:",
+    KO: "코드 상세 정보 보기:"
+  },
+  "share.field.viewPhone": {
+    PT: "Ver ficha técnica completa:",
+    EN: "View full specifications:",
+    RU: "Посмотреть полные характеристики:",
+    HI: "पूर्ण विनिर्देश देखें:",
+    KO: "전체 사양 확인하기:"
+  },
+  "share.field.screen": {
+    PT: "Tela",
+    EN: "Screen",
+    RU: "Экран",
+    HI: "स्क्रीन",
+    KO: "화면"
+  },
+  "share.field.processor": {
+    PT: "Processador",
+    EN: "Processor",
+    RU: "Процессор",
+    HI: "प्रोसेसर",
+    KO: "프로세서"
+  },
+  "share.field.memory": {
+    PT: "Memória",
+    EN: "Memory",
+    RU: "Память",
+    HI: "मेमोरी",
+    KO: "메모리"
+  },
+  "share.field.cameras": {
+    PT: "Câmeras",
+    EN: "Cameras",
+    RU: "Камеры",
+    HI: "कैमरे",
+    KO: "카메라"
+  },
+  "share.field.battery": {
+    PT: "Bateria",
+    EN: "Battery",
+    RU: "Аккумулятор",
+    HI: "बैटरी",
+    KO: "배터리"
+  },
+  "share.field.network": {
+    PT: "Rede",
+    EN: "Network",
+    RU: "Сеть",
+    HI: "नेटवर्क",
+    KO: "네트워크"
+  },
+  "share.field.compatible": {
+    PT: "Compatível ✅",
+    EN: "Compatible ✅",
+    RU: "Совместимо ✅",
+    HI: "संगत ✅",
+    KO: "호환됨 ✅"
+  },
+  "share.field.notSupported": {
+    PT: "Sem suporte ❌",
+    EN: "Not supported ❌",
+    RU: "Не поддерживается ❌",
+    HI: "असमर्थित ❌",
+    KO: "지원 안 됨 ❌"
+  },
+  "share.field.source": {
+    PT: "Fonte",
+    EN: "Source",
+    RU: "Источник",
+    HI: "स्रोत",
+    KO: "출처"
+  },
+  "share.field.visitNow": {
+    PT: "Acesse agora:",
+    EN: "Visit now:",
+    RU: "Перейти сейчас:",
+    HI: "अभी देखें:",
+    KO: "지금 확인하기:"
+  },
+  "share.field.rear": {
+    PT: "Traseira",
+    EN: "Rear",
+    RU: "Основная",
+    HI: "रियर",
+    KO: "후면"
+  },
+  "share.field.front": {
+    PT: "Frontal",
+    EN: "Front",
+    RU: "Фронтальная",
+    HI: "फ्रंट",
+    KO: "전면"
+  },
+  "share.field.expandable": {
+    PT: "Expansível",
+    EN: "Expandable",
+    RU: "Слот расширения",
+    HI: "विस्तार योग्य",
+    KO: "확장 가능"
   }
 };
 
@@ -4013,6 +4146,7 @@ interface LanguageContextType {
   t: (key: string) => string;
   getLanguageUrl: (targetLang: Language, usePath?: boolean) => string;
   getShareableUrl: (targetLang?: Language) => string;
+  getItemShareUrl: (slug: string, targetLang?: Language) => string;
   supportedLanguages: LanguageInfo[];
 }
 
@@ -4075,6 +4209,15 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     return getLanguageUrl(selected, false);
   };
 
+  const getItemShareUrl = (slug: string, targetLang?: Language): string => {
+    const selected = (targetLang || lang).toLowerCase();
+    const cleanSlug = slug.replace(/^\//, '');
+    const origin = typeof window !== 'undefined' && window.location.origin
+      ? window.location.origin
+      : 'https://downandconvert.onrender.com';
+    return `${origin}/${selected}/${cleanSlug}`;
+  };
+
   const t = (key: string): string => {
     if (!dict[key]) return key;
     return dict[key][lang] || dict[key]['PT'] || key;
@@ -4087,6 +4230,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       t,
       getLanguageUrl,
       getShareableUrl,
+      getItemShareUrl,
       supportedLanguages: SUPPORTED_LANGUAGES
     }}>
       {children}

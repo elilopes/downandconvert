@@ -254,7 +254,7 @@ interface SmartphoneSpecsProps {
 }
 
 export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceId }) => {
-  const { t } = useLanguage();
+  const { t, lang, getItemShareUrl } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [copiedPhoneId, setCopiedPhoneId] = useState<string | null>(null);
   const [isFiltersMinimized, setIsFiltersMinimized] = useState<boolean>(false);
@@ -392,25 +392,30 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
   const handleSharePhone = async (phone: typeof mockedSmartphones[0]) => {
     const p = phone.specs;
     const ramText = p.ram.join('/') + 'GB';
-    const romText = Math.max(...p.storage.options) + 'GB' + (p.storage.expandable ? ' (Expansível)' : '');
-    const deviceUrl = `${window.location.origin}/${phone.id}`;
+    const expandableText = p.storage.expandable ? ` (${t('share.field.expandable')})` : '';
+    const romText = Math.max(...p.storage.options) + 'GB' + expandableText;
+    const deviceUrl = getItemShareUrl(phone.id);
+    const rearLabel = t('share.field.rear');
+    const frontLabel = t('share.field.front');
+    const whatsAppStatus = p.features.supportsWhatsApp ? t('share.field.compatible') : t('share.field.notSupported');
+
     const text = `📱 *${phone.brand} ${phone.model}* (${phone.releaseYear} • ${phone.os})\n\n` +
-      `• 📺 Tela: ${p.screen.size}" ${p.screen.type} (${p.screen.resolution} • ${p.screen.refreshRate}Hz)\n` +
-      `• ⚙️ Processador: ${p.processor.chipset} (${p.processor.cpuBrand} ${p.processor.cores} cores)\n` +
+      `• 📺 ${t('share.field.screen')}: ${p.screen.size}" ${p.screen.type} (${p.screen.resolution} • ${p.screen.refreshRate}Hz)\n` +
+      `• ⚙️ ${t('share.field.processor')}: ${p.processor.chipset} (${p.processor.cpuBrand} ${p.processor.cores} cores)\n` +
       `• 🎮 GPU: ${p.gpu.brand} ${p.gpu.model}\n` +
-      `• 💾 Memória: RAM ${ramText} | ROM ${romText}\n` +
-      `• 📸 Câmeras: ${p.camera.rear}MP Traseira • ${p.camera.front}MP Frontal (${p.camera.recordingResolution})\n` +
-      `• 🔋 Bateria: ${p.battery.capacity} mAh\n` +
-      `• 📶 Rede: ${p.features.network} • ${p.features.simCards} SIM${p.features.hasNfc ? ' • NFC' : ''}${p.features.hasGps ? ' • GPS' : ''}\n` +
-      `• 💬 WhatsApp: ${p.features.supportsWhatsApp ? 'Compatível ✅' : 'Sem suporte ❌'}\n\n` +
-      `🔗 *Ver ficha técnica completa:*\n${deviceUrl}`;
+      `• 💾 ${t('share.field.memory')}: RAM ${ramText} | ROM ${romText}\n` +
+      `• 📸 ${t('share.field.cameras')}: ${p.camera.rear}MP ${rearLabel} • ${p.camera.front}MP ${frontLabel} (${p.camera.recordingResolution})\n` +
+      `• 🔋 ${t('share.field.battery')}: ${p.battery.capacity} mAh\n` +
+      `• 📶 ${t('share.field.network')}: ${p.features.network} • ${p.features.simCards} SIM${p.features.hasNfc ? ' • NFC' : ''}${p.features.hasGps ? ' • GPS' : ''}\n` +
+      `• 💬 WhatsApp: ${whatsAppStatus}\n\n` +
+      `🔗 *${t('share.field.viewPhone')}*\n${deviceUrl}`;
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `${phone.brand} ${phone.model} - Especificações (Down&Convert)`,
-          text: text,
-          url: deviceUrl
+          title: `${phone.brand} ${phone.model} - (Down&Convert)`,
+          text: text
+          // Avoid passing url: deviceUrl to prevent duplication in Web Share API
         });
         setCopiedPhoneId(phone.id);
         setTimeout(() => setCopiedPhoneId(null), 2500);

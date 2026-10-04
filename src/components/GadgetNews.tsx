@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import {
   ExternalLink,
@@ -200,6 +200,18 @@ export const GadgetNews: React.FC = () => {
   const [auto404VerificationEnabled, setAuto404VerificationEnabled] = useState<boolean>(true);
   const [verifiedLinksMap, setVerifiedLinksMap] = useState<Record<string, boolean>>({});
 
+  // Estados de Tradução Automática Multilíngue (EN, RU, HI, KO)
+  const requestedTranslationsRef = useRef<Set<string>>(new Set());
+  const [translationsMap, setTranslationsMap] = useState<Record<string, Record<string, { title?: string; subtitle?: string; lead?: string }>>>(() => {
+    try {
+      const saved = localStorage.getItem('gadget_news_translations_cache_v3');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+  const [isTranslatingNews, setIsTranslatingNews] = useState<boolean>(false);
+
   // Função para importação automática das notícias da revista eletrônica do Flipboard no período de 48 horas
   const autoImportFlipboard48h = useCallback(async (silent = false) => {
     if (!silent) setIsFlipboardSyncing(true);
@@ -222,24 +234,24 @@ export const GadgetNews: React.FC = () => {
           link: art.link,
           title: {
             PT: art.title,
-            EN: art.title,
-            RU: art.title,
-            HI: art.title,
-            KO: art.title
+            EN: '',
+            RU: '',
+            HI: '',
+            KO: ''
           },
-          subtitle: art.lead ? {
-            PT: art.lead,
-            EN: art.lead,
-            RU: art.lead,
-            HI: art.lead,
-            KO: art.lead
+          subtitle: (art.subtitle && art.subtitle.trim() !== art.lead?.trim()) ? {
+            PT: art.subtitle,
+            EN: '',
+            RU: '',
+            HI: '',
+            KO: ''
           } : undefined,
           lead: art.lead ? {
             PT: art.lead,
-            EN: art.lead,
-            RU: art.lead,
-            HI: art.lead,
-            KO: art.lead
+            EN: '',
+            RU: '',
+            HI: '',
+            KO: ''
           } : undefined
         }));
 
@@ -295,6 +307,115 @@ export const GadgetNews: React.FC = () => {
     return () => clearInterval(interval);
   }, [autoImportFlipboard48h]);
 
+  // Efeito para tradução automática em lote para o idioma selecionado (EN, RU, HI, KO)
+  useEffect(() => {
+    if (lang === 'PT') return;
+
+    // Identifica notícias que ainda necessitam de tradução no idioma atual
+    const itemsToTranslate = newsList.filter((item) => {
+      const ptTitle = item.title?.PT?.trim() || '';
+
+      // 1. Já solicitado nesta sessão?
+      if (requestedTranslationsRef.current.has(`${lang}:${item.id}`)) return false;
+
+      // 2. Já traduzido no cache e é diferente do português?
+      const cachedTitle = translationsMap[item.id]?.[lang]?.title?.trim();
+      if (cachedTitle && (!ptTitle || cachedTitle.toLowerCase() !== ptTitle.toLowerCase())) {
+        return false;
+      }
+
+      // 3. Já traduzido manualmente no dataset (ex: mockedGadgetNews)?
+      const curTitle = item.title?.[lang]?.trim();
+      if (curTitle && (!ptTitle || curTitle.toLowerCase() !== ptTitle.toLowerCase())) {
+        return false;
+      }
+
+      return true;
+    }).slice(0, 35); // Traduz até 35 notícias do feed
+
+    if (itemsToTranslate.length === 0) return;
+
+    // Marca como solicitado para evitar requisições repetidas
+    itemsToTranslate.forEach((it) => {
+      requestedTranslationsRef.current.add(`${lang}:${it.id}`);
+    });
+
+    let isCancelled = false;
+    setIsTranslatingNews(true);
+
+    const runBatchTranslation = async () => {
+      try {
+        const payload = itemsToTranslate.map((item) => ({
+          id: item.id,
+          title: item.title?.PT || item.title?.EN || '',
+          subtitle: item.subtitle?.PT || item.subtitle?.EN || '',
+          lead: item.lead?.PT || item.lead?.EN || ''
+        }));
+
+        const res = await fetch('/api/news/translate-batch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: payload,
+            targetLang: lang
+          })
+        });
+
+        const data = await res.json();
+        if (data.success && Array.isArray(data.translations) && !isCancelled) {
+          setTranslationsMap((prev) => {
+            const next = { ...prev };
+            data.translations.forEach((tr: any) => {
+              if (!next[tr.id]) next[tr.id] = {};
+              next[tr.id][lang] = {
+                title: tr.title,
+                subtitle: tr.subtitle,
+                lead: tr.lead
+              };
+            });
+            try {
+              localStorage.setItem('gadget_news_translations_cache_v3', JSON.stringify(next));
+            } catch {}
+            return next;
+          });
+
+          // Atualiza também os itens em newsList
+          setNewsList((prev) =>
+            prev.map((item) => {
+              const tr = data.translations.find((t: any) => t.id === item.id);
+              if (!tr) return item;
+              return {
+                ...item,
+                title: {
+                  ...item.title,
+                  [lang]: tr.title || item.title?.[lang] || item.title?.PT
+                },
+                subtitle: tr.subtitle ? {
+                  ...(item.subtitle || { PT: '', EN: '', RU: '', HI: '', KO: '' }),
+                  [lang]: tr.subtitle
+                } : item.subtitle,
+                lead: tr.lead ? {
+                  ...(item.lead || { PT: '', EN: '', RU: '', HI: '', KO: '' }),
+                  [lang]: tr.lead
+                } : item.lead
+              };
+            })
+          );
+        }
+      } catch (err) {
+        console.warn('Erro ao carregar traduções para', lang, err);
+      } finally {
+        if (!isCancelled) setIsTranslatingNews(false);
+      }
+    };
+
+    runBatchTranslation();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [lang, newsList, translationsMap]);
+
   // Carrega notícias salvas localmente pelo usuário e inicializa lista
   useEffect(() => {
     try {
@@ -312,7 +433,15 @@ export const GadgetNews: React.FC = () => {
                 safeId = generateNewsItemId('custom-saved', item.link, item.title?.PT || '', idx);
               }
               seenStoredIds.add(safeId);
-              cleanedCustom.push({ ...item, id: safeId });
+
+              // Elimina subtítulo duplicado que repete o lead
+              const subPt = item.subtitle?.PT?.trim().toLowerCase() || '';
+              const leadPt = item.lead?.PT?.trim().toLowerCase() || '';
+              const cleanedItem = { ...item, id: safeId };
+              if (subPt && leadPt && subPt === leadPt) {
+                cleanedItem.subtitle = undefined;
+              }
+              cleanedCustom.push(cleanedItem);
             }
           });
           localStorage.setItem(STORAGE_KEY_CUSTOM_NEWS, JSON.stringify(cleanedCustom));
@@ -439,24 +568,24 @@ export const GadgetNews: React.FC = () => {
           link: art.link,
           title: {
             PT: art.title,
-            EN: art.title,
-            RU: art.title,
-            HI: art.title,
-            KO: art.title
+            EN: '',
+            RU: '',
+            HI: '',
+            KO: ''
           },
-          subtitle: art.lead ? {
-            PT: art.lead,
-            EN: art.lead,
-            RU: art.lead,
-            HI: art.lead,
-            KO: art.lead
+          subtitle: (art.subtitle && art.subtitle.trim() !== art.lead?.trim()) ? {
+            PT: art.subtitle,
+            EN: '',
+            RU: '',
+            HI: '',
+            KO: ''
           } : undefined,
           lead: art.lead ? {
             PT: art.lead,
-            EN: art.lead,
-            RU: art.lead,
-            HI: art.lead,
-            KO: art.lead
+            EN: '',
+            RU: '',
+            HI: '',
+            KO: ''
           } : undefined
         }));
 
@@ -567,10 +696,11 @@ export const GadgetNews: React.FC = () => {
   };
 
   const handleShareNewsItem = async (item: GadgetNewsItem) => {
-    const title = getLocalizedText(item.title);
-    const subtitle = getLocalizedText(item.subtitle);
-    const lead = getLocalizedText(item.lead);
-    const shareText = `📰 *${title}*\n${subtitle ? `\n_${subtitle}_\n` : ''}\n${lead ? `${lead}\n` : ''}\n🔗 Fonte (${item.author}): ${item.link}`;
+    const title = getLocalizedText(item.title, item.id, 'title');
+    const subtitle = getLocalizedText(item.subtitle, item.id, 'subtitle');
+    const lead = getLocalizedText(item.lead, item.id, 'lead');
+    const sourceLabel = t('share.field.source');
+    const shareText = `📰 *${title}*\n${subtitle ? `\n_${subtitle}_\n` : ''}\n${lead ? `${lead}\n` : ''}\n🔗 ${sourceLabel} (${item.author}): ${item.link}`;
 
     if (navigator.share) {
       try {
@@ -601,14 +731,106 @@ export const GadgetNews: React.FC = () => {
 
   const handleShareWhatsApp = (item: GadgetNewsItem, e: React.MouseEvent) => {
     e.stopPropagation();
-    const title = getLocalizedText(item.title);
+    const title = getLocalizedText(item.title, item.id, 'title');
     const text = `📰 *${title}*\n\n${item.link}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
   };
 
-  const getLocalizedText = (localizedString?: LocalizedString): string => {
-    if (!localizedString) return '';
-    return localizedString[lang] || localizedString.PT || localizedString.EN || '';
+  const getLocalizedText = (
+    localizedString?: LocalizedString,
+    itemId?: string,
+    field?: 'title' | 'subtitle' | 'lead'
+  ): string => {
+    if (!localizedString && !itemId) return '';
+
+    const ptText = localizedString?.PT?.trim() || '';
+
+    // 1. Se temos tradução dinâmica em cache para este item, idioma e campo
+    if (itemId && field && translationsMap[itemId]?.[lang]?.[field]) {
+      const cached = translationsMap[itemId][lang][field]?.trim();
+      if (cached) {
+        // Se lang for PT, retorna; se não for PT, só usa se não for igual ao português
+        if (lang === 'PT' || !ptText || cached.toLowerCase() !== ptText.toLowerCase()) {
+          return cached;
+        }
+      }
+    }
+
+    if (localizedString) {
+      if (lang === 'PT') {
+        return localizedString.PT || localizedString.EN || '';
+      }
+
+      // Se houver valor específico no objeto para o idioma selecionado e não for vazio
+      const val = localizedString[lang]?.trim();
+      if (val) {
+        // Se for diferente de PT (ou se PT não existir), é uma tradução válida
+        if (!ptText || val.toLowerCase() !== ptText.toLowerCase()) {
+          return val;
+        }
+      }
+
+      // Se o usuário selecionou EN e temos EN válido
+      if (lang === 'EN' && localizedString.EN?.trim()) {
+        const enVal = localizedString.EN.trim();
+        if (!ptText || enVal.toLowerCase() !== ptText.toLowerCase()) {
+          return enVal;
+        }
+      }
+
+      // Se tiver em translationsMap mesmo sem field específico
+      if (itemId && field) {
+        const tr = translationsMap[itemId]?.[lang];
+        if (tr && tr[field]) {
+          const cachedField = tr[field]!.trim();
+          if (!ptText || cachedField.toLowerCase() !== ptText.toLowerCase()) {
+            return cachedField;
+          }
+        }
+      }
+
+      // Se não tiver tradução ainda, prioriza EN se existir, senão PT
+      return (localizedString.EN && localizedString.EN !== ptText ? localizedString.EN : null) || localizedString[lang] || localizedString.PT || '';
+    }
+
+    return '';
+  };
+
+  const getLocalizedCategory = (item: GadgetNewsItem): string => {
+    const categoryNames: Record<NewsCategory, Record<string, string>> = {
+      gadgets: {
+        PT: 'Gadgets & Inovações',
+        EN: 'Gadgets & Innovations',
+        RU: 'Гаджеты и инновации',
+        HI: 'गैजेट्स और नवाचार',
+        KO: '가젯 및 혁신'
+      },
+      inventions: {
+        PT: 'Invenções & Patentes',
+        EN: 'Inventions & Patents',
+        RU: 'Изобретения и патенты',
+        HI: 'आविष्कार और पेटेंट',
+        KO: '발명 및 특허'
+      },
+      discoveries: {
+        PT: 'Ciência & Descobertas',
+        EN: 'Science & Discoveries',
+        RU: 'Наука и открытия',
+        HI: 'विज्ञान और खोजें',
+        KO: '과학 및 발견'
+      }
+    };
+
+    if (item.categoryLabel) {
+      const val = item.categoryLabel[lang]?.trim();
+      const ptVal = item.categoryLabel.PT?.trim();
+      if (val && (lang === 'PT' || !ptVal || val.toLowerCase() !== ptVal.toLowerCase())) {
+        return val;
+      }
+    }
+
+    const fallbackCat = categoryNames[item.category] || categoryNames.gadgets;
+    return fallbackCat[lang] || fallbackCat.PT || 'Tecnologia';
   };
 
   // Função para gerar o resumo da notícia usando inicialmente funções React/JS locais e Node.js, com IA como fallback
@@ -626,10 +848,10 @@ export const GadgetNews: React.FC = () => {
     setSummaryErrors((prev) => ({ ...prev, [item.id]: null }));
 
     try {
-      const title = getLocalizedText(item.title);
-      const subtitle = getLocalizedText(item.subtitle);
-      const lead = getLocalizedText(item.lead);
-      const category = getLocalizedText(item.categoryLabel);
+      const title = getLocalizedText(item.title, item.id, 'title');
+      const subtitle = getLocalizedText(item.subtitle, item.id, 'subtitle');
+      const lead = getLocalizedText(item.lead, item.id, 'lead');
+      const category = getLocalizedCategory(item);
 
       // 1. Gera INSTANTANEAMENTE o resumo técnico local usando funções React/JS (0ms, 100% offline)
       const localAlgoSummary = generateAlgorithmicNewsSummary({
@@ -724,9 +946,9 @@ export const GadgetNews: React.FC = () => {
 
       if (!searchQuery.trim()) return true;
 
-      const title = getLocalizedText(item.title).toLowerCase();
-      const subtitle = getLocalizedText(item.subtitle).toLowerCase();
-      const lead = getLocalizedText(item.lead).toLowerCase();
+      const title = getLocalizedText(item.title, item.id, 'title').toLowerCase();
+      const subtitle = getLocalizedText(item.subtitle, item.id, 'subtitle').toLowerCase();
+      const lead = getLocalizedText(item.lead, item.id, 'lead').toLowerCase();
       const author = item.author.toLowerCase();
       const query = searchQuery.toLowerCase();
 
@@ -737,7 +959,7 @@ export const GadgetNews: React.FC = () => {
         author.includes(query)
       );
     });
-  }, [newsList, selectedCategory, searchQuery, lang]);
+  }, [newsList, selectedCategory, searchQuery, lang, translationsMap]);
 
   const categoryFilters: { id: NewsCategory | 'all'; labelKey: string }[] = [
     { id: 'all', labelKey: 'news.filterAll' },
@@ -852,12 +1074,38 @@ export const GadgetNews: React.FC = () => {
       </div>
 
       {/* News Cards Grid */}
+      {isTranslatingNews && lang !== 'PT' && (
+        <div className="mb-6 p-3.5 rounded-2xl bg-cyan-950/40 border border-cyan-500/30 flex items-center justify-between gap-3 animate-pulse text-xs text-cyan-200 shadow-lg shadow-cyan-950/20">
+          <div className="flex items-center gap-2.5">
+            <div className="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-300">
+              <Sparkles className="w-4 h-4 animate-spin" />
+            </div>
+            <div>
+              <span className="font-bold text-white block">
+                {lang === 'RU'
+                  ? 'Traduzindo títulos e leads para Russo (Русский)...'
+                  : lang === 'HI'
+                  ? 'समाचारों के शीर्षक और विवरण का हिन्दी में अनुवाद किया जा रहा है...'
+                  : lang === 'KO'
+                  ? '뉴스 제목 및 요약을 한국어로 번역하는 중입니다...'
+                  : 'Translating headlines and summaries to English...'}
+              </span>
+              <p className="text-[11px] text-cyan-300/80">
+                Adaptando as notícias para o idioma selecionado em tempo real.
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shrink-0">
+            {lang}
+          </span>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {filteredNews.map((item, index) => {
-          const mainTitle = getLocalizedText(item.title);
-          const subTitle = getLocalizedText(item.subtitle);
-          const leadContent = getLocalizedText(item.lead);
-          const categoryTag = getLocalizedText(item.categoryLabel);
+          const mainTitle = getLocalizedText(item.title, item.id, 'title');
+          const subTitle = getLocalizedText(item.subtitle, item.id, 'subtitle');
+          const leadContent = getLocalizedText(item.lead, item.id, 'lead');
+          const categoryTag = getLocalizedCategory(item);
           const isVerified = verifiedLinksMap[item.link] !== false;
           const isCustom = item.id.startsWith('custom-') || item.id.startsWith('user-suggest-') || item.id.startsWith('suggested-');
 
@@ -937,8 +1185,10 @@ export const GadgetNews: React.FC = () => {
                 {mainTitle}
               </h3>
 
-              {/* Título Secundário / Subtítulo */}
-              {subTitle && (
+              {/* Título Secundário / Subtítulo (somente se existir e não repetir o lead ou o título) */}
+              {subTitle && 
+                (!leadContent || subTitle.trim().toLowerCase() !== leadContent.trim().toLowerCase()) &&
+                subTitle.trim().toLowerCase() !== mainTitle.trim().toLowerCase() && (
                 <h4 className="text-sm font-semibold text-cyan-400/90 mb-3 leading-relaxed">
                   {subTitle}
                 </h4>
@@ -1250,7 +1500,7 @@ export const GadgetNews: React.FC = () => {
                   )}
                 </div>
                 <h3 className="text-lg sm:text-xl font-extrabold text-white leading-snug">
-                  {getLocalizedText(modalSummaryItem.item.title)}
+                  {getLocalizedText(modalSummaryItem.item.title, modalSummaryItem.item.id, 'title')}
                 </h3>
                 <p className="text-xs text-slate-400 mt-1 flex items-center gap-2">
                   <span>{modalSummaryItem.item.author}</span>

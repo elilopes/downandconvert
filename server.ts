@@ -23,6 +23,9 @@ if (
 ) {
   process.env.GEMINI_API_KEY = originalCloudKey;
 }
+if (process.env.GEMINI_API_KEY === leakedKeyPattern) {
+  process.env.GEMINI_API_KEY = '';
+}
 
 import { GoogleGenAI } from '@google/genai';
 import express from 'express';
@@ -92,9 +95,23 @@ function injectSEO(html: string, reqPath: string): string {
 
   const device = mockedSmartphones.find(s => s.id === pathSlug);
   if (device) {
-    const title = `${device.brand} ${device.model} - Ficha Técnica e Análise | Down&Convert`;
-    const description = `Confira a ficha técnica completa, benchmark, câmeras e bateria do ${device.brand} ${device.model}. Descubra se vale a pena!`;
+    let title = `${device.brand} ${device.model} - Ficha Técnica e Análise | Down&Convert`;
+    let description = `Confira a ficha técnica completa, benchmark, câmeras e bateria do ${device.brand} ${device.model}. Descubra se vale a pena!`;
     
+    if (lang === 'en') {
+      title = `${device.brand} ${device.model} - Full Specs & Review | Down&Convert`;
+      description = `Check out full specifications, benchmark, cameras and battery life of ${device.brand} ${device.model}.`;
+    } else if (lang === 'ru') {
+      title = `${device.brand} ${device.model} - Характеристики и обзор | Down&Convert`;
+      description = `Полные технические характеристики, тесты, камеры и аккумулятор ${device.brand} ${device.model}.`;
+    } else if (lang === 'hi') {
+      title = `${device.brand} ${device.model} - पूर्ण विनिर्देश और समीक्षा | Down&Convert`;
+      description = `${device.brand} ${device.model} के पूर्ण विनिर्देश, बेंचमार्क, कैमरे और बैटरी की जांच करें।`;
+    } else if (lang === 'ko') {
+      title = `${device.brand} ${device.model} - 상세 사양 및 분석 | Down&Convert`;
+      description = `${device.brand} ${device.model}의 전체 사양, 벤치마크, 카메라 및 배터리 성능을 확인하세요.`;
+    }
+
     return updatedHtml
       .replace(/<title>.*?<\/title>/i, `<title>${title}</title>`)
       .replace(/<meta\s+name=["']description["']\s+content=["'][^"]*["']\s*\/?>/i, `<meta name="description" content="${description}" />`)
@@ -104,9 +121,23 @@ function injectSEO(html: string, reqPath: string): string {
 
   const ussd = USSD_DATABASE.find(u => u.id === pathSlug);
   if (ussd) {
-    const title = `Código Secreto ${ussd.code} (${ussd.carrier.toUpperCase()}) - ${ussd.id.replace(/-/g, ' ')} | Down&Convert`;
-    const description = `Descubra para que serve o código USSD/MMI ${ussd.code} da operadora/fabricante ${ussd.carrier.toUpperCase()}. Veja comandos úteis e funções secretas do seu celular.`;
+    let title = `Código Secreto ${ussd.code} (${ussd.carrier.toUpperCase()}) - ${ussd.id.replace(/-/g, ' ')} | Down&Convert`;
+    let description = `Descubra para que serve o código USSD/MMI ${ussd.code} da operadora/fabricante ${ussd.carrier.toUpperCase()}. Veja comandos úteis e funções secretas do seu celular.`;
     
+    if (lang === 'en') {
+      title = `Secret Code ${ussd.code} (${ussd.carrier.toUpperCase()}) - ${ussd.id.replace(/-/g, ' ')} | Down&Convert`;
+      description = `Discover what the USSD/MMI code ${ussd.code} from ${ussd.carrier.toUpperCase()} does. View useful commands and secret functions for your phone.`;
+    } else if (lang === 'ru') {
+      title = `Секретный код ${ussd.code} (${ussd.carrier.toUpperCase()}) - ${ussd.id.replace(/-/g, ' ')} | Down&Convert`;
+      description = `Узнайте, для чего нужен USSD/MMI код ${ussd.code} оператора ${ussd.carrier.toUpperCase()}. Полезные команды и функции вашего телефона.`;
+    } else if (lang === 'hi') {
+      title = `सीक्रेट कोड ${ussd.code} (${ussd.carrier.toUpperCase()}) - ${ussd.id.replace(/-/g, ' ')} | Down&Convert`;
+      description = `जानें कि ${ussd.carrier.toUpperCase()} का यूएसएसडी/एमएमआई कोड ${ussd.code} किस लिए है। अपने फोन के उपयोगी कमांड और गुप्त कार्य देखें।`;
+    } else if (lang === 'ko') {
+      title = `비밀 코드 ${ussd.code} (${ussd.carrier.toUpperCase()}) - ${ussd.id.replace(/-/g, ' ')} | Down&Convert`;
+      description = `${ussd.carrier.toUpperCase()} 통신사/제조사의 USSD/MMI 코드 ${ussd.code}의 기능과 유용한 숨겨진 명령어를 확인하세요.`;
+    }
+
     return updatedHtml
       .replace(/<title>.*?<\/title>/i, `<title>${title}</title>`)
       .replace(/<meta\s+name=["']description["']\s+content=["'][^"]*["']\s*\/?>/i, `<meta name="description" content="${description}" />`)
@@ -2803,6 +2834,240 @@ Regras:
     } catch (err) {
       console.error('Erro na importação de notícias de gadgets e inovações:', err);
       res.status(500).json({ success: false, error: err.message || 'Erro ao importar notícias' });
+    }
+  });
+
+  // =========================================================================
+  // TRADUÇÃO DINÂMICA DE NOTÍCIAS MULTILÍNGUE (PT, EN, RU, HI, KO)
+  // =========================================================================
+  const newsTranslationMemory = new Map<string, string>();
+
+  async function translateSingleString(clean: string, langKey: string): Promise<string> {
+    if (!clean || !clean.trim()) return '';
+    const cacheKey = `${langKey}:${clean}`;
+    if (newsTranslationMemory.has(cacheKey)) {
+      return newsTranslationMemory.get(cacheKey)!;
+    }
+
+    // Provider 1: clients5.google.com
+    try {
+      const url = `https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=${langKey}&q=${encodeURIComponent(clean)}`;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 4000);
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeout);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data[0]) {
+          const tr = Array.isArray(data[0]) ? data[0][0] : data[0];
+          if (tr && typeof tr === 'string' && tr.trim() !== '') {
+            const result = tr.trim();
+            newsTranslationMemory.set(cacheKey, result);
+            return result;
+          }
+        }
+      }
+    } catch {}
+
+    // Provider 2: MyMemory API
+    try {
+      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(clean)}&langpair=auto|${langKey}`;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 4000);
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeout);
+      if (res.ok) {
+        const data = await res.json();
+        const tr = data.responseData?.translatedText;
+        if (tr && typeof tr === 'string' && tr.trim() !== '' && !tr.includes('MYMEMORY WARNING')) {
+          const result = tr.trim();
+          newsTranslationMemory.set(cacheKey, result);
+          return result;
+        }
+      }
+    } catch {}
+
+    // Provider 3: Google gtx fallback
+    try {
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${langKey}&dt=t&q=${encodeURIComponent(clean)}`;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 4000);
+      const res = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        },
+        signal: controller.signal
+      });
+      clearTimeout(timeout);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && Array.isArray(data[0])) {
+          const translated = data[0].map((s: any) => s[0]).join('');
+          if (translated && translated.trim()) {
+            const result = translated.trim();
+            newsTranslationMemory.set(cacheKey, result);
+            return result;
+          }
+        }
+      }
+    } catch {}
+
+    // Provider 4: Gemini fallback (apenas se houver chave válida e não-vazada)
+    if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== leakedKeyPattern) {
+      try {
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const langNames: Record<string, string> = {
+          pt: 'Portuguese',
+          en: 'English',
+          ru: 'Russian',
+          hi: 'Hindi',
+          ko: 'Korean'
+        };
+        const targetName = langNames[langKey] || langKey;
+        const prompt = `Translate the following text to ${targetName}. Output ONLY the direct translation:\n\n${clean}`;
+        const aiRes = await ai.models.generateContent({
+          model: 'gemini-3.8-flash',
+          contents: prompt
+        });
+        const aiText = aiRes.text?.trim();
+        if (aiText) {
+          newsTranslationMemory.set(cacheKey, aiText);
+          return aiText;
+        }
+      } catch {}
+    }
+
+    return clean;
+  }
+
+  async function translateArticleParts(
+    title: string | undefined,
+    subtitle: string | undefined,
+    lead: string | undefined,
+    langCode: string
+  ): Promise<{ title: string; subtitle: string; lead: string }> {
+    const langKey = langCode.toLowerCase();
+    let resTitle = title || '';
+    let resSubtitle = subtitle || '';
+    let resLead = lead || '';
+
+    if (langKey === 'pt') {
+      return { title: resTitle, subtitle: resSubtitle, lead: resLead };
+    }
+
+    // Identifica campos únicos que necessitam de tradução
+    const partsToFetch: { key: 'title' | 'subtitle' | 'lead'; text: string }[] = [];
+    if (resTitle.trim()) {
+      const cached = newsTranslationMemory.get(`${langKey}:${resTitle.trim()}`);
+      if (cached) resTitle = cached;
+      else partsToFetch.push({ key: 'title', text: resTitle.trim() });
+    }
+    if (resSubtitle.trim() && resSubtitle.trim() !== resTitle.trim()) {
+      const cached = newsTranslationMemory.get(`${langKey}:${resSubtitle.trim()}`);
+      if (cached) resSubtitle = cached;
+      else partsToFetch.push({ key: 'subtitle', text: resSubtitle.trim() });
+    }
+    if (resLead.trim() && resLead.trim() !== resTitle.trim() && resLead.trim() !== resSubtitle.trim()) {
+      const cached = newsTranslationMemory.get(`${langKey}:${resLead.trim()}`);
+      if (cached) resLead = cached;
+      else partsToFetch.push({ key: 'lead', text: resLead.trim() });
+    }
+
+    if (partsToFetch.length === 0) {
+      return { title: resTitle, subtitle: resSubtitle, lead: resLead };
+    }
+
+    // Se temos partes para traduzir, junta com delimitador para traduzir numa única chamada
+    if (partsToFetch.length === 1) {
+      const tr = await translateSingleString(partsToFetch[0].text, langKey);
+      if (partsToFetch[0].key === 'title') resTitle = tr;
+      if (partsToFetch[0].key === 'subtitle') resSubtitle = tr;
+      if (partsToFetch[0].key === 'lead') resLead = tr;
+    } else {
+      const joined = partsToFetch.map((p) => p.text).join(' \n###\n ');
+      const translatedJoined = await translateSingleString(joined, langKey);
+      const split = translatedJoined.split(/\s*###\s*/);
+
+      partsToFetch.forEach((p, index) => {
+        const val = split[index] ? split[index].trim() : '';
+        if (val) {
+          newsTranslationMemory.set(`${langKey}:${p.text}`, val);
+          if (p.key === 'title') resTitle = val;
+          if (p.key === 'subtitle') resSubtitle = val;
+          if (p.key === 'lead') resLead = val;
+        } else {
+          // Fallback individual se o split falhou
+          translateSingleString(p.text, langKey).then((indivVal) => {
+            if (p.key === 'title') resTitle = indivVal;
+            if (p.key === 'subtitle') resSubtitle = indivVal;
+            if (p.key === 'lead') resLead = indivVal;
+          });
+        }
+      });
+    }
+
+    return { title: resTitle, subtitle: resSubtitle, lead: resLead };
+  }
+
+  app.post('/api/news/translate-batch', express.json(), async (req, res) => {
+    try {
+      const { items, targetLang = 'PT' } = req.body;
+      if (!Array.isArray(items) || items.length === 0) {
+        return res.json({ success: true, translations: [] });
+      }
+
+      const langCode = String(targetLang).toUpperCase();
+      const validLangs = ['PT', 'EN', 'RU', 'HI', 'KO'];
+      if (!validLangs.includes(langCode)) {
+        return res.status(400).json({ error: 'Idioma inválido. Suportados: PT, EN, RU, HI, KO' });
+      }
+
+      if (langCode === 'PT') {
+        return res.json({
+          success: true,
+          targetLang: 'PT',
+          translations: items.map((it: any) => ({
+            id: it.id,
+            title: it.title,
+            subtitle: it.subtitle,
+            lead: it.lead
+          }))
+        });
+      }
+
+      // Processa itens em lotes com concorrência moderada (4 simultâneos) para máxima estabilidade
+      const chunkSize = 4;
+      const translations: any[] = [];
+
+      for (let i = 0; i < items.length; i += chunkSize) {
+        const chunk = items.slice(i, i + chunkSize);
+        const chunkResults = await Promise.all(
+          chunk.map(async (item: any) => {
+            const { title, subtitle, lead } = await translateArticleParts(
+              item.title,
+              item.subtitle,
+              item.lead,
+              langCode
+            );
+            return {
+              id: item.id,
+              title: title || item.title,
+              subtitle: subtitle || item.subtitle,
+              lead: lead || item.lead
+            };
+          })
+        );
+        translations.push(...chunkResults);
+      }
+
+      res.json({
+        success: true,
+        targetLang: langCode,
+        translations
+      });
+    } catch (err: any) {
+      console.error('Erro na tradução em lote de notícias:', err);
+      res.status(500).json({ success: false, error: err.message || 'Erro ao traduzir notícias' });
     }
   });
 
