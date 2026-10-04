@@ -20,6 +20,20 @@ export interface GadgetNewsItem {
   link: string;
 }
 
+export interface NewsSummaryTopic {
+  icon?: string;
+  title?: string;
+  detail?: string;
+}
+
+export interface NewsSummaryData {
+  readTime?: string;
+  oneLineTake?: string;
+  topics?: NewsSummaryTopic[];
+  whyItMatters?: string;
+  keywords?: string[];
+}
+
 export const mockedGadgetNews: GadgetNewsItem[] = [
   {
     id: "flipboard-chips-neuromorficos",
@@ -649,6 +663,111 @@ export const mockedGadgetNews: GadgetNewsItem[] = [
       RU: "Физики доказали, что микроскопические механические складки в углеродных монослоях генерируют существенную электрическую плотность, что позволяет создавать автономные биомедицинские нанодатчики, работающие от движения мышц.",
       HI: "भौतिकविदों ने प्रदर्शित किया कि कार्बन मोनोलेयर्स में सूक्ष्म यांत्रिक सिलवटें महत्वपूर्ण विद्युत घनत्व उत्पन्न करती हैं, जिससे प्राकृतिक मांसपेशियों के आंदोलन द्वारा संचालित स्व-संचालित बायोमेडिकल नैनोसेंसर का निर्माण संभव होता है।",
       KO: "물리학자들은 탄소 단일층의 미세한 기계적 주름이 상당한 전기 밀도를 발생시켜 신체 근육 움직임으로 자체 구동되는 생체의학 나노센서를 구현할 수 있음을 입증했습니다."
+    }
+  },
+  {
+    id: "meta-orion-oculos-ar",
+    category: "gadgets",
+    categoryLabel: {
+      PT: "Óculos AR",
+      EN: "AR Glasses",
+      RU: "Очки AR",
+      HI: "एआर चश्मा",
+      KO: "AR 안경"
+    },
+    author: "Meta Newsroom / TechCrunch",
+    pubDate: "2026-09-18T10:00:00Z",
+    link: "https://techcrunch.com/2024/09/25/meta-orion-augmented-reality-glasses/",
+    title: {
+      PT: "Meta Orion: Óculos de Realidade Aumentada mais avançados do mundo revelados",
+      EN: "Meta Orion: World's most advanced Augmented Reality glasses revealed",
+      RU: "Meta Orion: представлены самые продвинутые в мире очки дополненной реальности",
+      HI: "मेटा ओरियन: दुनिया का सबसे उन्नत संवर्धित वास्तविकता चश्मा अनावरण किया गया",
+      KO: "메타 오리온: 세계에서 가장 진화된 증강현실(AR) 스마트 글래스 공개"
+    },
+    subtitle: {
+      PT: "Lentes de carboneto de silício, rastreamento neural e IA redefinem o futuro dos wearables",
+      EN: "Silicon carbide lenses, neural tracking, and AI redefine the future of wearables",
+      RU: "Линзы из карбида кремния, нейроотслеживание и ИИ переопределяют будущее носимых устройств",
+      HI: "सिलिकॉन कार्बाइड लेंस, न्यूरल ट्रैकिंग और एआई वियरेबल्स के भविष्य को फिर से परिभाषित करते हैं",
+      KO: "실리콘 카바이드 렌즈, 신경 추적 인터페이스 및 인공지능 탑재로 미래 웨어러블 구현"
+    },
+    lead: {
+      PT: "A Meta revelou o Orion, seus primeiros óculos de realidade aumentada real. Com um campo de visão de 70 graus e lentes de carboneto de silício ultra leves, o dispositivo é controlado por uma pulseira neural que lê impulsos elétricos do pulso do usuário.",
+      EN: "Meta revealed Orion, its first true augmented reality glasses. Featuring a 70-degree field of view and ultra-lightweight silicon carbide lenses, the device is controlled by a neural wristband that reads muscle electrical impulses.",
+      RU: "Meta представила Orion, свои первые настоящие очки дополненной реальности. Обладая 70-градусным углем обзора и сверхлегкими линзами из карбида кремния, устройство управляется нейробраслетом, считывающим импульсы запястья.",
+      HI: "मेटा ने ओरियन का अनावरण किया, जो उसका पहला वास्तविक संवर्धित वास्तविकता चश्मा है। 70-डिग्री फ़ील्ड ऑफ़ व्यू और अल्ट्रा-लाइटवेट सिलिकॉन कार्बाइड लेंस की विशेषता वाले इस डिवाइस को न्यूeral ब्रेसलेट द्वारा नियंत्रित किया जाता है।",
+      KO: "메타가 첫 번째 순정 증강현실 안경인 '오리온(Orion)'을 전격 공개했습니다. 70도 시야각과 초경량 실리콘 카바이드 렌즈를 탑재했으며, 손목 근육의 신경 전기 신호를 감지하는 밴드로 자유롭게 조작합니다."
+    }
+  },
+  {
+    id: "samsung-galaxy-ring-2",
+    category: "gadgets",
+    categoryLabel: {
+      PT: "Wearables & Saúde",
+      EN: "Wearables & Health",
+      RU: "Носимые устройства и здоровье",
+      HI: "वियरेबल्स और स्वास्थ्य",
+      KO: "웨어러블 및 건강"
+    },
+    author: "Samsung Global Newsroom / SamMobile",
+    pubDate: "2026-09-12T08:15:00Z",
+    link: "https://www.sammobile.com/news/samsung-galaxy-ring-pre-orders-shipments/",
+    title: {
+      PT: "Samsung lança Galaxy Ring 2 com dobro de bateria e monitor de glicose não invasivo",
+      EN: "Samsung launches Galaxy Ring 2 with double the battery and non-invasive glucose monitor",
+      RU: "Samsung выпустила Galaxy Ring 2 с удвоенным временем работы и неинвазивным глюкометром",
+      HI: "सैमसंग ने दोगुनी बैटरी और गैर-आक्रामक ग्लूकोज मॉनिटर के साथ गैलेक्सी रिंग 2 लॉन्च किया",
+      KO: "삼성전자, 배터리 수명 2배 및 비침습 혈당 측정 지원하는 '갤럭시 링 2' 전격 출시"
+    },
+    subtitle: {
+      PT: "Anel inteligente de segunda geração traz revestimento de titânio acetinado e sensores médicos de ponta",
+      EN: "Second-generation smart ring features satin titanium finish and cutting-edge medical sensors",
+      RU: "Умное кольцо второго поколения получило сатиновый титановый корпус и передовые датчики медицинского уровня",
+      HI: "दूसरी पीढ़ी की स्मार्ट रिंग में साटन टाइटेनियम फिनिश और अत्याधुनिक मेडिकल सेंसर शामिल हैं",
+      KO: "티타늄 마감과 고성능 의료 센서를 갖추어 한층 더 강력해진 2세대 스마트 링"
+    },
+    lead: {
+      PT: "A Samsung anunciou oficialmente o Galaxy Ring 2. O novo anel inteligente melhora drasticamente a eficiência energética para durar até 14 dias com uma única carga e traz um sensor experimental para monitoramento passivo de tendências de glicemia.",
+      EN: "Samsung officially announced the Galaxy Ring 2. The new smart ring drastically improves energy efficiency to last up to 14 days on a single charge and features an experimental sensor for passive glucose level tracking.",
+      RU: "Samsung официально анонсировала Galaxy Ring 2. Новое умное кольцо кардинально улучшает энергоэффективность, работая до 14 дней на одном заряде, и содержит экспериментальный датчик пассивного отслеживания уровня глюкозы.",
+      HI: "सैमसंग ने आधिकारिक तौर पर गैलेक्सी रिंग 2 की घोषणा की। नया स्मार्ट रिंग एक बार चार्ज करने पर 14 दिनों तक चलने के लिए ऊर्जा दक्षता में सुधार करता है और ग्लूकोज प्रवृत्तियों की निगरानी के लिए एक सेंसर पेश करता है।",
+      KO: "삼성전자가 스마트 링 신제품 '갤럭시 링 2'를 공식 공개했습니다. 한 번 충전으로 최대 14일 동안 사용할 수 있도록 전력 효율을 극대화했으며, 무채혈 방식으로 일상 혈당 추이를 추적하는 센서가 도입되었습니다."
+    }
+  },
+  {
+    id: "apple-vision-air-wearable",
+    category: "gadgets",
+    categoryLabel: {
+      PT: "Computação Espacial",
+      EN: "Spatial Computing",
+      RU: "Пространственные вычисления",
+      HI: "स्थानिक कंप्यूटिंग",
+      KO: "공간 컴퓨팅"
+    },
+    author: "Mark Gurman / Bloomberg",
+    pubDate: "2026-09-05T14:00:00Z",
+    link: "https://www.bloomberg.com/news/articles/2024-02-18/apple-vision-pro-successor-vision-air",
+    title: {
+      PT: "Apple planeja 'Vision Air' ultra-leve com conexão direta ao iPhone",
+      EN: "Apple plans ultra-lightweight 'Vision Air' with direct iPhone tethering",
+      RU: "Apple планирует сверхлегкие очки 'Vision Air' с прямым подключением к iPhone",
+      HI: "ऐप्पल ने आईफोन से सीधे कनेक्शन के साथ अल्ट्रा-लाइटवेट 'विजन एयर' की योजना बनाई",
+      KO: "애플, 아이폰 연동형 초경량 스마트 안경 '비전 에어(Vision Air)' 출시 검토 중"
+    },
+    subtitle: {
+      PT: "Novo headset foca em conforto de uso diário, reduzindo custos ao processar dados no celular",
+      EN: "New headset focuses on daily comfort, reducing costs by offloading processing to the iPhone",
+      RU: "Новая гарнитура ориентирована на повседневный комфорт, снижая стоимость за счет переноса вычислений на iPhone",
+      HI: "नया हेडसेट दैनिक आराम पर केंद्रित है, आईफोन पर डेटा संसाधित करके लागत को कम करता है",
+      KO: "하루 종일 착용 가능한 편안함과 연산 장치 간소화로 단가를 혁신적으로 낮춘 보급형 모델"
+    },
+    lead: {
+      PT: "Fontes ligadas à cadeia de suprimentos da Apple indicam que o próximo dispositivo de Computação Espacial, apelidado de Vision Air, pesará menos de 250 gramas. Para economizar bateria e peso, o headset funcionará conectando-se diretamente ao chip A-Series do iPhone.",
+      EN: "Sources close to Apple's supply chain indicate that the next Spatial Computing device, dubbed Vision Air, will weigh under 250 grams. To save battery and weight, the headset will process data directly on the iPhone's A-Series chip.",
+      RU: "Источники в цепочке поставок Apple сообщают, что следующее устройство пространственных вычислений под названием Vision Air будет весить менее 250 грамм. Чтобы сэкономить вес и батарею, гарнитура будет подключаться напрямую к чипу iPhone A-Series.",
+      HI: "ऐप्पल की आपूर्ति श्रृंखला के करीबी स्रोत संकेत देते हैं कि अगला स्थानिक कंप्यूटिंग डिवाइस, जिसे विज़न एयर कहा जाता है, का वजन 250 gram से कम होगा। 배터리와 무게를 절약하기 위해 헤드셋은 아이폰의 A시리즈 칩셋에 직접 연결하여 연산합니다.",
+      KO: "애플 공급망에 따르면 차세대 공간 컴퓨팅 디바이스 '비전 에어(Vision Air)'는 무게가 250g 이하로 설계됩니다. 전력 소모와 무게를 최소화하기 위해 무선 연산 처리를 아이폰의 A시리즈 칩셋에 위임하는 방식입니다."
     }
   }
 ];

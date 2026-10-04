@@ -54,10 +54,10 @@ import {
 } from './utils/audioEncoder';
 import { encodeWithFFmpeg } from './utils/ffmpegEncoder';
 import { encodeOnServer } from './utils/serverEncoder';
-import { useLanguage } from './contexts/LanguageContext';
+import { useLanguage, Language } from './contexts/LanguageContext';
 
 export default function App() {
-  const { t } = useLanguage();
+  const { t, lang, setLang } = useLanguage();
   const [activeTab, setActiveTab] = useState<'converter' | 'downloader' | 'ussd' | 'smartphones' | 'news'>('converter');
   const [items, setItems] = useState<VideoItem[]>([]);
   const [globalFormat, setGlobalFormat] = useState<AudioFormat>('mp3');
@@ -83,7 +83,20 @@ export default function App() {
   // Sync URL routes/parameters with modals (supports /privacy, /terms, ?legal=privacy, #privacy, etc.)
   useEffect(() => {
     const parseUrlForModals = () => {
-      const path = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
+      let normalizedPath = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
+      const segments = normalizedPath.split('/').filter(Boolean);
+      
+      const langPrefixes = ['pt', 'en', 'ru', 'hi', 'ko'];
+      if (segments.length > 0 && langPrefixes.includes(segments[0])) {
+        const langCode = segments[0].toUpperCase() as Language;
+        if (lang !== langCode) {
+          setLang(langCode, false);
+        }
+        segments.shift();
+        normalizedPath = '/' + segments.join('/');
+      }
+
+      const path = normalizedPath;
       const pathSlug = path.substring(1);
       const isDeviceUrl = mockedSmartphones.some(s => s.id === pathSlug);
       const isUssdUrl = USSD_DATABASE.some(u => u.id === pathSlug);
@@ -166,10 +179,16 @@ export default function App() {
   useEffect(() => {
     const title = t(`seo.title.${activeTab}`);
     const description = t(`seo.desc.${activeTab}`);
-    let canonical = 'https://www.downandconvert.com';
+    const origin = window.location.origin || 'https://downandconvert.onrender.com';
+    let canonical = origin;
 
     if (activeTab !== 'converter') {
       canonical += `/${activeTab}`;
+    }
+
+    // Include current language parameter in canonical if non-default
+    if (lang && lang !== 'PT') {
+      canonical += `?lang=${lang.toLowerCase()}`;
     }
 
     document.title = title;
@@ -189,7 +208,20 @@ export default function App() {
       document.head.appendChild(linkCanonical);
     }
     linkCanonical.setAttribute('href', canonical);
-  }, [activeTab, t]);
+
+    // Alternate language hreflang links (pt, en, ru, hi, ko)
+    const langSlugs: Record<string, string> = { pt: 'pt', en: 'en', ru: 'ru', hi: 'hi', ko: 'ko' };
+    Object.keys(langSlugs).forEach((code) => {
+      let hreflangLink = document.querySelector(`link[rel="alternate"][hreflang="${code}"]`);
+      if (!hreflangLink) {
+        hreflangLink = document.createElement('link');
+        hreflangLink.setAttribute('rel', 'alternate');
+        hreflangLink.setAttribute('hreflang', code);
+        document.head.appendChild(hreflangLink);
+      }
+      hreflangLink.setAttribute('href', `${origin}/?lang=${code}`);
+    });
+  }, [activeTab, t, lang]);
 
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const activeTabRef = useRef<HTMLButtonElement>(null);

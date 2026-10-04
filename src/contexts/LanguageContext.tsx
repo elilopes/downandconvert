@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 export type Language = 'PT' | 'EN' | 'RU' | 'HI' | 'KO';
 
@@ -2695,27 +2695,1400 @@ const dict: Translations = {
     RU: "Error: code 503 - Эта модель в настоящее время испытывает высокий спрос. Всплески спроса обычно носят временный характер. Пожалуйста, повторите попытку позже.",
     HI: "Error: code 503 - इस 모델 में वर्तमान में अत्यधिक माँग है। माँग में उछाल आमतौर पर अस्थायी होता है। कृपया बाद में पुनः प्रयास करें।",
     KO: "Error: code 503 - 이 모델은 현재 대기 시간이 깁니다. 이러한 사용량 급증은 일시적입니다. 나중에 다시 시도해 주세요."
+  },
+  "ussd.code.tmobile.932.title": {
+    PT: "Uso de Dados T-Mobile USA (#932#)",
+    EN: "T-Mobile USA Data Usage (#932#)",
+    RU: "Использование данных T-Mobile USA (#932#)",
+    HI: "टी-मोबाइल यूएसए डेटा उपयोग (#932#)",
+    KO: "T-Mobile USA 데이터 사용량 조회 (#932#)"
+  },
+  "ussd.code.tmobile.932.desc": {
+    PT: "Verifica instantaneamente o consumo de dados móveis atual na rede da T-Mobile Estados Unidos.",
+    EN: "Instantly checks current mobile data usage on the T-Mobile US network.",
+    RU: "Мгновенно проверяет текущее использование мобильных данных в сети T-Mobile в США.",
+    HI: "टी-मोबाइल यूएस नेटवर्क पर वर्तमान मोबाइल डेटा उपयोग की तुरंत जांच करता है।",
+    KO: "T-Mobile 미국 네트워크에서 현재 모바일 데이터 사용량을 즉시 조회합니다."
+  },
+  "ussd.code.tmobile.225.title": {
+    PT: "Saldo e Vencimento T-Mobile (#225#)",
+    EN: "T-Mobile Balance & Due Date (#225#)",
+    RU: "Баланс и срок оплаты T-Mobile (#225#)",
+    HI: "टी-मोबाइल बैलेंस और देय तिथि (#225#)",
+    KO: "T-Mobile 잔액 및 납부 기한 (#225#)"
+  },
+  "ussd.code.tmobile.225.desc": {
+    PT: "Exibe o saldo atual da conta e a data de vencimento da próxima fatura ou ciclo de cobrança.",
+    EN: "Displays the current account balance and the due date of the next bill or billing cycle.",
+    RU: "Отображает текущий баланс счета и дату оплаты следующего счета или биллингового цикла.",
+    HI: "वर्तमान खाता शेष और अगले बिल या बिलिंग चक्र की देय तिथि दिखाता है।",
+    KO: "현재 계정 잔액과 다음 청구서 또는 청구 주기의 납부 기한을 표시합니다."
+  },
+  "ussd.code.att.3282.title": {
+    PT: "Consulta de Dados AT&T (*3282#)",
+    EN: "AT&T Data Usage Inquiry (*3282#)",
+    RU: "Запрос данных AT&T (*3282#)",
+    HI: "एटीएंडटी डेटा उपयोग जांच (*3282#)",
+    KO: "AT&T 데이터 사용량 문의 (*3282#)"
+  },
+  "ussd.code.att.3282.desc": {
+    PT: "Recebe uma mensagem SMS detalhando o consumo de internet móvel do ciclo atual.",
+    EN: "Receives an SMS message detailing mobile data consumption for the current cycle.",
+    RU: "Получает SMS-сообщение с подробным описанием потребления мобильного интернета в текущем цикле.",
+    HI: "वर्तमान चक्र के लिए मोबाइल डेटा खपत का विवरण देने वाला एक एसएमएस संदेश प्राप्त करता है।",
+    KO: "현재 주기의 모바일 데이터 소비량에 대한 자세한 내용을 담은 SMS 메시지를 수신합니다."
+  },
+  "ussd.code.att.225.title": {
+    PT: "Consultar Fatura AT&T (*225#)",
+    EN: "Check AT&T Bill Balance (*225#)",
+    RU: "Проверить баланс счета AT&T (*225#)",
+    HI: "एटीएंडटी बिल बैलेंस की जांच करें (*225#)",
+    KO: "AT&T 요금 잔액 확인 (*225#)"
+  },
+  "ussd.code.att.225.desc": {
+    PT: "Informa o saldo restante da linha pré-paga ou o valor da fatura atual da AT&T Estados Unidos.",
+    EN: "Provides the remaining prepaid balance or current bill amount for AT&T United States.",
+    RU: "Предоставляет информацию об оставшемся предоплаченном балансе или сумме текущего счета AT&T в США.",
+    HI: "एटीएंडटी यूनाइटेड स्टेट्स के लिए शेष प्रीपेड बैलेंस या वर्तमान बिल राशि प्रदान करता है।",
+    KO: "AT&T 미국의 남은 선불 잔액 또는 현재 청구 금액 정보를 제공합니다."
+  },
+  "ussd.code.orange.123.title": {
+    PT: "Menu de Saldo Orange Europe (#123#)",
+    EN: "Orange Europe Balance Menu (#123#)",
+    RU: "Меню баланса Orange Europe (#123#)",
+    HI: "ऑरेंज यूरोप बैलेंस मेनू (#123#)",
+    KO: "Orange 유럽 잔액 메뉴 (#123#)"
+  },
+  "ussd.code.orange.123.desc": {
+    PT: "Acessa o menu principal de consulta de créditos, consumo de franquia e recarga da Orange França e Europa.",
+    EN: "Accesses the main menu for checking credit, allowance consumption, and topping up for Orange France and Europe.",
+    RU: "Доступ к главному меню для проверки баланса, потребления трафика и пополнения счета Orange во Франции и Европе.",
+    HI: "ऑरेंज फ्रांस और यूरोप के लिए क्रेडिट, उपयोग की जांच और टॉप-अप के लिए मुख्य मेनू तक पहुंच।",
+    KO: "Orange 프랑스 및 유럽의 크레딧 조회, 요금제 소비량 확인, 충전을 위한 메인 메뉴에 접속합니다."
+  },
+  "ussd.code.movistar.133.title": {
+    PT: "Consulta de Saldo Movistar (*133#)",
+    EN: "Movistar Balance Inquiry (*133#)",
+    RU: "Запрос баланса Movistar (*133#)",
+    HI: "मोविस्टार बैलेंस जांच (*133#)",
+    KO: "Movistar 잔액 조회 (*133#)"
+  },
+  "ussd.code.movistar.133.desc": {
+    PT: "Verifica o saldo disponível e a validade de créditos da linha pré-paga na operadora Movistar.",
+    EN: "Checks the available balance and credit validity of the prepaid line on the Movistar network.",
+    RU: "Проверяет доступный баланс и срок действия кредитов предоплаченной линии в сети Movistar.",
+    HI: "मोविस्टार नेटवर्क पर प्रीपेड लाइन के उपलब्ध बैलेंस और क्रेडिट वैधता की जांच करता है।",
+    KO: "Movistar 네트워크 선불 요금제의 사용 가능한 잔액과 유효 기간을 확인합니다."
+  },
+  "ussd.code.jio.333.title": {
+    PT: "Saldo de Consumo Jio India (*333#)",
+    EN: "Jio India Balance Inquiry (*333#)",
+    RU: "Запрос баланса Jio India (*333#)",
+    HI: "जियो इंडिया बैलेंस जांच (*333#)",
+    KO: "Jio 인도 잔액 조회 (*333#)"
+  },
+  "ussd.code.jio.333.desc": {
+    PT: "Consulta rápida de saldo de dados, créditos restantes e validade do plano ativo na operadora Jio.",
+    EN: "Quick query of data balance, remaining credits, and active plan validity on the Jio carrier.",
+    RU: "Быстрый запрос баланса данных, оставшихся кредитов и срока действия активного тарифа у оператора Jio.",
+    HI: "जियो कैरियर पर डेटा बैलेंस, शेष क्रेडिट और सक्रिय योजना की वैधता की त्वरित जांच।",
+    KO: "Jio 통신사에서 데이터 잔량, 남은 크레딧 및 활성화된 요금제 유효 기간을 신속하게 조회합니다."
+  },
+  "ussd.code.huawei.2846579.title": {
+    PT: "ProjectMenu Huawei/Honor (*#*#2846579#*#*)",
+    EN: "Huawei/Honor ProjectMenu (*#*#2846579#*#*)",
+    RU: "ProjectMenu Huawei/Honor (*#*#2846579#*#*)",
+    HI: "हुआवेई/ऑनर प्रोजेक्टमेन्यू (*#*#2846579#*#*)",
+    KO: "화웨이/아너 ProjectMenu (*#*#2846579#*#*)"
+  },
+  "ussd.code.huawei.2846579.desc": {
+    PT: "Acessa configurações de engenharia, informações de versão, testes de carregamento da bateria e status do chip.",
+    EN: "Accesses engineering settings, version information, battery charging tests, and SIM status.",
+    RU: "Доступ к инженерным настройкам, информации о версии, тестам зарядки батареи и статусу SIM-карты.",
+    HI: "इंजीनियरिंग सेटिंग्स, संस्करण की जानकारी, बैटरी चार्जिंग परीक्षण और सिम स्थिति तक पहुंच।",
+    KO: "엔지니어링 설정, 버전 정보, 배터리 충전 테스트 및 SIM 상태 확인 메뉴에 접속합니다."
+  },
+  "ussd.code.oneplus.808.title": {
+    PT: "Menu de Diagnóstico OnePlus (*#808#)",
+    EN: "OnePlus Diagnostic Menu (*#808#)",
+    RU: "Диагностическое меню OnePlus (*#808#)",
+    HI: "वनप्लस डायग्नोस्टिक मेनू (*#808#)",
+    KO: "OnePlus 진단 메뉴 (*#808#)"
+  },
+  "ussd.code.oneplus.808.desc": {
+    PT: "Menu secreto para testes de sensores, GPS, câmera, carregamento rápido Dash/Warp e áudio em aparelhos OnePlus.",
+    EN: "Secret menu to test sensors, GPS, camera, Dash/Warp fast charging, and audio on OnePlus devices.",
+    RU: "Секретное меню для тестирования датчиков, GPS, камеры, быстрой зарядки Dash/Warp и звука на устройствах OnePlus.",
+    HI: "वनप्लस उपकरणों पर सेंसर, जीपीएस, कैमरा, डैश/वार्प फास्ट चार्जिंग और ऑडियो का परीक्षण करने के लिए गुप्त मेनू।",
+    KO: "OnePlus 기기에서 센서, GPS, 카메라, Dash/Warp 고속 충전 및 오디오를 테스트하기 위한 비밀 메뉴입니다."
+  },
+  "ussd.code.sony.7378423.title": {
+    PT: "Service Menu Xperia Sony (*#*#7378423#*#*)",
+    EN: "Sony Xperia Service Menu (*#*#7378423#*#*)",
+    RU: "Сервисное меню Sony Xperia (*#*#7378423#*#*)",
+    HI: "सोनी एक्सपीरिया सेवा मेनू (*#*#7378423#*#*)",
+    KO: "소니 엑스페리아 서비스 메뉴 (*#*#7378423#*#*)"
+  },
+  "ussd.code.sony.7378423.desc": {
+    PT: "Permite testar todos os componentes de hardware (tela, alto-falante, pressão de vedação contra água) de aparelhos Sony.",
+    EN: "Allows testing of all hardware components (screen, speaker, water sealing pressure) on Sony devices.",
+    RU: "Позволяет протестировать все аппаратные компоненты (экран, динамик, герметичность влагозащиты) на устройствах Sony.",
+    HI: "सोनी उपकरणों पर सभी हार्डवेयर घटकों (स्क्रीन, स्पीकर, वाटर सीलिंग प्रेशर) के परीक्षण की अनुमति देता है।",
+    KO: "소니 기기에서 모든 하드웨어 구성 요소(화면, 스피커, 방수 실링 압력 등)를 테스트할 수 있습니다."
+  },
+  "ussd.code.nothing.6684464.title": {
+    PT: "Nothing Feedback & Tool (*#*#6684464#*#*)",
+    EN: "Nothing Feedback & Tool (*#*#6684464#*#*)",
+    RU: "Инструмент обратной связи Nothing (*#*#6684464#*#*)",
+    HI: "नथिंग फीडबैक एंड टूल (*#*#6684464#*#*)",
+    KO: "Nothing 피드백 및 도구 (*#*#6684464#*#*)"
+  },
+  "ussd.code.nothing.6684464.desc": {
+    PT: "Acessa o menu oculto de diagnóstico, envio de relatórios de bugs e logs do sistema Glyph Interface nos aparelhos Nothing.",
+    EN: "Accesses the hidden diagnostic menu, bug reporting, and Glyph Interface system logs on Nothing devices.",
+    RU: "Доступ к скрытому диагностическому меню, отчетам об ошибках и системным логам интерфейса Glyph на устройствах Nothing.",
+    HI: "नथिंग उपकरणों पर छिपे हुए नैदानिक मेनू, बग रिपोर्टिंग और ग्लिफ़ इंटरफ़ेस सिस्टम लॉग तक पहुंच।",
+    KO: "Nothing 기기에서 숨겨진 진단 메뉴, 버그 보고 및 Glyph 인터페이스 시스템 로그에 접속합니다."
+  },
+  "ussd.code.nokia.0000.title": {
+    PT: "Firmware e Detalhes Nokia (*#0000#)",
+    EN: "Nokia Firmware & Details (*#0000#)",
+    RU: "Прошивка и сведения Nokia (*#0000#)",
+    HI: "नोकिया फर्मवेयर और विवरण (*#0000#)",
+    KO: "노키아 펌웨어 및 제품 정보 (*#0000#)"
+  },
+  "ussd.code.nokia.0000.desc": {
+    PT: "Exibe a versão do sistema, data de fabricação, modelo do processador e informações do chip em celulares Nokia.",
+    EN: "Displays system version, manufacturing date, processor model, and SIM details on Nokia phones.",
+    RU: "Отображает версию системы, дату производства, модель процессора и сведения о SIM-карте на телефонах Nokia.",
+    HI: "नोकिया फोन पर सिस्टम संस्करण, निर्माण की तारीख, प्रोसेसर मॉडल और सिम विवरण प्रदर्शित करता है।",
+    KO: "노키아 휴대폰에서 시스템 버전, 제조일자, 프로세서 모델 및 SIM 세부 정보를 표시합니다."
+  },
+  "ussd.code.realme.899.title": {
+    PT: "Engineer Mode Oppo/Realme (*#899#)",
+    EN: "Oppo/Realme Engineer Mode (*#899#)",
+    RU: "Инженерный режим Oppo/Realme (*#899#)",
+    HI: "ओप्पो/रियलमी इंजीनियर मोड (*#899#)",
+    KO: "오포/리얼미 엔지니어 모드 (*#899#)"
+  },
+  "ussd.code.realme.899.desc": {
+    PT: "Menu avançado de calibração de tela, câmera, testes de giroscópio e overclock temporário do processador em Oppo e Realme.",
+    EN: "Advanced menu for screen calibration, camera, gyroscope tests, and temporary processor overclocking on Oppo and Realme.",
+    RU: "Дополнительное меню для калибровки экрана, камеры, тестов гироскопа и временного разгона процессора на Oppo и Realme.",
+    HI: "ओप्पो और रियलमी पर स्क्रीन कैलिब्रेशन, कैमरा, जायरोस्कोप परीक्षण और अस्थायी प्रोसेसर ओवरक्लॉकिंग के लिए उन्नत मेनू।",
+    KO: "Oppo 및 Realme 기기에서 화면 보정, 카메라, 자이로스코프 테스트, 임시 프로세서 오버클러킹을 지원하는 고급 엔지니어 메뉴입니다."
+  },
+  "ussd.code.pixel.4636.title": {
+    PT: "Rede Google Pixel (*#*#4636#*#*)",
+    EN: "Google Pixel Network Info (*#*#4636#*#*)",
+    RU: "Информация о сети Google Pixel (*#*#4636#*#*)",
+    HI: "गूगल पिक्सेल नेटवर्क जानकारी (*#*#4636#*#*)",
+    KO: "구글 픽셀 네트워크 정보 (*#*#4636#*#*)"
+  },
+  "ussd.code.pixel.4636.desc": {
+    PT: "Exibe informações de sinal celular LTE/5G, status do VoLTE, ping do servidor e histórico de uso detalhado do Pixel.",
+    EN: "Displays LTE/5G cellular signal information, VoLTE status, server ping, and detailed usage history on Pixel.",
+    RU: "Отображает информацию о сотовом сигнале LTE/5G, статус VoLTE, пинг сервера и подробную историю использования на Pixel.",
+    HI: "पिक्सेल पर एलटीई/5जी सेलुलर सिग्नल जानकारी, वीओएलटीई स्थिति, सर्वर पिंग और विस्तृत उपयोग इतिहास प्रदर्शित करता है।",
+    KO: "구글 픽셀 기기에서 LTE/5G 셀룰러 신호 정보, VoLTE 상태, 서버 핑 및 자세한 사용 기록을 표시합니다."
+  },
+  "ussd.code.mtk.3646633.title": {
+    PT: "MTK Engineering Mode (*#*#3646633#*#*)",
+    EN: "MTK Engineering Mode (*#*#3646633#*#*)",
+    RU: "Инженерный режим MTK (*#*#3646633#*#*)",
+    HI: "एमटीके इंजीनियरिंग मोड (*#*#3646633#*#*)",
+    KO: "MediaTek 엔지니어링 모드 (*#*#3646633#*#*)"
+  },
+  "ussd.code.mtk.3646633.desc": {
+    PT: "Acessa as ferramentas ocultas de chipset MediaTek para ajustar volume de áudio, frequências LTE e testes operacionais em marcas alternativas (Cubot, Oukitel, Doogee, Blackview, Ulefone).",
+    EN: "Accesses hidden MediaTek chipset tools to adjust audio volume, LTE bands, and operational tests on alternative brands (Cubot, Oukitel, Doogee, Blackview, Ulefone).",
+    RU: "Доступ к скрытым инструментам чипсета MediaTek для регулировки громкости звука, частот LTE и операционных тестов на альтернативных брендах (Cubot, Oukitel, Doogee, Blackview, Ulefone).",
+    HI: "वैकल्पिक ब्रांडों (Cubot, Oukitel, Doogee, Blackview, Ulefone) पर ऑडियो वॉल्यूम, एलटीई बैंड और परिचालन परीक्षणों को समायोजित करने के लिए छिपे हुए मीडियाटेक चिपसेट टूल तक पहुंच।",
+    KO: "기타 대안 브랜드(Cubot, Oukitel, Doogee, Blackview, Ulefone 등)에서 오디오 볼륨, LTE 주파수 밴드 조절 및 실시간 테스트를 위해 미디어텍(MediaTek) 칩셋 내부 도구에 진입합니다."
+  },
+  "ussd.code.tmobile.646.title": {
+    PT: "Minutos Utilizados T-Mobile (#646#)",
+    EN: "T-Mobile Minutes Used (#646#)",
+    RU: "Использованные минуты T-Mobile (#646#)",
+    HI: "टी-मोबाइल प्रयुक्त मिनट (#646#)",
+    KO: "T-Mobile 사용한 통화 시간 조회 (#646#)"
+  },
+  "ussd.code.tmobile.646.desc": {
+    PT: "Exibe os minutos de chamada consumidos no ciclo atual de cobrança na operadora T-Mobile.",
+    EN: "Displays voice minutes consumed in the current billing cycle on the T-Mobile network.",
+    RU: "Отображает минуты разговора, использованные в текущем платежном цикле в сети T-Mobile.",
+    HI: "टी-मोबाइल नेटवर्क पर वर्तमान बिलिंग चक्र में प्रयुक्त वॉयस मिनट दिखाता है।",
+    KO: "T-Mobile 네트워크에서 현재 청구 주기에 사용된 음성 통화 시간을 표시합니다."
+  },
+  "ussd.code.tmobile.674.title": {
+    PT: "Mensagens Enviadas T-Mobile (#674#)",
+    EN: "T-Mobile Messages Sent (#674#)",
+    RU: "Отправленные сообщения T-Mobile (#674#)",
+    HI: "टी-मोबाइल भेजे गए संदेश (#674#)",
+    KO: "T-Mobile 보낸 메시지 수 (#674#)"
+  },
+  "ussd.code.tmobile.674.desc": {
+    PT: "Exibe o total de mensagens de texto (SMS) enviadas no ciclo atual do seu plano T-Mobile.",
+    EN: "Displays the total number of text messages (SMS) sent in the current cycle of your T-Mobile plan.",
+    RU: "Отображает общее количество отправленных текстовых сообщений (SMS) в текущем цикле тарифа T-Mobile.",
+    HI: "आपके टी-मोबाइल प्लान के वर्तमान चक्र में भेजे गए कुल टेक्स्ट संदेशों (एसएमएस) को दिखाता है।",
+    KO: "T-Mobile 요금제의 현재 주기에 전송된 총 문자 메시지(SMS) 수를 표시합니다."
+  },
+  "ussd.code.tmobile.999.title": {
+    PT: "Saldo de Conta Pré-Paga T-Mobile (#999#)",
+    EN: "T-Mobile Prepaid Account Balance (#999#)",
+    RU: "Баланс предоплаты T-Mobile (#999#)",
+    HI: "टी-मोबाइल प्रीपेड खाता शेष (#999#)",
+    KO: "T-Mobile 선불 계정 잔액 (#999#)"
+  },
+  "ussd.code.tmobile.999.desc": {
+    PT: "Consulta o saldo restante em dólares e a validade de recarga da conta pré-paga na T-Mobile.",
+    EN: "Checks remaining prepaid account balance in dollars and top-up validity on T-Mobile.",
+    RU: "Проверяет оставшийся баланс предоплаченного счета в долларах и срок действия платежа в T-Mobile.",
+    HI: "टी-मोबाइल पर डॉलर में शेष प्रीपेड खाता शेष और टॉप-अप वैधता की जांच करता है।",
+    KO: "T-Mobile 선불 계정의 달러 잔액 및 충전 유효 기간을 조회합니다."
+  },
+  "ussd.code.att.646.title": {
+    PT: "Minutos de Voz AT&T (*646#)",
+    EN: "AT&T Voice Minutes (*646#)",
+    RU: "Минуты разговора AT&T (*646#)",
+    HI: "एटीएंडटी वॉयस मिनट (*646#)",
+    KO: "AT&T 음성 통화 분수 (*646#)"
+  },
+  "ussd.code.att.646.desc": {
+    PT: "Consulta instantaneamente o consumo de minutos de ligação no ciclo atual da AT&T.",
+    EN: "Instantly queries voice calling minutes consumed in the current AT&T cycle.",
+    RU: "Мгновенно запрашивает минуты разговора, использованные в текущем цикле AT&T.",
+    HI: "वर्तमान एटीएंडटी चक्र में प्रयुक्त वॉयस कॉल मिनटों की तुरंत जांच करता है।",
+    KO: "현재 AT&T 주기에서 사용된 음성 통화 분수를 즉시 조회합니다."
+  },
+  "ussd.code.att.7282.title": {
+    PT: "Dados Compartilhados AT&T (*7282#)",
+    EN: "AT&T Shared Data Usage (*7282#)",
+    RU: "Общий объем данных AT&T (*7282#)",
+    HI: "एटीएंडटी साझा डेटा उपयोग (*7282#)",
+    KO: "AT&T 공유 데이터 사용량 (*7282#)"
+  },
+  "ussd.code.att.7282.desc": {
+    PT: "Consulta o uso de dados móveis de todos os aparelhos vinculados ao plano familiar da AT&T.",
+    EN: "Queries mobile data usage for all devices linked to your AT&T family plan.",
+    RU: "Запрашивает использование мобильных данных для всех устройств семейного тарифа AT&T.",
+    HI: "आपके एटीएंडटी पारिवारिक प्लान से जुड़े सभी उपकरणों के लिए mobile data उपयोग की जांच करता है।",
+    KO: "AT&T 패밀리 요금제에 연결된 모든 기기의 모바일 데이터 사용량을 조회합니다."
+  },
+  "ussd.code.att.777.title": {
+    PT: "Saldo Pré-Pago AT&T (*777#)",
+    EN: "AT&T Prepaid Balance (*777#)",
+    RU: "Предоплаченный баланс AT&T (*777#)",
+    HI: "एटीएंडटी प्रीपेड शेष (*777#)",
+    KO: "AT&T 선불 요금 잔액 (*777#)"
+  },
+  "ussd.code.att.777.desc": {
+    PT: "Consulta o saldo de recargas e a validade dos créditos do plano pré-paga AT&T (GoPhone).",
+    EN: "Checks prepaid balance and credit validity for AT&T prepaid (GoPhone) plans.",
+    RU: "Проверяет предоплаченный баланс и срок действия кредитов на тарифах AT&T (GoPhone).",
+    HI: "एटीएंडटी प्रीपेड (GoPhone) योजनाओं के लिए प्रीपेड शेष और क्रेडिट वैधता की जांच करता है।",
+    KO: "AT&T 선불(GoPhone) 요금제의 충전 잔액 및 크레딧 유효 기간을 확인합니다."
+  },
+  "ussd.code.orange.100.title": {
+    PT: "Descobrir Número Orange (#100#)",
+    EN: "Orange Number Display (#100#)",
+    RU: "Показать номер Orange (#100#)",
+    HI: "ऑरेंज नंबर डिस्प्ले (#100#)",
+    KO: "Orange 본인 번호 표시 (#100#)"
+  },
+  "ussd.code.orange.100.desc": {
+    PT: "Mostra o número do próprio chip de forma rápida na tela na operadora Orange.",
+    EN: "Quickly displays your own phone number on the screen for Orange carrier.",
+    RU: "Быстро отображает ваш собственный номер телефона на экране у оператора Orange.",
+    HI: "ऑरेंज कैरियर के लिए स्क्रीन पर अपना खुद का फोन नंबर तुरंत दिखाता है।",
+    KO: "Orange 통신사 사용자의 본인 전화번호를 화면에 신속하게 표시합니다."
+  },
+  "ussd.code.orange.101.title": {
+    PT: "Menu de Recarga Orange (#101#)",
+    EN: "Orange Top-Up Menu (#101#)",
+    RU: "Меню пополнения Orange (#101#)",
+    HI: "ऑरेंज टॉप-अप मेनू (#101#)",
+    KO: "Orange 충전 메뉴 (#101#)"
+  },
+  "ussd.code.orange.101.desc": {
+    PT: "Acessa o menu interativo para recarga rápida por cartão de crédito ou voucher na Orange.",
+    EN: "Accesses the interactive menu for quick top-ups via credit card or voucher on Orange.",
+    RU: "Доступ к интерактивному меню для быстрого пополнения счета картой или ваучером в сети Orange.",
+    HI: "ऑरेंज पर क्रेडिट कार्ड या वाउचर के माध्यम से त्वरित टॉप-अप के लिए इंटरैक्टिव मेनू तक पहुंच।",
+    KO: "Orange 네트워크에서 신용카드 또는 바우처를 통한 신속한 요금 충전용 대화형 메뉴에 진입합니다."
+  },
+  "ussd.code.orange.125.title": {
+    PT: "Consulta de Consumo Orange (#125#)",
+    EN: "Orange Usage Inquiry (#125#)",
+    RU: "Запрос использования Orange (#125#)",
+    HI: "ऑरेंज उपयोग जांच (#125#)",
+    KO: "Orange 사용량 조회 (#125#)"
+  },
+  "ussd.code.orange.125.desc": {
+    PT: "Menu completo para verificar o consumo de SMS, voz e pacotes adicionais na Orange Europe.",
+    EN: "Complete menu to verify SMS, voice, and active add-on package consumption on Orange Europe.",
+    RU: "Полное меню для проверки использования SMS, минут и активных дополнительных пакетов в Orange Europe.",
+    HI: "ऑरेंज यूरोप पर एसएमएस, वॉयस और सक्रिय ऐड-ऑन पैकेज की खपत की जांच करने के लिए संपूर्ण मेनू।",
+    KO: "Orange 유럽 네트워크에서 문자, 음성 및 활성화된 부가 패키지 소모량을 조회하는 종합 메뉴입니다."
+  },
+  "ussd.code.movistar.102.title": {
+    PT: "Consulta de Bônus Movistar (*102#)",
+    EN: "Movistar Bonus Check (*102#)",
+    RU: "Проверка бонусов Movistar (*102#)",
+    HI: "मोविस्टार बोनस की जांच करें (*102#)",
+    KO: "Movistar 보너스 혜택 확인 (*102#)"
+  },
+  "ussd.code.movistar.102.desc": {
+    PT: "Verifica bônus de internet ativos e minutos extras promocionais na sua linha Movistar.",
+    EN: "Checks active mobile data bonuses and promotional extra minutes on your Movistar line.",
+    RU: "Проверяет активные мобильные интернет-бонусы и промо-минуты на линии Movistar.",
+    HI: "आपकी मोविस्टार लाइन पर सक्रिय मोबाइल डेटा बोनस और प्रचार अतिरिक्त मिनटों की जांच करता है।",
+    KO: "Movistar 회선에서 활성화된 모바일 데이터 보너스 및 프로모션 추가 통화 분수를 확인합니다."
+  },
+  "ussd.code.movistar.123.title": {
+    PT: "Menu de Serviços Movistar (*123#)",
+    EN: "Movistar Services Menu (*123#)",
+    RU: "Меню услуг Movistar (*123#)",
+    HI: "मोविस्टार सेवाएं मेनू (*123#)",
+    KO: "Movistar 서비스 메뉴 (*123#)"
+  },
+  "ussd.code.movistar.123.desc": {
+    PT: "Acessa o portal interativo de contratação de serviços, alteração de planos e suporte Movistar.",
+    EN: "Accesses the interactive portal for subscribing to services, plan changes, and Movistar support.",
+    RU: "Доступ к интерактивному порталу для подключения услуг, изменения тарифов и поддержки Movistar.",
+    HI: "सेवाओं की सदस्यता लेने, योजना परिवर्तन और मोविस्टार सहायता के लिए इंटरैक्टिव पोर्टल तक पहुंच।",
+    KO: "Movistar 서비스 가입, 요금제 변경 및 고객 지원을 위한 대화형 포털에 접속합니다."
+  },
+  "ussd.code.movistar.111.title": {
+    PT: "Recarga SOS Movistar (*111#)",
+    EN: "Movistar SOS Recharge (*111#)",
+    RU: "Пополнение SOS Movistar (*111#)",
+    HI: "मोविस्टार एसओएस रीचार्ज (*111#)",
+    KO: "Movistar SOS 긴급 충전 (*111#)"
+  },
+  "ussd.code.movistar.111.desc": {
+    PT: "Solicita um adiantamento de saldo de emergência para linhas pré-pagas sem créditos.",
+    EN: "Requests an emergency balance advance for prepaid lines running out of credit.",
+    RU: "Запрашивает экстренный авансовый платеж для предоплаченных линий без баланса.",
+    HI: "क्रेडिट समाप्त होने वाली प्रीपेड लाइनों के लिए आपातकालीन बैलेंस अग्रिम का अनुरोध करता है।",
+    KO: "잔액이 소진된 선불 회선을 위해 긴급 SOS 요금 당겨쓰기를 요청합니다."
+  },
+  "ussd.code.jio.199.title": {
+    PT: "Menu de Conta Jio India (*199#)",
+    EN: "Jio India Account Menu (*199#)",
+    RU: "Меню аккаунта Jio India (*199#)",
+    HI: "जियो इंडिया खाता मेनू (*199#)",
+    KO: "Jio 인도 계정 메뉴 (*199#)"
+  },
+  "ussd.code.jio.199.desc": {
+    PT: "Acessa o menu mestre para consultar o próprio número, ofertas ativas e validade do plano na Jio.",
+    EN: "Accesses the master menu to query own number, active offers, and plan validity on Jio.",
+    RU: "Доступ к главному меню для запроса собственного номера, активных акций и срока действия тарифа в Jio.",
+    HI: "जियो पर अपना नंबर, सक्रिय ऑफ़र और प्लान की वैधता जानने के लिए मास्टर मेनू तक पहुंच।",
+    KO: "Jio 네트워크에서 본인 번호, 활성 오퍼 및 요금제 유효 기한을 확인하는 마스터 메뉴에 진입합니다."
+  },
+  "ussd.code.jio.1991.title": {
+    PT: "Detalhes do Plano Ativo Jio (*199*1#)",
+    EN: "Jio Active Plan Details (*199*1#)",
+    RU: "Сведения об активном тарифе Jio (*199*1#)",
+    HI: "जियो सक्रिय योजना विवरण (*199*1#)",
+    KO: "Jio 활성 요금제 상세 조회 (*199*1#)"
+  },
+  "ussd.code.jio.1991.desc": {
+    PT: "Exibe informações detalhadas sobre a franquia e termos do plano de tarifas ativo atualmente na Jio.",
+    EN: "Displays detailed information about the allowance and terms of the currently active Jio tariff plan.",
+    RU: "Отображает подробную информацию о лимитах и условиях текущего активного тарифа Jio.",
+    HI: "वर्तमान में सक्रिय जियो टैरिफ योजना के भत्ते और शर्तों के बारे में विस्तृत जानकारी प्रदर्शित करता है।",
+    KO: "Jio 통신사에서 현재 활성화된 요금제의 제공량 및 세부 조건을 상세히 확인합니다."
+  },
+  "ussd.code.huawei.1357946.title": {
+    PT: "Código de Segurança Huawei (##1357946##)",
+    EN: "Huawei Security Code (##1357946##)",
+    RU: "Код безопасности Huawei (##1357946##)",
+    HI: "हुआवेई सुरक्षा कोड (##1357946##)",
+    KO: "화웨이 보안 식별 코드 (##1357946##)"
+  },
+  "ussd.code.huawei.1357946.desc": {
+    PT: "Mostra o ID único do dispositivo (Device ID), essencial para desbloqueio de bootloader e segurança na Huawei.",
+    EN: "Shows the unique Device ID, essential for bootloader unlocking and hardware security on Huawei devices.",
+    RU: "Показывает уникальный Device ID, необходимый для разблокировки загрузчика и безопасности устройств Huawei.",
+    HI: "हुआवेई उपकरणों पर बूटलोडर अनलॉकिंग और हार्डवेयर सुरक्षा के लिए आवश्यक अद्वितीय डिवाइस आईडी दिखाता है।",
+    KO: "화웨이 기기 부트로더 잠금 해제 및 하드웨어 보안 키 확인에 필수적인 기기 고유 ID(Device ID)를 표시합니다."
+  },
+  "ussd.code.huawei.121314.title": {
+    PT: "Teste de Touchscreen Huawei (*#*#121314#*#*)",
+    EN: "Huawei Touchscreen Test (*#*#121314#*#*)",
+    RU: "Тест сенсорного экрана Huawei (*#*#121314#*#*)",
+    HI: "हुआवेई टचस्क्रीन टेस्ट (*#*#121314#*#*)",
+    KO: "화웨이 터치스크린 테스트 (*#*#121314#*#*)"
+  },
+  "ussd.code.huawei.121314.desc": {
+    PT: "Acessa o teste nativo de calibração, sensibilidade e resposta de toque em painéis de celulares Huawei.",
+    EN: "Accesses the native touchscreen test for calibration, sensitivity, and touch response on Huawei panels.",
+    RU: "Доступ к встроенному тесту калибровки, чувствительности и отклика сенсорного экрана на панелях Huawei.",
+    HI: "हुआवेई पैनल पर अंशांकन, संवेदनशीलता और स्पर्श प्रतिक्रिया के लिए मूल टचस्क्रीन परीक्षण तक पहुंच।",
+    KO: "화웨이 디스플레이 패널의 터치 보정, 감도 및 다중 터치 감지 등을 실시간 테스트하는 내장 메뉴입니다."
+  },
+  "ussd.code.huawei.6130.title": {
+    PT: "Estatísticas de Uso Huawei (*#*#6130#*#*)",
+    EN: "Huawei Usage Statistics (*#*#6130#*#*)",
+    RU: "Статистика использования Huawei (*#*#6130#*#*)",
+    HI: "हुआवेई उपयोग के आंकड़े (*#*#6130#*#*)",
+    KO: "화웨이 사용 통계 (*#*#6130#*#*)"
+  },
+  "ussd.code.huawei.6130.desc": {
+    PT: "Exibe relatórios avançados sobre aplicativos abertos, tempo de tela, status de rede Wi-Fi e telefonia.",
+    EN: "Displays advanced reports on opened apps, screen time, Wi-Fi status, and cellular network telemetry on Huawei.",
+    RU: "Отображает расширенные отчеты об открытых приложениях, экранном времени, статусе Wi-Fi и сотовой связи на Huawei.",
+    HI: "हुआवेई पर खोले गए ऐप्स, स्क्रीन टाइम, वाई-फाई स्थिति और सेलुलर नेटवर्क टेलीमेट्री पर उन्नत रिपोर्ट प्रदर्शित करता है।",
+    KO: "실행된 앱 사용 빈도, 화면 켜짐 시간, 와이파이 상태 및 셀룰러 네트워크 품질 상세 보고서를 표시합니다."
+  },
+  "ussd.code.oneplus.800.title": {
+    PT: "Menu de Log OnePlus Logkit (*#*#800#*#*)",
+    EN: "OnePlus Logkit Debug Menu (*#*#800#*#*)",
+    RU: "Меню отладки OnePlus Logkit (*#*#800#*#*)",
+    HI: "वनप्लस लॉगकिट डिबग मेनू (*#*#800#*#*)",
+    KO: "OnePlus Logkit 디버깅 메뉴 (*#*#800#*#*)"
+  },
+  "ussd.code.oneplus.800.desc": {
+    PT: "Acessa o menu de depuração de sistema e gravação de logs de tela, sinal, rede e performance de dispositivos OnePlus.",
+    EN: "Accesses the system debugging and log recording menu for screen, signal, network, and performance on OnePlus.",
+    RU: "Доступ к меню отладки системы и записи логов экрана, сигнала, сети и производительности на устройствах OnePlus.",
+    HI: "वनप्लस पर स्क्रीन, सिग्नल, नेटवर्क और प्रदर्शन के लिए सिस्टम डिबगिंग और लॉग रिकॉर्डिंग मेनू तक पहुंच।",
+    KO: "OnePlus 기기에서 화면, 전파 수신, 네트워크 상태 및 시스템 성능 로그를 수집하고 분석하는 전문 디버깅 도구입니다."
+  },
+  "ussd.code.oneplus.1234.title": {
+    PT: "Versão do Software OnePlus (*#1234#)",
+    EN: "OnePlus Software Version (*#1234#)",
+    RU: "Версия ПО OnePlus (*#1234#)",
+    HI: "वनप्लस सॉफ्टवेयर संस्करण (*#1234#)",
+    KO: "OnePlus 소프트웨어 버전 (*#1234#)"
+  },
+  "ussd.code.oneplus.1234.desc": {
+    PT: "Informa a versão exata da build da OxygenOS instalada, data de compilação e modelo da placa lógica.",
+    EN: "Shows the exact OxygenOS build version installed, compile date, and logic board motherboard model.",
+    RU: "Показывает точную установленную версию сборки OxygenOS, дату компиляции и модель материнской платы.",
+    HI: "सटीक रूप से स्थापित ऑक्सीजनओएस बिल्ड संस्करण, संकलन तिथि और मदरबोर्ड 모델 दिखाता है।",
+    KO: "설치된 OxygenOS의 상세 빌드 버전, 컴파일 날짜 및 메인보드 하드웨어 식별 코드를 표시합니다."
+  },
+  "ussd.code.sony.225.title": {
+    PT: "Calendário Xperia Sony (*#*#225#*#*)",
+    EN: "Sony Xperia Calendar Info (*#*#225#*#*)",
+    RU: "Сведения о календаре Sony Xperia (*#*#225#*#*)",
+    HI: "सोनी एक्सपीरिया कैलेंडर की जानकारी (*#*#225#*#*)",
+    KO: "소니 엑스페리아 캘린더 정보 (*#*#225#*#*)"
+  },
+  "ussd.code.sony.225.desc": {
+    PT: "Mostra eventos agendados no calendário do sistema, dados de contas sincronizadas e feriados locais salvos.",
+    EN: "Shows events scheduled in the system calendar, synchronized account data, and saved local holidays on Xperia.",
+    RU: "Показывает события в системном календаре, данные синхронизированных аккаунтов и сохраненные праздники на Xperia.",
+    HI: "सिस्टम कैलेंडर में अनुसूचित घटनाओं, सिंक्रनाइज़ खाता डेटा और सहेजे गए स्थानीय अवकाशों को दिखाता है।",
+    KO: "시스템 캘린더에 예약된 이벤트, 동기화된 계정 데이터 및 저장된 일정을 표시합니다."
+  },
+  "ussd.code.sony.426.title": {
+    PT: "Firebase Diagnostics Sony (*#*#426#*#*)",
+    EN: "Sony Firebase Diagnostics (*#*#426#*#*)",
+    RU: "Диагностика Firebase Sony (*#*#426#*#*)",
+    HI: "सोनी फायरबेस डायग्नोस्टिक्स (*#*#426#*#*)",
+    KO: "소니 파이어베이스 진단 (*#*#426#*#*)"
+  },
+  "ussd.code.sony.426.desc": {
+    PT: "Exibe o status da conexão em tempo real do Google Play Services com o Firebase Cloud Messaging para notificações de push.",
+    EN: "Displays the real-time connection status of Google Play Services with Firebase Cloud Messaging for push alerts.",
+    RU: "Отображает статус соединения Google Play Services с Firebase Cloud Messaging для пуш-уведомлений в реальном времени.",
+    HI: "पुश अलर्ट के लिए फायरबेस क्लाउड मैसेजिंग के साथ Google Play सेवाओं की रीयल-टाइम कनेक्शन स्थिति प्रदर्शित करता है।",
+    KO: "앱 알림 푸시 수신을 담당하는 Google Play 서비스와 Firebase 클라우드 메시징 간의 실시간 서버 연동 상태를 진단합니다."
+  },
+  "ussd.code.nothing.0.title": {
+    PT: "Diagnóstico Geral Nothing (*#*#0#*#*)",
+    EN: "Nothing General Diagnostic (*#*#0#*#*)",
+    RU: "Общая диагностика Nothing (*#*#0#*#*)",
+    HI: "नथिंग सामान्य निदान (*#*#0#*#*)",
+    KO: "Nothing 종합 하드웨어 진단 (*#*#0#*#*)"
+  },
+  "ussd.code.nothing.0.desc": {
+    PT: "Acessa a interface de testes físicos do Nothing Phone para sensores, cores RGB, vibração e resposta tátil.",
+    EN: "Accesses the physical test interface of Nothing Phone for sensors, RGB screen colors, vibration, and haptic feedback.",
+    RU: "Доступ к интерфейсу физических тестов Nothing Phone для датчиков, цветов экрана RGB, вибрации и тактильной отдачи.",
+    HI: "सेंसर, आरजीबी स्क्रीन रंग, कंपन और हैप्टिक फीडबैक के लिए नथिंग फोन के भौतिक परीक्षण इंटरफ़ेस तक पहुंच।",
+    KO: "Nothing Phone의 내장 센서, 화면 색상 표현, 진동 모터 및 정밀 햅틱 피드백을 수동 검사할 수 있는 기기 테스트 메뉴입니다."
+  },
+  "ussd.code.nothing.0228.title": {
+    PT: "Calibração de Bateria Nothing (*#0228#)",
+    EN: "Nothing Battery Calibration (*#0228#)",
+    RU: "Калибровка батареи Nothing (*#0228#)",
+    HI: "नथिंग बैटरी कैलिब्रेशन (*#0228#)",
+    KO: "Nothing 배터리 캘리브레이션 (*#0228#)"
+  },
+  "ussd.code.nothing.0228.desc": {
+    PT: "Acessa o relatório de status, voltagem física, temperatura e calibração de consumo do módulo de bateria.",
+    EN: "Accesses status report, physical voltage, temperature, and consumption calibration for Nothing Phone battery.",
+    RU: "Доступ к отчету о состоянии, физическом напряжении, температуре и калибровке расхода модуля батареи Nothing.",
+    HI: "नथिंग बैटरी के लिए स्थिति रिपोर्ट, भौतिक वोल्टेज, तापमान और खपत अंशांकन तक पहुंच।",
+    KO: "Nothing 배터리의 전류 전압, 충전 상태, 모듈 온도 수치 확인 및 소비 효율을 미세 조정합니다."
+  },
+  "ussd.code.nokia.7780.title": {
+    PT: "Restaurar Padrões Nokia (*#7780#)",
+    EN: "Restore Nokia Settings (*#7780#)",
+    RU: "Восстановление настроек Nokia (*#7780#)",
+    HI: "नोकिया सेटिंग्स पुनर्स्थापित करें (*#7780#)",
+    KO: "노키아 기본 설정 복원 (*#7780#)"
+  },
+  "ussd.code.nokia.7780.desc": {
+    PT: "Restaura o aparelho para as configurações de fábrica sem apagar os arquivos pessoais e fotos do celular.",
+    EN: "Restores the device to original factory settings without deleting personal files, photos, or documents on Nokia.",
+    RU: "Сбрасывает устройство к исходным заводским настройкам без удаления личных файлов и фотографий на Nokia.",
+    HI: "नोकिया फोन पर व्यक्तिगत फ़ाइलें या फ़ोटो हटाए बिना डिवाइस को मूल फ़ैक्टरी सेटिंग्स में पुनर्स्थापित करता है।",
+    KO: "개인 사진, 연락처, 파일 등 데이터 손실 없이 휴대폰의 설정 정보만 출고 시 원래 상태로 리셋합니다."
+  },
+  "ussd.code.nokia.7370.title": {
+    PT: "Hard Reset Completo Nokia (*#7370#)",
+    EN: "Nokia Factory Hard Reset (*#7370#)",
+    RU: "Полный сброс Nokia (*#7370#)",
+    HI: "नोकिया फैक्टरी हार्ड रीसेट (*#7370#)",
+    KO: "노키아 전체 하드 리셋 (*#7370#)"
+  },
+  "ussd.code.nokia.7370.desc": {
+    PT: "Formata completamente o celular Nokia, apagando todos os dados e restaurando o sistema original limpo.",
+    EN: "Completely formats the Nokia phone, deleting all data and restoring the clean original operating system.",
+    RU: "Полностью форматирует телефон Nokia, удаляя все данные и восстанавливая чистую операционную систему.",
+    HI: "नोकिया फोन को पूरी तरह से प्रारूपित करता है, सभी डेटा को हटा देता है और स्वच्छ मूल ओएस को पुनर्स्थापित करता है।",
+    KO: "노키아 기기의 모든 내부 파일과 사용자 설정을 파괴하고 가장 깨끗한 초기 순정 펌웨어 상태로 완전 공장 초기화합니다."
+  },
+  "ussd.code.nokia.2820.title": {
+    PT: "MAC Bluetooth Nokia (*#2820#)",
+    EN: "Nokia Bluetooth MAC Address (*#2820#)",
+    RU: "MAC-адрес Bluetooth Nokia (*#2820#)",
+    HI: "नोकिया ब्लूटूथ मैक एड्रेस (*#2820#)",
+    KO: "नो키아 블루투스 MAC 주소 (*#2820#)"
+  },
+  "ussd.code.nokia.2820.desc": {
+    PT: "Exibe o endereço físico do chip Bluetooth do celular para pareamento técnico ou auditoria.",
+    EN: "Displays the physical MAC address of the phone's Bluetooth chip for pairing or technical auditing.",
+    RU: "Отображает физический MAC-адрес чипа Bluetooth телефона для сопряжения или технического аудита.",
+    HI: "पेयरिंग या तकनीकी ऑडिट के लिए फोन के ब्लूटूथ चिप का भौतिक मैक पता प्रदर्शित करता है।",
+    KO: "하드웨어 블루투스 네트워크 인터페이스의 고유 물리 주소(MAC)를 즉시 파악하여 화면에 출력합니다."
+  },
+  "ussd.code.realme.6776.title": {
+    PT: "Software ColorOS/RealmeUI (*#6776#)",
+    EN: "RealmeUI/ColorOS Software Info (*#6776#)",
+    RU: "Версия ПО ColorOS/RealmeUI (*#6776#)",
+    HI: "ColorOS/RealmeUI सॉफ्टवेयर जानकारी (*#6776#)",
+    KO: "Oppo 및 Realme 시스템 정보 (*#6776#)"
+  },
+  "ussd.code.realme.6776.desc": {
+    PT: "Informa a versão detalhada da interface ColorOS/RealmeUI, branch de desenvolvimento e nível do patch de segurança.",
+    EN: "Shows detailed version of ColorOS/RealmeUI interface, development branch, and security patch level.",
+    RU: "Показывает подробную версию интерфейса ColorOS/RealmeUI, ветку разработки и уровень патча безопасности.",
+    HI: "कलरओएस/रियलमीयूआई इंटरफ़ेस के विस्तृत संस्करण, विकास शाखा और सुरक्षा पैच स्तर को दिखाता है।",
+    KO: "사용 중인 ColorOS / RealmeUI 커스텀 롬 상세 사양, 빌드 이력 및 최신 안드로이드 보안 패치 등급을 확인합니다."
+  },
+  "ussd.code.realme.800.title": {
+    PT: "Ferramenta de Feedback Realme (*#*#800#*#*)",
+    EN: "Realme Feedback Tool (*#*#800#*#*)",
+    RU: "Инструмент отзывов Realme (*#*#800#*#*)",
+    HI: "रियलमी फीडबैक टूल (*#*#800#*#*)",
+    KO: "리얼미 피드백 수집 도구 (*#*#800#*#*)"
+  },
+  "ussd.code.realme.800.desc": {
+    PT: "Ferramenta nativa do sistema para registro de bugs, captura de logs de rede, sinal móvel e comportamento de bateria.",
+    EN: "Native system tool to record bugs, capture network logs, mobile signals, and battery drain behaviors on Realme/Oppo.",
+    RU: "Встроенный системный инструмент для записи багов, логов сети, мобильного сигнала и поведения батареи на Realme/Oppo.",
+    HI: "बग रिकॉर्ड करने, नेटवर्क लॉग, मोबाइल सिग्नल और बैटरी ड्रेन व्यवहार को कैप्चर करने के लिए मूल सिस्टम टूल।",
+    KO: "기기 오작동 발생 시 버그 리포트를 컴파일하고 통신 수신 주파수 및 배टर리 급방전 로그를 보존하는 도구입니다."
+  },
+  "ussd.code.pixel.3424.title": {
+    PT: "Suporte e Teste Google Pixel (*#*#3424#*#*)",
+    EN: "Google Pixel Help & Diagnostic (*#*#3424#*#*)",
+    RU: "Поддержка и диагностика Google Pixel (*#*#3424#*#*)",
+    HI: "गूगल पिक्सेल सहायता और नैदानिक (*#*#3424#*#*)",
+    KO: "구글 픽셀 도움말 및 장치 자가진단 (*#*#3424#*#*)"
+  },
+  "ussd.code.pixel.3424.desc": {
+    PT: "Acessa as ferramentas oficiais de teste de componentes integrados e diagnóstico técnico em celulares Google Pixel.",
+    EN: "Accesses official component testing tools and technical diagnostic menus on Google Pixel devices.",
+    RU: "Доступ к официальным инструментам тестирования компонентов и меню технической диагностики на устройствах Google Pixel.",
+    HI: "Google Pixel उपकरणों पर आधिकारिक घटक परीक्षण टूल और तकनीकी नैदानिक ​​मेनू तक पहुंच।",
+    KO: "구글 픽셀 디바이스 전용 컴포넌트 오류 정밀 진단 및 고객 지원 자가 테스트 화면으로 이동합니다."
+  },
+  "ussd.code.pixel.426.title": {
+    PT: "Serviços Firebase Google Pixel (*#*#426#*#*)",
+    EN: "Google Pixel Firebase Services (*#*#426#*#*)",
+    RU: "Службы Firebase Google Pixel (*#*#426#*#*)",
+    HI: "गूगल पिक्सेल फायरबेस सेवाएं (*#*#426#*#*)",
+    KO: "구글 픽셀 파이어베이스 디버그 (*#*#426#*#*)"
+  },
+  "ussd.code.pixel.426.desc": {
+    PT: "Ferramenta de monitoramento e auditoria de conexão das notificações push do Google Play Services no Pixel.",
+    EN: "Monitoring and auditing connection tool for Google Play Services push alerts on Google Pixel.",
+    RU: "Инструмент мониторинга и аудита соединения пуш-уведомлений Google Play Services на Google Pixel.",
+    HI: "Google Pixel पर Google Play सेवाओं के पुश नोटिफिकेशन के लिए कनेक्शन निगरानी उपकरण।",
+    KO: "구글 플레이 서비스의 통신 연동 안정성을 실시간 진단하며 푸시 메일 및 알림이 안 오는 증상을 검출합니다."
+  },
+  "ussd.code.tmobile.686.title": {
+    PT: "Próprio Número T-Mobile (#686#)",
+    EN: "T-Mobile Display Own Number (#686#)",
+    RU: "Показать собственный номер T-Mobile (#686#)",
+    HI: "टी-मोबाइल स्वयं का नंबर प्रदर्शित करें (#686#)",
+    KO: "T-Mobile 본인 번호 조회 (#686#)"
+  },
+  "ussd.code.tmobile.686.desc": {
+    PT: "Exibe de forma simples o seu próprio número de telefone associado ao chip na T-Mobile.",
+    EN: "Displays the phone number associated with your T-Mobile SIM card.",
+    RU: "Просто отображает ваш собственный номер телефона, связанный с SIM-картой T-Mobile.",
+    HI: "टी-मोबाइल पर आपके सिम कार्ड से जुड़े फोन नंबर को आसानी से प्रदर्शित करता है।",
+    KO: "T-Mobile SIM 카드와 연결된 본인 전화번호를 화면에 간편하게 표시합니다."
+  },
+  "ussd.code.tmobile.263.title": {
+    PT: "Serviços Caller ID T-Mobile (#263#)",
+    EN: "T-Mobile Caller ID Services (#263#)",
+    RU: "Службы Caller ID T-Mobile (#263#)",
+    HI: "टी-मोबाइल कॉलर आईडी सेवाएं (#263#)",
+    KO: "T-Mobile 발신자 ID 서비스 (#263#)"
+  },
+  "ussd.code.tmobile.263.desc": {
+    PT: "Verifica e altera as configurações de identificação de chamadas do seu plano T-Mobile.",
+    EN: "Checks and changes caller identification configuration on your T-Mobile plan.",
+    RU: "Проверяет и изменяет настройки идентификации вызывающего абонента в вашем тариفه T-Mobile.",
+    HI: "आपके टी-मोबाइल प्लान पर कॉलर पहचान कॉन्फ़िगरेशन की जांच और बदलाव करता है।",
+    KO: "T-Mobile 요금제에서 발신자 번호 표시 구성을 검사하고 변경합니다."
+  },
+  "ussd.code.att.61.title": {
+    PT: "Desvios não Atendidos AT&T (*#61#)",
+    EN: "AT&T Unanswered Forwarding Status (*#61#)",
+    RU: "Статус переадресации AT&T при отсутствии ответа (*#61#)",
+    HI: "एटीएंडटी अनुत्तरित अग्रेषण स्थिति (*#61#)",
+    KO: "AT&T 미응답 전화연결 상태 (*#61#)"
+  },
+  "ussd.code.att.61.desc": {
+    PT: "Verifica o status e o número de encaminhamento para chamadas não atendidas na AT&T.",
+    EN: "Checks status and target number for unanswered call forwarding on AT&T.",
+    RU: "Проверяет статус и номер переадресации для неотвеченных вызовов в AT&T.",
+    HI: "एटीएंडटी पर अनुत्तरित कॉल अग्रेषण के लिए स्थिति और लक्ष्य संख्या की जांच करता है।",
+    KO: "AT&T 네트워크에서 미응답 전화를 연결할 번호와 상태를 점검합니다."
+  },
+  "ussd.code.att.33.title": {
+    PT: "Bloqueio de Chamadas AT&T (*#33#)",
+    EN: "AT&T Call Barring Status (*#33#)",
+    RU: "Статус запрета вызовов AT&T (*#33#)",
+    HI: "एटीएंडटी कॉल बारिंग स्थिति (*#33#)",
+    KO: "AT&T 발신/수신 제한 상태 (*#33#)"
+  },
+  "ussd.code.att.33.desc": {
+    PT: "Verifica se há restrições ou bloqueios ativos para chamadas realizadas ou recebidas na AT&T.",
+    EN: "Checks if there are any active restrictions or barring on outgoing or incoming calls on AT&T.",
+    RU: "Проверяет наличие активных ограничений или запретов на исходящие или входящие вызовы в AT&T.",
+    HI: "जांच करता है कि क्या एटीएंडटी पर आउटगोइंग या इनकमिंग कॉल पर कोई सक्रिय प्रतिबंध या रोक है।",
+    KO: "AT&T 네트워크에서 모든 발신 및 수신 통화 차단이나 활성화된 제한 설정을 점검합니다."
+  },
+  "ussd.code.orange.144.title": {
+    PT: "Menu Orange Money (#144#)",
+    EN: "Orange Money Menu (#144#)",
+    RU: "Меню Orange Money (#144#)",
+    HI: "ऑरेंज मनी मेनू (#144#)",
+    KO: "Orange Money 금융 메뉴 (#144#)"
+  },
+  "ussd.code.orange.144.desc": {
+    PT: "Acessa o portal interativo de transações financeiras e pagamentos móveis da Orange.",
+    EN: "Accesses the interactive mobile financial transaction and payment portal of Orange.",
+    RU: "Доступ к интерактивному порталу мобильных финансовых транзакций и платежей Orange.",
+    HI: "ऑरेंज के इंटरैक्टिव मोबाइल वित्तीय लेनदेन और भुगतान पोर्टल तक पहुंच।",
+    KO: "Orange 네트워크의 대화형 모바일 금융 거래 및 간편 결제 포털 서비스에 접근합니다."
+  },
+  "ussd.code.orange.141.title": {
+    PT: "Ligue-me de Volta Orange (*141#)",
+    EN: "Orange Call Me Back Service (*141#)",
+    RU: "Служба «Перезвони мне» Orange (*141#)",
+    HI: "ऑरेंज कॉल मी बैक सेवा (*141#)",
+    KO: "Orange 전화요청 콜미백 (*141#)"
+  },
+  "ussd.code.orange.141.desc": {
+    PT: "Envia um SMS gratuito para outro contato solicitando retorno de ligação quando sem créditos na Orange.",
+    EN: "Sends a free SMS requesting a call back when you run out of prepaid credits on Orange.",
+    RU: "Отправляет бесплатное SMS с просьбой перезвонить, когда заканчивается предоплаченный баланс в Orange.",
+    HI: "ऑरेंज पर प्रीपेड क्रेडिट समाप्त होने पर कॉल बैक का अनुरोध करने वाला एक निःशुल्क एसएमएस भेजता है।",
+    KO: "Orange 통신사 사용 시 선불 잔액이 소진되었을 때 무료로 통화를 요청하는 문자를 상대방에게 전송합니다."
+  },
+  "ussd.code.movistar.100.title": {
+    PT: "Menu Pré-Pago Movistar (*100#)",
+    EN: "Movistar Prepaid Menu (*100#)",
+    RU: "Предоплаченное меню Movistar (*100#)",
+    HI: "मोविस्टार प्रीपेड मेनू (*100#)",
+    KO: "Movistar 선불 통합 메뉴 (*100#)"
+  },
+  "ussd.code.movistar.100.desc": {
+    PT: "Acessa o menu mestre para recargas, planos de dados e saldo na operadora Movistar.",
+    EN: "Accesses the master menu for top-ups, data plans, and balance on Movistar.",
+    RU: "Доступ к главному меню для пополнения счета, тарифных планов и баланса в Movistar.",
+    HI: "मोविस्टार पर टॉप-अप, डेटा प्लान और बैलेंस के लिए मास्टर मेनू तक पहुंच।",
+    KO: "Movistar 선불 요금제의 요금 충전, 데이터 가입 및 잔액을 관리하는 핵심 메뉴에 접속합니다."
+  },
+  "ussd.code.movistar.2293.title": {
+    PT: "Tarifa de Dados Movistar (*2293#)",
+    EN: "Movistar Data Tariff Check (*2293#)",
+    RU: "Проверка тарифа данных Movistar (*2293#)",
+    HI: "मोविस्टार डेटा टैरिफ की जांच करें (*2293#)",
+    KO: "Movistar 데이터 요금제 확인 (*2293#)"
+  },
+  "ussd.code.movistar.2293.desc": {
+    PT: "Consulta as tarifas de dados móveis vigentes e o consumo de megabytes na Movistar.",
+    EN: "Checks current mobile data tariffs and megabytes consumed on Movistar.",
+    RU: "Проверяет текущие мобильные тарифы на передачу данных и потребленные мегабайты в Movistar.",
+    HI: "मोविस्टार पर वर्तमान मोबाइल डेटा टैरिफ और खपत किए गए मेगाबाइट की जांच करता है।",
+    KO: "Movistar 네트워크에서 적용 중인 실시간 모바일 데이터 요율 및 소모된 메가바이트를 확인합니다."
+  },
+  "ussd.code.jio.3333.title": {
+    PT: "Uso Detalhado Jio India (*333*3#)",
+    EN: "Jio India Detailed Data Usage (*333*3#)",
+    RU: "Подробное использование данных Jio India (*333*3#)",
+    HI: "जियो इंडिया विस्तृत डेटा उपयोग (*333*3#)",
+    KO: "Jio 인도 상세 데이터 소비량 (*333*3#)"
+  },
+  "ussd.code.jio.3333.desc": {
+    PT: "Verifica detalhadamente o consumo de internet e franquias diárias ativas na Jio.",
+    EN: "Checks details of internet data consumption and active daily high-speed quotas on Jio.",
+    RU: "Подробно проверяет потребление интернет-трафика и активные ежедневные лимиты в Jio.",
+    HI: "जियो पर इंटरनेट डेटा खपत और सक्रिय दैनिक हाई-स्पीड कोटा के विवरण की जांच करता है।",
+    KO: "Jio 네트워크에서 인터넷 데이터 소모 현황 및 활성화된 일일 고속 할당량 상세 내역을 파악합니다."
+  },
+  "ussd.code.jio.3332.title": {
+    PT: "Saldo Principal Jio (*333*2#)",
+    EN: "Jio Main Account Balance (*333*2#)",
+    RU: "Основной баланс счета Jio (*333*2#)",
+    HI: "जियो मुख्य खाता शेष (*333*2#)",
+    KO: "Jio 계정 기본 잔액 (*333*2#)"
+  },
+  "ussd.code.jio.3332.desc": {
+    PT: "Informa o saldo principal em rúpias e créditos de recarga na sua conta Jio.",
+    EN: "Provides the main account balance in Rupees and top-up credits on your Jio account.",
+    RU: "Отображает основной баланс счета в рупиях и кредиты пополнения на вашем аккаунте Jio.",
+    HI: "आपके जियो खाते पर रुपये में मुख्य खाता शेष और टॉप-अप क्रेडिट प्रदान करता है।",
+    KO: "Jio 계정의 루피화 기준 기본 잔액과 충전 크레딧 보유량을 표시합니다."
+  },
+  "ussd.code.huawei.1472365.title": {
+    PT: "Teste de GPS Huawei (*#*#1472365#*#*)",
+    EN: "Huawei GPS Calibration Test (*#*#1472365#*#*)",
+    RU: "Тест калибровки GPS Huawei (*#*#1472365#*#*)",
+    HI: "हुआवेई जीपीएस अंशांकन परीक्षण (*#*#1472365#*#*)",
+    KO: "화웨이 GPS 수신 정밀 보정 테스트 (*#*#1472365#*#*)"
+  },
+  "ussd.code.huawei.1472365.desc": {
+    PT: "Inicia ferramenta oculta para calibração, força de sinal e resposta de satélites GPS Huawei.",
+    EN: "Starts hidden tool for calibrating, checking signal strength and response of GPS satellites on Huawei.",
+    RU: "Запускает скрытый инструмент для калибровки, проверки уровня сигнала и отклика спутников GPS на Huawei.",
+    HI: "हुआवेई पर जीपीएस उपग्रहों के अंशांकन, सिग्नल की ताकत और प्रतिक्रिया की जांच के लिए छिपे हुए टूल को शुरू करता है।",
+    KO: "화웨이 단말기에서 GPS 위성 수신 품질을 측정하고 안테나 감도를 진단/보정하는 숨겨진 화면입니다."
+  },
+  "ussd.code.huawei.232339.title": {
+    PT: "Teste de Wi-Fi Huawei (*#*#232339#*#*)",
+    EN: "Huawei WLAN Wi-Fi Test (*#*#232339#*#*)",
+    RU: "Тест Wi-Fi WLAN Huawei (*#*#232339#*#*)",
+    HI: "हुआवेई डब्लूएलएएन वाई-फाई टेस्ट (*#*#232339#*#*)",
+    KO: "화웨이 무선랜(WLAN) 와이파이 테스트 (*#*#232339#*#*)"
+  },
+  "ussd.code.huawei.232339.desc": {
+    PT: "Executa testes de ping, velocidade e estabilidade da placa de rede sem fio (WLAN) em Huawei.",
+    EN: "Runs ping, speed and stability tests for the wireless network card (WLAN) on Huawei.",
+    RU: "Выполняет тесты пинга, скорости и стабильности платы беспроводной сети (WLAN) на Huawei.",
+    HI: "हुआवेई पर वायरलेस network कार्ड (WLAN) के लिए पिंग, गति और स्थिरता परीक्षण चलाता है।",
+    KO: "화웨이 기기에서 무선랜 카드 칩셋의 실시간 응답 속도, 핑 수치 및 통신 안정성을 체크합니다."
+  },
+  "ussd.code.oneplus.83818.title": {
+    PT: "Logs EngineerMode OnePlus (*#*#83818#*#*)",
+    EN: "OnePlus EngineerMode Logs (*#*#83818#*#*)",
+    RU: "Логи EngineerMode OnePlus (*#*#83818#*#*)",
+    HI: "वनप्लस इंजीनियरमोд लॉग (*#*#83818#*#*)",
+    KO: "OnePlus 엔지니어 로그 덤프 (*#*#83818#*#*)"
+  },
+  "ussd.code.oneplus.83818.desc": {
+    PT: "Grava logs de rádio frequência e telecomunicações para análise avançada no OnePlus.",
+    EN: "Records radio frequency and telecommunications logs for advanced analysis on OnePlus.",
+    RU: "Записывает логи радиочастот и телекоммуникаций для расширенного анализа на OnePlus.",
+    HI: "वनप्लस पर उन्नत विश्लेषण के लिए रेडियो फ्रीक्वेंसी और दूरसंचार लॉग रिकॉर्ड करता है।",
+    KO: "OnePlus 기기의 무선 주파수 신호 및 이동통신 교신 이력을 로깅하여 디버깅 분석을 진행합니다."
+  },
+  "ussd.code.oneplus.36446337.title": {
+    PT: "Teste de Hardware OnePlus (*#*#36446337#*#*)",
+    EN: "OnePlus Engineering Hardware Test (*#*#36446337#*#*)",
+    RU: "Тест оборудования OnePlus Engineering (*#*#36446337#*#*)",
+    HI: "वनप्लस इंजीनियरिंग हार्डवेयर टेस्ट (*#*#36446337#*#*)",
+    KO: "OnePlus 엔지니어링 하드웨어 테스트 (*#*#36446337#*#*)"
+  },
+  "ussd.code.oneplus.36446337.desc": {
+    PT: "Acessa o menu avançado de testes laboratoriais de tela, câmera e botões físicos no OnePlus.",
+    EN: "Accesses advanced lab testing menu for screen, camera and physical buttons on OnePlus.",
+    RU: "Доступ к продвинутому лабораторному меню тестирования экрана, камеры и физических кнопок на OnePlus.",
+    HI: "वनप्लस पर स्क्रीन, कैमरा और भौतिक बटनों के लिए उन्नत लैब परीक्षण मेनू तक पहुंच।",
+    KO: "OnePlus 기기 공장 출고 단계의 정밀 디스플레이, 카메라 모듈 및 물리 기계식 버튼 성능 분석용 메뉴입니다."
+  },
+  "ussd.code.sony.0588.title": {
+    PT: "Sensor de Proximidade Sony (*#*#0588#*#*)",
+    EN: "Sony Proximity Sensor Test (*#*#0588#*#*)",
+    RU: "Тест датчика приближения Sony (*#*#0588#*#*)",
+    HI: "सोनी प्रॉक्सिमिटी सेंसर टेस्ट (*#*#0588#*#*)",
+    KO: "소니 근접 센서 보정 및 검사 (*#*#0588#*#*)"
+  },
+  "ussd.code.sony.0588.desc": {
+    PT: "Testa a sensibilidade e calibração do sensor que desliga a tela durante chamadas em aparelhos Sony.",
+    EN: "Tests sensitivity and calibration of the sensor that turns off screen during calls on Sony.",
+    RU: "Тестирует чувствительность и калибровку датчика, который отключает экран во время звонков на устройствах Sony.",
+    HI: "सोनी उपकरणों पर कॉल के दौरान स्क्रीन को बंद करने वाले सेंसर की संवेदनशीलता और अंशांकन का परीक्षण करता है।",
+    KO: "통화 시 화면을 자동으로 끄는 소니 단말기 상단 근접 센서의 물리 작동 감도를 검사합니다."
+  },
+  "ussd.code.sony.973283110.title": {
+    PT: "Service Mode LTE Sony (*#*#973283110#*#*)",
+    EN: "Sony LTE Service Mode (*#*#973283110#*#*)",
+    RU: "Сервисный режим LTE Sony (*#*#973283110#*#*)",
+    HI: "सोनी एलटीई सेवा मोड (*#*#973283110#*#*)",
+    KO: "소니 LTE 서비스 모드 (*#*#973283110#*#*)"
+  },
+  "ussd.code.sony.973283110.desc": {
+    PT: "Acessa configurações profundas de rede móvel, prioridade de bandas e telemetria LTE em Sony.",
+    EN: "Accesses deep mobile network configurations, band priorities, and LTE telemetry on Sony.",
+    RU: "Доступ к глубоким настройкам мобильной сети, приоритетам диапазонов и телеметрии LTE в устройствах Sony.",
+    HI: "सोनी पर गहन mobile network कॉन्फ़िगरेशन, बैंड प्राथमिकताओं और एलटीई टेलीमेट्री तक पहुंच।",
+    KO: "소니 기기에서 LTE 전송 대역폭 우선순위, 셀 타워 신호 감도 맵 등 고급 모바일 네트워크 정보를 설정합니다."
+  },
+  "ussd.code.nothing.4636.title": {
+    PT: "Menu de Teste Nothing (*#*#4636#*#*)",
+    EN: "Nothing Testing Menu (*#*#4636#*#*)",
+    RU: "Меню тестирования Nothing (*#*#4636#*#*)",
+    HI: "नथिंग परीक्षण मेनू (*#*#4636#*#*)",
+    KO: "Nothing 장치 시험 메뉴 (*#*#4636#*#*)"
+  },
+  "ussd.code.nothing.4636.desc": {
+    PT: "Menu completo para verificar telemetria Wi-Fi, sinal móvel e histórico detalhado de apps no Nothing Phone.",
+    EN: "Complete menu to check Wi-Fi telemetry, mobile signal and detailed app history on Nothing Phone.",
+    RU: "Полное меню для проверки телеметрии Wi-Fi, мобильного сигнала и подробной истории приложений на Nothing Phone.",
+    HI: "नथिंग फोन पर वाई-फाई टेलीमेट्री, मोबाइल सिग्नल और विस्तृत ऐप इतिहास की जांच करने के लिए संपूर्ण मेनू।",
+    KO: "Nothing Phone에서 와이파이 네트워크 교신, 이동통신 감도 파악 및 앱 작동 점유율 데이터를 확인합니다."
+  },
+  "ussd.code.nothing.34971539.title": {
+    PT: "Firmware da Câmera Nothing (*#*#34971539#*#*)",
+    EN: "Nothing Camera Firmware Info (*#*#34971539#*#*)",
+    RU: "Информация о прошивке камеры Nothing (*#*#34971539#*#*)",
+    HI: "नथिंग कैमरा फर्मवेयर जानकारी (*#*#34971539#*#*)",
+    KO: "Nothing 카메라 센서 정보 (*#*#34971539#*#*)"
+  },
+  "ussd.code.nothing.34971539.desc": {
+    PT: "Exibe a versão exata do firmware dos sensores traseiros e frontal instalados no Nothing Phone.",
+    EN: "Displays exact firmware version for rear and front camera sensors installed on Nothing Phone.",
+    RU: "Отображает точную версию прошивки датчиков задней и фронтальной камер, установленных на Nothing Phone.",
+    HI: "नथिंग फोन पर स्थापित रियर और फ्रंट कैमरा सेंसर के लिए सटीक फर्मवेयर संस्करण प्रदर्शित करता है।",
+    KO: "Nothing Phone의 후면 듀얼 카메라 및 전면 렌즈 하드웨어 드라이버 펌웨어 버전을 정밀 체크합니다."
+  },
+  "ussd.code.nokia.warranty.title": {
+    PT: "Menu de Garantia Nokia (*#92702689#)",
+    EN: "Nokia Warranty Menu (*#92702689#)",
+    RU: "Гарантийное меню Nokia (*#92702689#)",
+    HI: "नोकिया वारंटी मेनू (*#92702689#)",
+    KO: "노키아 하드웨어 보증 기간 조회 (*#92702689#)"
+  },
+  "ussd.code.nokia.warranty.desc": {
+    PT: "Exibe o tempo total de ligações (Life Timer), data de compra, número de série e reparos em celulares Nokia.",
+    EN: "Displays total call time (Life Timer), purchase date, serial number, and repair details on Nokia.",
+    RU: "Отображает общее время разговоров (Life Timer), дату покупки, серийный номер и данные о ремонте на Nokia.",
+    HI: "नोकिया फोन पर कुल कॉल समय (लाइफ टाइमर), खरीद की तारीख, सीरियल नंबर और मरम्मत विवरण प्रदर्शित करता है।",
+    KO: "피처폰 시절부터 쓰인 고유 코드로, 노키아 기기의 누적 통화 사용량, 최초 개통 일자, 수리 보증 이력을 조회합니다."
+  },
+  "ussd.code.nokia.62.title": {
+    PT: "Desvios se Inalcançável Nokia (*#62#)",
+    EN: "Nokia Unreachable Forwarding (*#62#)",
+    RU: "Переадресация при недоступности Nokia (*#62#)",
+    HI: "नोकिया अनुपलब्ध अग्रेषण (*#62#)",
+    KO: "노키아 서비스 이탈 시 연결 번호 (*#62#)"
+  },
+  "ussd.code.nokia.62.desc": {
+    PT: "Verifica para qual número as ligações são desviadas quando o celular Nokia está desligado ou sem sinal.",
+    EN: "Checks which number calls are forwarded to when the Nokia phone is off or has no signal.",
+    RU: "Проверяет, на какой номер перенаправляются вызовы, когда телефон Nokia выключен или находится вне зоны доступа.",
+    HI: "जांच करता है कि जब नोकिया फोन बंद होता है या कोई सिग्नल नहीं होता है तो कॉल किस नंबर पर अग्रेषित की जाती हैं।",
+    KO: "노키아 기기가 꺼져있거나 전파 음영 지역에 진입했을 때 수신 전화를 착신 전환할 대상 번호를 조회합니다."
+  },
+  "ussd.code.realme.6484.title": {
+    PT: "Hardware CIT Test Realme (*#*#6484#*#*)",
+    EN: "Realme CIT Hardware Test (*#*#6484#*#*)",
+    RU: "Тест оборудования CIT Realme (*#*#6484#*#*)",
+    HI: "रियलमी सीआईटी हार्डवेयर टेस्ट (*#*#6484#*#*)",
+    KO: "리얼미 CIT 통합 자가 검사 (*#*#6484#*#*)"
+  },
+  "ussd.code.realme.6484.desc": {
+    PT: "Acessa o menu mestre para verificação de touch, alto-falante, fone de ouvido, microfone e vibração na Realme.",
+    EN: "Accesses master menu for checking touch, speaker, headphone, microphone, and vibration on Realme.",
+    RU: "Доступ к главному меню для проверки сенсора, динамика, наушников, микрофона и вибрации на устройствах Realme.",
+    HI: "रियलमी पर टच, स्पीकर, हेडफोन, माइक्रोफोन और वाइब्रेशन की जांच के लिए मास्टर मेनू तक पहुंच।",
+    KO: "리얼미 단말기의 액정 터치, 메인 스피커, 이어폰 잭, 통화용 마이크, 진동 모터 반응을 검증하는 CIT 엔지니어 메뉴입니다."
+  },
+  "ussd.code.realme.232339.title": {
+    PT: "Teste WLAN Realme (*#*#232339#*#*)",
+    EN: "Realme WLAN Test (*#*#232339#*#*)",
+    RU: "Тест WLAN Realme (*#*#232339#*#*)",
+    HI: "रियलमी डब्लूएलएएन टेस्ट (*#*#232339#*#*)",
+    KO: "리얼미 무선 인터넷(WLAN) 점검 (*#*#232339#*#*)"
+  },
+  "ussd.code.realme.232339.desc": {
+    PT: "Permite analisar a resposta e calibrar a recepção da antena Wi-Fi dos aparelhos Realme.",
+    EN: "Allows analyzing and calibrating the Wi-Fi antenna reception on Realme devices.",
+    RU: "Позволяет анализировать и калибровать прием антенны Wi-Fi на устройствах Realme.",
+    HI: "रियलमी उपकरणों पर वाई-फाई एंटीना रिसेप्शन का विश्लेषण और कैलिब्रेट करने की अनुमति देता है।",
+    KO: "리얼미 스마트폰 내부의 내장 와이파이(Wi-Fi) 안테나 수신 감도 조절 및 주파수 혼선을 진단합니다."
+  },
+  "ussd.code.pixel.8255.title": {
+    PT: "Google Services Monitor Pixel (*#*#8255#*#*)",
+    EN: "Google Services Monitor Pixel (*#*#8255#*#*)",
+    RU: "Google Services Monitor Pixel (*#*#8255#*#*)",
+    HI: "Google Play सेवाएं मॉनिटर पिक्सेल (*#*#8255#*#*)",
+    KO: "구글 서비스 모니터 픽셀 디버깅 (*#*#8255#*#*)"
+  },
+  "ussd.code.pixel.8255.desc": {
+    PT: "Ferramenta oculta de monitoramento de status da conexão do Google Play Services com os servidores Gtalk no Pixel.",
+    EN: "Hidden tool to monitor Google Play Services connection status with Gtalk servers on Pixel.",
+    RU: "Скрытый инструмент для мониторинга статуса соединения Google Play Services с серверами Gtalk на устройствах Pixel.",
+    HI: "पिक्सेल पर Gtalk सर्वर के साथ Google Play सेवाओं की कनेक्शन स्थिति की निगरानी करने के लिए छिपा हुआ टूल।",
+    KO: "구글 픽셀 기기와 구글 서버(Gtalk 통신) 간의 지속적인 세션 연결 강도를 확인하는 고급 실시간 진단기입니다."
+  },
+  "ussd.code.pixel.759.title": {
+    PT: "RLZ Debug UI Google Pixel (*#*#759#*#*)",
+    EN: "Google Pixel RLZ Debug UI (*#*#759#*#*)",
+    RU: "RLZ Debug UI Google Pixel (*#*#759#*#*)",
+    HI: "आरएलजेड डिबग यूआई गूगल पिक्सेल (*#*#759#*#*)",
+    KO: "구글 픽셀 RLZ 디버그 UI (*#*#759#*#*)"
+  },
+  "ussd.code.pixel.759.desc": {
+    PT: "Menu de depuração técnica para parceiros OEM e configurações exclusivas de parceiros do Google no Pixel.",
+    EN: "Technical debugging menu for OEM partners and exclusive Google partner configurations on Pixel.",
+    RU: "Техническое меню отладки для OEM-партнеров и эксклюзивных конфигураций партнеров Google на устройствах Pixel.",
+    HI: "ओईएम भागीदारों और पिक्सेल पर विशेष Google भागीدار कॉन्फ़िगरेशन के लिए तकनीकी डिबगिंग मेनू।",
+    KO: "구글 픽셀 단말 제조사 파트너사 및 구글 내부 배포 구성 설정을 정밀 시험하기 위한 특수 디버깅 인터페이스입니다."
+  },
+  "ussd.code.mts.100.title": {
+    PT: "Saldo MTS (*100#)",
+    EN: "MTS Balance Inquiry (*100#)",
+    RU: "Баланс МТС (*100#)",
+    HI: "एमटीएस बैलेंस पूछताछ (*100#)",
+    KO: "MTS 잔액 조회 (*100#)"
+  },
+  "ussd.code.mts.100.desc": {
+    PT: "Consulta rápida do saldo principal ativo e créditos de recarga na sua linha MTS.",
+    EN: "Quick inquiry of active main balance and recharge credits on your MTS line.",
+    RU: "Быстрый запрос активного основного баланса и кредитов пополнения на вашей линии МТС.",
+    HI: "आपकी एमटीएस लाइन पर सक्रिय मुख्य बैलेंस और रिचार्ज क्रेडिट का त्वरित विवरण।",
+    KO: "MTS 가입자의 현재 실시간 기본 통화 잔액과 충전 금액을 신속하게 확인합니다."
+  },
+  "ussd.code.mts.0887.title": {
+    PT: "Próprio Número MTS (*111*0887#)",
+    EN: "MTS Display Own Number (*111*0887#)",
+    RU: "Узнать свой номер МТС (*111*0887#)",
+    HI: "एमटीएस अपना नंबर देखें (*111*0887#)",
+    KO: "MTS 본인 전화번호 확인 (*111*0887#)"
+  },
+  "ussd.code.mts.0887.desc": {
+    PT: "Exibe o seu próprio número de telefone associado ao chip na rede MTS.",
+    EN: "Displays the phone number associated with your SIM card on the MTS network.",
+    RU: "Отображает номер телефона, связанный с вашей SIM-картой в сети МТС.",
+    HI: "एमटीएस नेटवर्क पर आपके सिम कार्ड से जुड़े फोन número को प्रदर्शित करता है।",
+    KO: "MTS 네트워크 유심 카드와 일치하는 본인의 전화번호 정보를 간편하게 수신합니다."
+  },
+  "ussd.code.mts.1001.title": {
+    PT: "Saldo Internet MTS (*100*1#)",
+    EN: "MTS Internet Balance Inquiry (*100*1#)",
+    RU: "Остаток интернет-трафика МТС (*100*1#)",
+    HI: "एमटीएस इंटरनेट बैलेंस पूछताछ (*100*1#)",
+    KO: "MTS 무선 데이터 조회 (*100*1#)"
+  },
+  "ussd.code.mts.1001.desc": {
+    PT: "Verifica os gigabytes restantes e saldo do pacote de internet móvel na MTS.",
+    EN: "Checks the remaining gigabytes and mobile data package balance on MTS.",
+    RU: "Проверяет оставшиеся гигабайты и баланс пакета мобильного интернета в МТС.",
+    HI: "एमटीएस पर शेष गीगाबाइट और मोबाइल डेटा पैकेज बैलेंस की जांच करता है।",
+    KO: "사용 가능한 MTS 3G/4G/5G 무선 인터넷 남은 트래픽 용량(GB)을 조회합니다."
+  },
+  "ussd.code.mts.111.title": {
+    PT: "Menu de Serviços MTS (*111#)",
+    EN: "MTS Interactive Portal (*111#)",
+    RU: "Сервисный портал МТС (*111#)",
+    HI: "एमटीएस इंटरएक्टिव पोर्टल (*111#)",
+    KO: "MTS 부가서비스 포털 (*111#)"
+  },
+  "ussd.code.mts.111.desc": {
+    PT: "Acessa o portal interativo para ativação de tarifas, pacotes e serviços MTS sem precisar de internet.",
+    EN: "Accesses the interactive portal to manage MTS tariffs, packages, and services offline.",
+    RU: "Доступ к интерактивному порталу для управления тарифами, пакетами и услугами МТС без интернета.",
+    HI: "बिना इंटरनेट के एमटीएस टैरिफ, पैकेज और सेवाओं का प्रबंधन करने के लिए इंटरैक्टिव पोर्टल।",
+    KO: "인터넷이 끊겨도 작동하는 MTS 전용 대화형 부가 서비스 가입 및 요금제 변경 메뉴입니다."
+  },
+  "ussd.code.megafon.100.title": {
+    PT: "Saldo MegaFon (*100#)",
+    EN: "MegaFon Balance Inquiry (*100#)",
+    RU: "Баланс МегаФон (*100#)",
+    HI: "मेगाफोन बैलेंस पूछताछ (*100#)",
+    KO: "MegaFon 잔액 조회 (*100#)"
+  },
+  "ussd.code.megafon.100.desc": {
+    PT: "Exibe instantaneamente o saldo principal ativo da sua conta MegaFon.",
+    EN: "Instantly displays the active main balance of your MegaFon account.",
+    RU: "Мгновенно отображает активный основной баланс вашего счета МегаФон.",
+    HI: "आपके मेगाफोन खाते के सक्रिय मुख्य बैलेंस को तुरंत प्रदर्शित करता.।",
+    KO: "MegaFon 계정에 귀속된 활성 실시간 계정 잔액과 충전 잔고를 출력합니다."
+  },
+  "ussd.code.megafon.205.title": {
+    PT: "Próprio Número MegaFon (*205#)",
+    EN: "MegaFon Display Own Number (*205#)",
+    RU: "Узнать свой номер МегаФон (*205#)",
+    HI: "मेगाफोन अपना नंबर देखें (*205#)",
+    KO: "MegaFon 본인 전화번호 확인 (*205#)"
+  },
+  "ussd.code.megafon.205.desc": {
+    PT: "Recupera e exibe o seu próprio número de celular MegaFon diretamente na tela.",
+    EN: "Retrieves and displays your own MegaFon mobile phone number directly on screen.",
+    RU: "Получает и отображает ваш собственный мобильный номер МегаФон прямо на экране.",
+    HI: "आपके मेगाफोन मोबाइल नंबर को सीधे स्क्रीन पर प्राप्त और प्रदर्शित करता है।",
+    KO: "가입되어 있는 본인의 MegaFon 휴대전화 번호를 통신 기지국 조회를 통해 즉시 식별합니다."
+  },
+  "ussd.code.megafon.558.title": {
+    PT: "Franquia de Internet MegaFon (*558#)",
+    EN: "MegaFon Internet Package Status (*558#)",
+    RU: "Остатки пакетов услуг МегаФон (*558#)",
+    HI: "मेगाफोन इंटरनेट पैकेज स्थिति (*558#)",
+    KO: "MegaFon 인터넷 패키지 상태 (*558#)"
+  },
+  "ussd.code.megafon.558.desc": {
+    PT: "Verifica os saldos de internet móvel, tráfego restante e pacotes ativos na MegaFon.",
+    EN: "Checks mobile internet balances, remaining traffic, and active packages on MegaFon.",
+    RU: "Проверяет остатки мобильного интернета, оставшийся трафик и активные пакеты в МегаФон.",
+    HI: "मेगाफोन पर मोबाइल इंटरनेट बैलेंस, शेष ट्रैफ़िक और सक्रिय पैकेजों की जांच करता है।",
+    KO: "MegaFon 모바일 인터넷 데이터, 가입되어 있는 데이터 소모량 및 잔여 패키지를 추적합니다."
+  },
+  "ussd.code.megafon.1053.title": {
+    PT: "Sua Tarifa Ativa MegaFon (*105*3#)",
+    EN: "MegaFon Current Tariff (*105*3#)",
+    RU: "Узнать свой тариф МегаФон (*105*3#)",
+    HI: "मेगाफोन वर्तमान टैरिफ (*105*3#)",
+    KO: "MegaFon 활성 요금제 조회 (*105*3#)"
+  },
+  "ussd.code.megafon.1053.desc": {
+    PT: "Informa o nome e detalhes da sua tarifa ou plano contratado na MegaFon.",
+    EN: "Shows the name and details of your current active tariff or plan on MegaFon.",
+    RU: "Показывает название и детали вашего текущего активного тарифа или плана в МегаФон.",
+    HI: "मेगाफोन पर आपके वर्तमान सक्रिय टैरिफ या प्लान का नाम और विवरण दिखाता है।",
+    KO: "MegaFon 가입자가 현재 납부 및 사용하고 있는 통합 정액제 요금 명칭을 조회합니다."
+  },
+  "ussd.code.tele2.105.title": {
+    PT: "Saldo Tele2 (*105#)",
+    EN: "Tele2 Balance Inquiry (*105#)",
+    RU: "Баланс Tele2 (*105#)",
+    HI: "टेली2 बैलेंस पूछताछ (*105#)",
+    KO: "Tele2 잔액 조회 (*105#)"
+  },
+  "ussd.code.tele2.105.desc": {
+    PT: "Consulta básica de créditos e saldo corrente da sua conta Tele2.",
+    EN: "Basic inquiry of credits and current balance of your Tele2 account.",
+    RU: "Базовый запрос баланса и текущего счета вашей учетной записи Tele2.",
+    HI: "आपके टेली2 खाते के क्रेडिट और वर्तमान शेष राशि की बुनियादी जांच।",
+    KO: "Tele2 통신 계정의 실시간 가용 크레딧 및 청구 요금 충전 잔고를 표시합니다."
+  },
+  "ussd.code.tele2.201.title": {
+    PT: "Próprio Número Tele2 (*201#)",
+    EN: "Tele2 Display Own Number (*201#)",
+    RU: "Узнать свой номер Tele2 (*201#)",
+    HI: "टेली2 अपना नंबर देखें (*201#)",
+    KO: "Tele2 본인 전화번호 확인 (*201#)"
+  },
+  "ussd.code.tele2.201.desc": {
+    PT: "Informa o seu número de telefone da Tele2 quando você o esquece.",
+    EN: "Shows your own Tele2 phone number when you forget or need to register it.",
+    RU: "Показывает ваш собственный номер телефона Tele2, если вы его забыли.",
+    HI: "यदि आप भूल गए हैं, तो टेली2 पर आपका अपना फोन नंबर प्रदर्शित करता है।",
+    KO: "자신의 Tele2 신규 발급 번호를 잊어버렸을 경우, 기기 유심 연동 번호를 즉시 점검합니다."
+  },
+  "ussd.code.tele2.1550.title": {
+    PT: "Franquia Internet Tele2 (*155*0#)",
+    EN: "Tele2 Allowances Status (*155*0#)",
+    RU: "Остатки пакетов и трафика Tele2 (*155*0#)",
+    HI: "टेली2 अनुमत स्थिति (*155*0#)",
+    KO: "Tele2 데이터 및 패키지 잔여량 (*155*0#)"
+  },
+  "ussd.code.tele2.1550.desc": {
+    PT: "Consulta consolidada de gigabytes, minutos e SMS restantes no seu plano Tele2.",
+    EN: "Consolidated inquiry of remaining gigabytes, minutes, and SMS on your Tele2 plan.",
+    RU: "Консолидированный запрос оставшихся гигабайт, минут и SMS в вашем тарифе Tele2.",
+    HI: "आपके टेली2 प्लान पर शेष गीगाबाइट, मिनट और एसएमएस की समेकित जानकारी।",
+    KO: "Tele2 요금제 하에서 잔여 인터넷 트래픽(GB), 음성 통화 분수, 무료 SMS 현황을 출력합니다."
+  },
+  "ussd.code.tele2.153.title": {
+    PT: "Serviços Pagos Tele2 (*153#)",
+    EN: "Tele2 Active Paid Services (*153#)",
+    RU: "Подключенные платные услуги Tele2 (*153#)",
+    HI: "टेली2 सक्रिय भुगतान सेवाएं (*153#)",
+    KO: "Tele2 가입된 유료 부가서비스 (*153#)"
+  },
+  "ussd.code.tele2.153.desc": {
+    PT: "Lista todos os serviços adicionais pagos ativados na sua linha para evitar cobranças indesejadas.",
+    EN: "Lists all additional paid services activated on your line to avoid unwanted charges.",
+    RU: "Список всех подключенных платных услуг на вашей линии для предотвращения нежелательных списаний.",
+    HI: "अवांछित शुल्कों से बचने के लिए आपकी linha पर सक्रिय सभी अतिरिक्त भुगतान सेवाओं की सूची दिखाता है।",
+    KO: "소비자 모르게 청구되는 불필요한 자동 결제를 예방하기 위해 활성화된 유료 부가 서비스 목록을 불러옵니다."
+  },
+  "ussd.code.beeline.102.title": {
+    PT: "Saldo Beeline (*102#)",
+    EN: "Beeline Balance Inquiry (*102#)",
+    RU: "Баланс Билайн (*102#)",
+    HI: "बीलाइन बैलेंस पूछताछ (*102#)",
+    KO: "Beeline 잔액 조회 (*102#)"
+  },
+  "ussd.code.beeline.102.desc": {
+    PT: "Consulta o saldo atual de créditos e limites para contas pré-pagas e pós-pagas Beeline.",
+    EN: "Checks the current balance of credits and limits for Beeline prepaid and postpaid accounts.",
+    RU: "Проверяет текущий баланс кредитов и лимитов для предоплаченных и постоплатных счетов Билайн.",
+    HI: "बीलाइन प्रीपेड और पोस्टपेड खातों के लिए क्रेडिट और सीमा के वर्तमान विवरण की जांच करता है।",
+    KO: "Beeline 선불 및 후불 가입자의 현재 사용 가능한 계정 예치금 및 한도를 점검합니다."
+  },
+  "ussd.code.beeline.11010.title": {
+    PT: "Próprio Número Beeline (*110*10#)",
+    EN: "Beeline Display Own Number (*110*10#)",
+    RU: "Узнать свой номер Билайн (*110*10#)",
+    HI: "बीलाइन अपना नंबर देखें (*110*10#)",
+    KO: "Beeline 본인 전화번호 확인 (*110*10#)"
+  },
+  "ussd.code.beeline.11010.desc": {
+    PT: "Faz uma requisição simples ao sistema Beeline para enviar seu próprio número de telefone na tela.",
+    EN: "Makes a simple request to the Beeline system to show your phone number on screen.",
+    RU: "Делает простой запрос в систему Билайн для отображения вашего номера телефона на экране.",
+    HI: "स्क्रीन पर अपना फोन नंबर दिखाने के लिए बीलाइन सिस्टम से एक सरल अनुरोध करता है।",
+    KO: "Beeline 기지국 통신 채널을 거쳐 기기에 귀속된 현재의 고유 스마트폰 번호를 점검하고 전송받습니다."
+  },
+  "ussd.code.beeline.11006.title": {
+    PT: "Franquia Internet Beeline (*110*06#)",
+    EN: "Beeline Allowances Status (*110*06#)",
+    RU: "Остатки пакетов Билайн (*110*06#)",
+    HI: "बीलाइन अनुमत स्थिति (*110*06#)",
+    KO: "Beeline 데이터 및 무료 패키지 (*110*06#)"
+  },
+  "ussd.code.beeline.11006.desc": {
+    PT: "Informa sobre a franquia e gigabytes de internet restantes, minutos e SMS no plano Beeline.",
+    EN: "Informs about remaining mobile data allowances, minutes, and SMS on your Beeline plan.",
+    RU: "Информирует об оставшихся пакетах интернета, минут и SMS в вашем тарифе Билайн.",
+    HI: "आपके बीलाइन प्लान पर शेष मोबाइल डेटा, मिनट और एसएमएस के बारे में सूचित करता है।",
+    KO: "Beeline 요금제에 포함되어 있는 월간 잔여 무선 인터넷 데이터, 음성 통화 및 문자메시지를 표시합니다."
+  },
+  "ussd.code.beeline.141.title": {
+    PT: "Crédito de Confiança Beeline (*141#)",
+    EN: "Beeline Trust Payment (*141#)",
+    RU: "Доверительный платеж Билайн (*141#)",
+    HI: "बीライン ट्रस्ट भुगतान (*141#)",
+    KO: "Beeline 비상 신용 충전 (*141#)"
+  },
+  "ussd.code.beeline.141.desc": {
+    PT: "Ativa um crédito temporário para que sua linha Beeline continue ativa mesmo sem saldo imediato.",
+    EN: "Activates a temporary credit to keep your Beeline line active even without immediate balance.",
+    RU: "Активирует временный платеж, чтобы ваша линия Билайн оставалась активной даже без средств.",
+    HI: "बिना तत्काल बैलेंस के भी आपकी बीलाइन लाइन को सक्रिय रखने के लिए एक अस्थायी क्रेडिट सक्रिय करता है।",
+    KO: "통화 잔액이 갑자기 고갈되었을 때, 긴급 전화를 걸 수 있도록 임시로 비상 전화를 신용 보증으로 개통해 줍니다."
+  },
+  "header.share": {
+    PT: "Compartilhar",
+    EN: "Share",
+    RU: "Поделиться",
+    HI: "साझा करें",
+    KO: "공유하기"
+  },
+  "share.modal.title": {
+    PT: "Compartilhar Down&Convert",
+    EN: "Share Down&Convert",
+    RU: "Поделиться Down&Convert",
+    HI: "Down&Convert साझा करें",
+    KO: "Down&Convert 공유하기"
+  },
+  "share.modal.desc": {
+    PT: "Compartilhe o site com o idioma selecionado diretamente através de links dedicados.",
+    EN: "Share the site with the selected language directly through dedicated links.",
+    RU: "Поделитесь сайтом на выбранном языке с помощью прямых ссылок.",
+    HI: "समर्पित लिंक के माध्यम से सीधे चयनित भाषा में साइट साझा करें।",
+    KO: "선택된 언어로 즉시 열리는 전용 바로가기 링크로 사이트를 공유하세요."
+  },
+  "share.currentLang": {
+    PT: "Compartilhar no Idioma Selecionado",
+    EN: "Share in Selected Language",
+    RU: "Поделиться на выбранном языке",
+    HI: "चयनित भाषा में साझा करें",
+    KO: "선택된 언어로 사이트 공유"
+  },
+  "share.allLanguages": {
+    PT: "Links Diretos por Idioma (pt, en, ru, hi, ko)",
+    EN: "Direct Links by Language (pt, en, ru, hi, ko)",
+    RU: "Прямые ссылки по языкам (pt, en, ru, hi, ko)",
+    HI: "भाषा के अनुसार सीधे लिंक (pt, en, ru, hi, ko)",
+    KO: "언어별 전용 접속 링크 (pt, en, ru, hi, ko)"
+  },
+  "share.copyLink": {
+    PT: "Copiar Link",
+    EN: "Copy Link",
+    RU: "Скопировать ссылку",
+    HI: "लिंक कॉपी करें",
+    KO: "링크 복사"
+  },
+  "share.copied": {
+    PT: "Copiado!",
+    EN: "Copied!",
+    RU: "Скопировано!",
+    HI: "कॉपी किया गया!",
+    KO: "복사됨!"
+  },
+  "share.openLink": {
+    PT: "Abrir",
+    EN: "Open",
+    RU: "Открыть",
+    HI: "खोलें",
+    KO: "열기"
+  },
+  "share.nativeShare": {
+    PT: "Compartilhar no WhatsApp / Redes",
+    EN: "Share on WhatsApp / Social",
+    RU: "Поделиться в WhatsApp / соцсетях",
+    HI: "व्हाट्सएप / सोशल पर साझा करें",
+    KO: "WhatsApp / SNS로 공유하기"
   }
 };
 
+export interface LanguageInfo {
+  code: Language;
+  slug: string;
+  name: string;
+  nativeName: string;
+  flag: string;
+}
+
+export const SUPPORTED_LANGUAGES: LanguageInfo[] = [
+  { code: 'PT', slug: 'pt', name: 'Português', nativeName: 'Português (Brasil)', flag: '🇧🇷' },
+  { code: 'EN', slug: 'en', name: 'English', nativeName: 'English (US)', flag: '🇺🇸' },
+  { code: 'RU', slug: 'ru', name: 'Русский', nativeName: 'Русский', flag: '🇷🇺' },
+  { code: 'HI', slug: 'hi', name: 'हिन्दी', nativeName: 'हिन्दी', flag: '🇮🇳' },
+  { code: 'KO', slug: 'ko', name: '한국어', nativeName: '한국어', flag: '🇰🇷' },
+];
+
+export const VALID_LANGUAGES: Language[] = ['PT', 'EN', 'RU', 'HI', 'KO'];
+
+export function parseLanguageFromUrl(): Language | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    // 1. Query param: ?lang=en ou ?language=ru
+    const params = new URLSearchParams(window.location.search);
+    const langQuery = (params.get('lang') || params.get('language'))?.toUpperCase();
+    if (langQuery && VALID_LANGUAGES.includes(langQuery as Language)) {
+      return langQuery as Language;
+    }
+
+    // 2. Path segment: /pt, /en, /ru, /hi, /ko
+    const segments = window.location.pathname.toLowerCase().split('/').filter(Boolean);
+    if (segments.length > 0) {
+      const first = segments[0].toUpperCase();
+      if (VALID_LANGUAGES.includes(first as Language)) {
+        return first as Language;
+      }
+    }
+
+    // 3. LocalStorage
+    const saved = localStorage.getItem('downconvert_user_lang')?.toUpperCase();
+    if (saved && VALID_LANGUAGES.includes(saved as Language)) {
+      return saved as Language;
+    }
+
+    // 4. Navegador
+    const navLang = navigator.language?.toLowerCase() || '';
+    if (navLang.startsWith('ru')) return 'RU';
+    if (navLang.startsWith('hi')) return 'HI';
+    if (navLang.startsWith('ko')) return 'KO';
+    if (navLang.startsWith('en')) return 'EN';
+    if (navLang.startsWith('pt')) return 'PT';
+  } catch {}
+
+  return null;
+}
+
 interface LanguageContextType {
   lang: Language;
-  setLang: (lang: Language) => void;
+  setLang: (lang: Language, updateUrl?: boolean) => void;
   t: (key: string) => string;
+  getLanguageUrl: (targetLang: Language, usePath?: boolean) => string;
+  getShareableUrl: (targetLang?: Language) => string;
+  supportedLanguages: LanguageInfo[];
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [lang, setLang] = useState<Language>('PT');
-  
+  const [lang, setLangState] = useState<Language>(() => {
+    return parseLanguageFromUrl() || 'PT';
+  });
+
+  const setLang = (newLang: Language, updateUrl = true) => {
+    setLangState(newLang);
+    try {
+      localStorage.setItem('downconvert_user_lang', newLang);
+      if (updateUrl && typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        const segments = url.pathname.split('/').filter(Boolean);
+        if (segments.length > 0 && VALID_LANGUAGES.includes(segments[0].toUpperCase() as Language)) {
+          segments[0] = newLang.toLowerCase();
+          url.pathname = '/' + segments.join('/');
+        } else {
+          url.searchParams.set('lang', newLang.toLowerCase());
+        }
+        window.history.replaceState({}, '', url.toString());
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
+    // Escuta popstate caso o usuário use botões de avançar/voltar no navegador
+    const handlePopState = () => {
+      const detected = parseLanguageFromUrl();
+      if (detected && detected !== lang) {
+        setLangState(detected);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [lang]);
+
+  const getLanguageUrl = (targetLang: Language, usePath = false): string => {
+    if (typeof window === 'undefined') return `https://downandconvert.onrender.com/?lang=${targetLang.toLowerCase()}`;
+    const origin = window.location.origin;
+    const currentPath = window.location.pathname;
+    
+    if (usePath) {
+      const cleanPath = currentPath.replace(/^\/(pt|en|ru|hi|ko)(\/|$)/i, '/').replace(/\/$/, '');
+      const pathSuffix = cleanPath === '' || cleanPath === '/' ? '' : cleanPath;
+      return `${origin}/${targetLang.toLowerCase()}${pathSuffix}`;
+    } else {
+      const url = new URL(window.location.href);
+      url.searchParams.set('lang', targetLang.toLowerCase());
+      return url.toString();
+    }
+  };
+
+  const getShareableUrl = (targetLang?: Language): string => {
+    const selected = targetLang || lang;
+    return getLanguageUrl(selected, false);
+  };
+
   const t = (key: string): string => {
     if (!dict[key]) return key;
     return dict[key][lang] || dict[key]['PT'] || key;
   };
 
   return (
-    <LanguageContext.Provider value={{ lang, setLang, t }}>
+    <LanguageContext.Provider value={{
+      lang,
+      setLang,
+      t,
+      getLanguageUrl,
+      getShareableUrl,
+      supportedLanguages: SUPPORTED_LANGUAGES
+    }}>
       {children}
     </LanguageContext.Provider>
   );

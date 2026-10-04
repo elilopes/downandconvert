@@ -1644,20 +1644,13 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
                     </span>
                   </div>
 
-                  {/* Barra de Rolagem Horizontal para Ações */}
-                  <div 
-                    className="flex items-center gap-2 overflow-x-auto pb-2 pt-0.5 px-0.5 scrollbar-thin scrollbar-thumb-cyan-500/30 scrollbar-track-slate-800/50 touch-pan-x snap-x w-full"
-                    style={{
-                      WebkitOverflowScrolling: 'touch',
-                      scrollbarWidth: 'thin',
-                      scrollbarColor: 'rgba(6, 182, 212, 0.4) rgba(30, 41, 59, 0.5)'
-                    }}
-                  >
+                  {/* Grid de Ações em duas linhas / colunas (Totalmente visível em qualquer tela) */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 w-full">
                     {/* Botão de Comparação de Smartphone */}
                     <button
                       type="button"
                       onClick={() => handleToggleCompare(phone)}
-                      className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer snap-start print:hidden ${
+                      className={`inline-flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer print:hidden w-full ${
                         selectedForComparison.some(p => p.id === phone.id)
                           ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
                           : 'bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
@@ -1676,7 +1669,7 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
                     <button
                       type="button"
                       onClick={(e) => handleShareWhatsAppPhone(phone, e)}
-                      className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-xl text-xs font-semibold transition-all cursor-pointer snap-start"
+                      className="inline-flex items-center justify-center gap-1.5 px-2 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-xl text-[11px] font-semibold transition-all cursor-pointer w-full"
                       title="Compartilhar no WhatsApp"
                     >
                       <MessageSquareShare className="w-3.5 h-3.5" />
@@ -1687,7 +1680,7 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
                     <button
                       type="button"
                       onClick={() => handleSharePhone(phone)}
-                      className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer snap-start print:hidden ${
+                      className={`inline-flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer print:hidden w-full ${
                         copiedPhoneId === phone.id
                           ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
                           : 'bg-slate-800 hover:bg-slate-700 text-cyan-300 hover:text-white border border-slate-700'
@@ -1711,7 +1704,7 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
                     <button
                       type="button"
                       onClick={() => window.print()}
-                      className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/20 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm snap-start print:hidden"
+                      className="inline-flex items-center justify-center gap-1.5 px-2 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/20 rounded-xl text-[11px] font-bold transition-all cursor-pointer shadow-sm print:hidden w-full"
                       title="Salvar em PDF"
                     >
                       <FileDown className="w-3.5 h-3.5 text-rose-400" />
@@ -1722,7 +1715,7 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
                     <button
                       type="button"
                       onClick={() => setSelectedPhoneForGames(phone)}
-                      className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm snap-start print:hidden"
+                      className="inline-flex items-center justify-center gap-1.5 px-2 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 rounded-xl text-[11px] font-bold transition-all cursor-pointer shadow-sm print:hidden w-full"
                       title="Jogos pesados suportados com fluidez"
                     >
                       <Gamepad2 className="w-3.5 h-3.5 text-purple-400" />
@@ -1733,7 +1726,7 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
                     <button
                       type="button"
                       onClick={() => setSelectedPhoneForSimilar(phone)}
-                      className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm snap-start print:hidden"
+                      className="inline-flex items-center justify-center gap-1.5 px-2 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 rounded-xl text-[11px] font-bold transition-all cursor-pointer shadow-sm print:hidden w-full"
                       title="Ver aparelhos com ficha técnica e desempenho semelhantes"
                     >
                       <Sparkles className="w-3.5 h-3.5 text-amber-400" />

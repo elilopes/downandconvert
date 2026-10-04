@@ -35,7 +35,24 @@ export const UssdTool: React.FC<UssdToolProps> = ({ focusedUssdId }) => {
   const handleShareUssd = async (item: UssdCode) => {
     const title = t(item.titleKey);
     const desc = t(item.descKey);
-    const carrierName = item.carrier.charAt(0).toUpperCase() + item.carrier.slice(1);
+    const prettyCarriers: Record<string, string> = {
+      tmobile: 'T-Mobile',
+      att: 'AT&T',
+      orange: 'Orange',
+      movistar: 'Movistar',
+      jio: 'Jio',
+      huawei: 'Huawei',
+      oneplus: 'OnePlus',
+      sony: 'Sony',
+      nothing: 'Nothing',
+      nokia: 'Nokia',
+      realme: 'Realme',
+      pixel: 'Pixel',
+      samsung: 'Samsung',
+      iphone: 'iPhone',
+      android: 'Android'
+    };
+    const carrierName = prettyCarriers[item.carrier] || (item.carrier.charAt(0).toUpperCase() + item.carrier.slice(1));
     const codeType = item.type || 'USSD/MMI';
     const ussdUrl = `${window.location.origin}/${item.id}`;
 
@@ -82,7 +99,10 @@ export const UssdTool: React.FC<UssdToolProps> = ({ focusedUssdId }) => {
     
     const matchesCarrier = selectedCarrier === 'todos' || 
                            item.carrier === selectedCarrier || 
-                           (selectedCarrier === 'android' && item.carrier === 'samsung') ||
+                           (selectedCarrier === 'android' && [
+                             'android', 'samsung', 'xiaomi', 'motorola', 
+                             'huawei', 'oneplus', 'sony', 'nothing', 'realme', 'pixel'
+                           ].includes(item.carrier)) ||
                            (selectedCarrier === 'ios' && item.carrier === 'iphone');
     const matchesCategory = selectedCategory === 'todos' || item.category === selectedCategory;
 
@@ -125,9 +145,25 @@ export const UssdTool: React.FC<UssdToolProps> = ({ focusedUssdId }) => {
               { id: 'tim', label: 'TIM' },
               { id: 'oi', label: 'Oi' },
               { id: 'vodafone', label: 'Vodafone' },
+              { id: 'tmobile', label: 'T-Mobile' },
+              { id: 'att', label: 'AT&T' },
+              { id: 'orange', label: 'Orange' },
+              { id: 'movistar', label: 'Movistar' },
+              { id: 'jio', label: 'Jio' },
               { id: 'geral', label: t('ussd.universal') },
               { id: 'android', label: 'Android' },
               { id: 'ios', label: 'iOS' },
+              { id: 'huawei', label: 'Huawei' },
+              { id: 'oneplus', label: 'OnePlus' },
+              { id: 'sony', label: 'Sony' },
+              { id: 'nothing', label: 'Nothing' },
+              { id: 'nokia', label: 'Nokia' },
+              { id: 'realme', label: 'Realme' },
+              { id: 'pixel', label: 'Pixel' },
+              { id: 'mts', label: 'MTS' },
+              { id: 'megafon', label: 'MegaFon' },
+              { id: 'tele2', label: 'Tele2' },
+              { id: 'beeline', label: 'Beeline' },
             ].map(c => (
               <button
                 key={c.id}
@@ -201,9 +237,41 @@ export const UssdTool: React.FC<UssdToolProps> = ({ focusedUssdId }) => {
                       item.carrier === 'vodafone' ? 'bg-rose-950/60 text-rose-300 border-rose-800/60' :
                       item.carrier === 'samsung' ? 'bg-cyan-950/60 text-cyan-300 border-cyan-800/60' :
                       item.carrier === 'iphone' ? 'bg-slate-800/60 text-slate-300 border-slate-600/60' :
+                      item.carrier === 'tmobile' ? 'bg-pink-950/60 text-pink-300 border-pink-800/60' :
+                      item.carrier === 'att' ? 'bg-sky-950/60 text-sky-300 border-sky-800/60' :
+                      item.carrier === 'orange' ? 'bg-orange-950/60 text-orange-300 border-orange-800/60' :
+                      item.carrier === 'movistar' ? 'bg-teal-950/60 text-teal-300 border-teal-800/60' :
+                      item.carrier === 'jio' ? 'bg-indigo-950/60 text-indigo-300 border-indigo-800/60' :
+                      item.carrier === 'huawei' ? 'bg-red-950/40 text-red-300 border-red-800/40' :
+                      item.carrier === 'oneplus' ? 'bg-red-950/80 text-red-200 border-red-700/80' :
+                      item.carrier === 'sony' ? 'bg-zinc-800/80 text-zinc-200 border-zinc-600/80' :
+                      item.carrier === 'nothing' ? 'bg-slate-900 text-slate-200 border-slate-700' :
+                      item.carrier === 'nokia' ? 'bg-blue-950 text-blue-200 border-blue-800' :
+                      item.carrier === 'realme' ? 'bg-yellow-950/60 text-yellow-300 border-yellow-800/60' :
+                      item.carrier === 'pixel' ? 'bg-emerald-950/60 text-emerald-300 border-emerald-800/60' :
+                      item.carrier === 'mts' ? 'bg-red-950/60 text-red-300 border-red-800/60' :
+                      item.carrier === 'megafon' ? 'bg-emerald-950/60 text-emerald-300 border-emerald-800/60' :
+                      item.carrier === 'tele2' ? 'bg-indigo-950/60 text-indigo-300 border-indigo-800/60' :
+                      item.carrier === 'beeline' ? 'bg-yellow-950/50 text-yellow-300 border-yellow-800/50' :
                       'bg-emerald-950/60 text-emerald-300 border-emerald-800/60'
                     }`}>
-                      {item.carrier}
+                      {item.carrier === 'tmobile' ? 'T-Mobile' :
+                       item.carrier === 'att' ? 'AT&T' :
+                       item.carrier === 'orange' ? 'Orange' :
+                       item.carrier === 'movistar' ? 'Movistar' :
+                       item.carrier === 'jio' ? 'Jio' :
+                       item.carrier === 'huawei' ? 'Huawei' :
+                       item.carrier === 'oneplus' ? 'OnePlus' :
+                       item.carrier === 'sony' ? 'Sony' :
+                       item.carrier === 'nothing' ? 'Nothing' :
+                       item.carrier === 'nokia' ? 'Nokia' :
+                       item.carrier === 'realme' ? 'Realme' :
+                       item.carrier === 'pixel' ? 'Pixel' :
+                       item.carrier === 'mts' ? 'MTS' :
+                       item.carrier === 'megafon' ? 'MegaFon' :
+                       item.carrier === 'tele2' ? 'Tele2' :
+                       item.carrier === 'beeline' ? 'Beeline' :
+                       item.carrier}
                     </span>
                     {item.type && (
                       <span 

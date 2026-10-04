@@ -112,7 +112,7 @@ export async function encodeWithFFmpeg(
     const args: string[] = ['-i', inputName];
 
     if (isVideo) {
-      // Build video filter chain (crop + scale)
+      // Build video filter chain (crop + scale + sharpen)
       const vFilters: string[] = [];
       if (options.crop && options.crop.enabled && options.crop.width > 0 && options.crop.height > 0) {
         const cropW = Math.max(2, Math.floor(options.crop.width / 2) * 2);
@@ -125,6 +125,12 @@ export async function encodeWithFFmpeg(
           vFilters.push(`geq=lum='if(lt((X-(W/2))^2+(Y-(H/2))^2,(min(W,H)/2)^2),p(X,Y),0)':cb='if(lt((X-(W/2))^2+(Y-(H/2))^2,(min(W,H)/2)^2),p(X,Y),128)':cr='if(lt((X-(W/2))^2+(Y-(H/2))^2,(min(W,H)/2)^2),p(X,Y),128)'`);
         }
       }
+      
+      // AI/Sharpen filter approximation
+      if (options.crop?.sharpen) {
+        vFilters.push("unsharp=5:5:1.0:5:5:0.0");
+      }
+
       if (options.videoQuality === 'very_low') {
         vFilters.push("scale='min(480,iw)':-2");
       } else {

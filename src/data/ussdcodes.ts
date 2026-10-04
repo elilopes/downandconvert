@@ -2,7 +2,7 @@ export interface UssdCode {
   code: string;
   titleKey: string;
   descKey: string;
-  carrier: 'vivo' | 'claro' | 'tim' | 'oi' | 'vodafone' | 'correios' | 'geral' | 'android' | 'samsung' | 'xiaomi' | 'motorola' | 'iphone';
+  carrier: 'vivo' | 'claro' | 'tim' | 'oi' | 'vodafone' | 'correios' | 'geral' | 'android' | 'samsung' | 'xiaomi' | 'motorola' | 'iphone' | 'tmobile' | 'att' | 'orange' | 'movistar' | 'jio' | 'huawei' | 'oneplus' | 'sony' | 'nothing' | 'nokia' | 'realme' | 'pixel' | 'mts' | 'megafon' | 'tele2' | 'beeline';
   category: 'saldo' | 'recarga' | 'numero' | 'internet' | 'teste' | 'sistema' | 'limpeza';
   type?: 'USSD' | 'MMI';
   id: string;
@@ -135,4 +135,103 @@ export const USSD_DATABASE: UssdCode[] = [
   { code: '**042*oldPIN2*newPIN2*newPIN2#', titleKey: 'ussd.code.geral.pin042.title', descKey: 'ussd.code.geral.pin042.desc', carrier: 'geral', category: 'sistema', type: 'USSD', id: 'alterar-pin2' },
   { code: '**05*PUK*newPIN*newPIN#', titleKey: 'ussd.code.geral.puk05unlock.title', descKey: 'ussd.code.geral.puk05unlock.desc', carrier: 'geral', category: 'sistema', type: 'USSD', id: 'desbloquear-puk-pin' },
   { code: '**052*PUK2*newPIN2*newPIN2#', titleKey: 'ussd.code.geral.puk052unlock.title', descKey: 'ussd.code.geral.puk052unlock.desc', carrier: 'geral', category: 'sistema', type: 'USSD', id: 'desbloquear-puk2-pin2' },
+
+  // Operadoras de outros países (T-Mobile, AT&T, Orange, Movistar, Jio)
+  { code: '#932#', titleKey: 'ussd.code.tmobile.932.title', descKey: 'ussd.code.tmobile.932.desc', carrier: 'tmobile', category: 'internet', type: 'USSD', id: 'tmobile-uso-dados' },
+  { code: '#225#', titleKey: 'ussd.code.tmobile.225.title', descKey: 'ussd.code.tmobile.225.desc', carrier: 'tmobile', category: 'saldo', type: 'USSD', id: 'tmobile-saldo-vencimento' },
+  { code: '#646#', titleKey: 'ussd.code.tmobile.646.title', descKey: 'ussd.code.tmobile.646.desc', carrier: 'tmobile', category: 'saldo', type: 'USSD', id: 'tmobile-minutos-utilizados' },
+  { code: '#674#', titleKey: 'ussd.code.tmobile.674.title', descKey: 'ussd.code.tmobile.674.desc', carrier: 'tmobile', category: 'saldo', type: 'USSD', id: 'tmobile-mensagens-enviadas' },
+  { code: '#999#', titleKey: 'ussd.code.tmobile.999.title', descKey: 'ussd.code.tmobile.999.desc', carrier: 'tmobile', category: 'saldo', type: 'USSD', id: 'tmobile-saldo-prepago' },
+  { code: '*3282#', titleKey: 'ussd.code.att.3282.title', descKey: 'ussd.code.att.3282.desc', carrier: 'att', category: 'internet', type: 'USSD', id: 'att-consulta-dados' },
+  { code: '*225#', titleKey: 'ussd.code.att.225.title', descKey: 'ussd.code.att.225.desc', carrier: 'att', category: 'saldo', type: 'USSD', id: 'att-consultar-fatura' },
+  { code: '*646#', titleKey: 'ussd.code.att.646.title', descKey: 'ussd.code.att.646.desc', carrier: 'att', category: 'saldo', type: 'USSD', id: 'att-minutos-voz' },
+  { code: '*7282#', titleKey: 'ussd.code.att.7282.title', descKey: 'ussd.code.att.7282.desc', carrier: 'att', category: 'internet', type: 'USSD', id: 'att-dados-compartilhados' },
+  { code: '*777#', titleKey: 'ussd.code.att.777.title', descKey: 'ussd.code.att.777.desc', carrier: 'att', category: 'saldo', type: 'USSD', id: 'att-saldo-prepago' },
+  { code: '#123#', titleKey: 'ussd.code.orange.123.title', descKey: 'ussd.code.orange.123.desc', carrier: 'orange', category: 'saldo', type: 'USSD', id: 'orange-menu-saldo' },
+  { code: '#100#', titleKey: 'ussd.code.orange.100.title', descKey: 'ussd.code.orange.100.desc', carrier: 'orange', category: 'numero', type: 'USSD', id: 'orange-proprio-numero' },
+  { code: '#101#', titleKey: 'ussd.code.orange.101.title', descKey: 'ussd.code.orange.101.desc', carrier: 'orange', category: 'recarga', type: 'USSD', id: 'orange-menu-recarga' },
+  { code: '#125#', titleKey: 'ussd.code.orange.125.title', descKey: 'ussd.code.orange.125.desc', carrier: 'orange', category: 'saldo', type: 'USSD', id: 'orange-consulta-consumo' },
+  { code: '*133#', titleKey: 'ussd.code.movistar.133.title', descKey: 'ussd.code.movistar.133.desc', carrier: 'movistar', category: 'saldo', type: 'USSD', id: 'movistar-consulta-saldo' },
+  { code: '*102#', titleKey: 'ussd.code.movistar.102.title', descKey: 'ussd.code.movistar.102.desc', carrier: 'movistar', category: 'saldo', type: 'USSD', id: 'movistar-consulta-bonus' },
+  { code: '*123#', titleKey: 'ussd.code.movistar.123.title', descKey: 'ussd.code.movistar.123.desc', carrier: 'movistar', category: 'sistema', type: 'USSD', id: 'movistar-menu-servicos' },
+  { code: '*111#', titleKey: 'ussd.code.movistar.111.title', descKey: 'ussd.code.movistar.111.desc', carrier: 'movistar', category: 'recarga', type: 'USSD', id: 'movistar-recarga-sos' },
+  { code: '*333#', titleKey: 'ussd.code.jio.333.title', descKey: 'ussd.code.jio.333.desc', carrier: 'jio', category: 'saldo', type: 'USSD', id: 'jio-saldo-consumo' },
+  { code: '*199#', titleKey: 'ussd.code.jio.199.title', descKey: 'ussd.code.jio.199.desc', carrier: 'jio', category: 'sistema', type: 'USSD', id: 'jio-menu-conta' },
+  { code: '*199*1#', titleKey: 'ussd.code.jio.1991.title', descKey: 'ussd.code.jio.1991.desc', carrier: 'jio', category: 'sistema', type: 'USSD', id: 'jio-detalhes-plano' },
+
+  // Aparelhos não populares / Marcas alternativas (Huawei, OnePlus, Sony, Nothing, Nokia, Realme, Pixel, MediaTek)
+  { code: '*#*#2846579#*#*', titleKey: 'ussd.code.huawei.2846579.title', descKey: 'ussd.code.huawei.2846579.desc', carrier: 'huawei', category: 'sistema', type: 'MMI', id: 'huawei-projectmenu' },
+  { code: '##1357946##', titleKey: 'ussd.code.huawei.1357946.title', descKey: 'ussd.code.huawei.1357946.desc', carrier: 'huawei', category: 'sistema', type: 'MMI', id: 'huawei-device-id' },
+  { code: '*#*#121314#*#*', titleKey: 'ussd.code.huawei.121314.title', descKey: 'ussd.code.huawei.121314.desc', carrier: 'huawei', category: 'teste', type: 'MMI', id: 'huawei-teste-touch' },
+  { code: '*#*#6130#*#*', titleKey: 'ussd.code.huawei.6130.title', descKey: 'ussd.code.huawei.6130.desc', carrier: 'huawei', category: 'sistema', type: 'MMI', id: 'huawei-estatisticas-uso' },
+  { code: '*#808#', titleKey: 'ussd.code.oneplus.808.title', descKey: 'ussd.code.oneplus.808.desc', carrier: 'oneplus', category: 'teste', type: 'MMI', id: 'oneplus-diagnostico' },
+  { code: '*#*#800#*#*', titleKey: 'ussd.code.oneplus.800.title', descKey: 'ussd.code.oneplus.800.desc', carrier: 'oneplus', category: 'limpeza', type: 'MMI', id: 'oneplus-logkit' },
+  { code: '*#1234#', titleKey: 'ussd.code.oneplus.1234.title', descKey: 'ussd.code.oneplus.1234.desc', carrier: 'oneplus', category: 'sistema', type: 'MMI', id: 'oneplus-software-version' },
+  { code: '*#*#7378423#*#*', titleKey: 'ussd.code.sony.7378423.title', descKey: 'ussd.code.sony.7378423.desc', carrier: 'sony', category: 'teste', type: 'MMI', id: 'sony-servicemenu' },
+  { code: '*#*#225#*#*', titleKey: 'ussd.code.sony.225.title', descKey: 'ussd.code.sony.225.desc', carrier: 'sony', category: 'sistema', type: 'MMI', id: 'sony-calendario-info' },
+  { code: '*#*#426#*#*', titleKey: 'ussd.code.sony.426.title', descKey: 'ussd.code.sony.426.desc', carrier: 'sony', category: 'sistema', type: 'MMI', id: 'sony-fcm-diagnostico' },
+  { code: '*#*#6684464#*#*', titleKey: 'ussd.code.nothing.6684464.title', descKey: 'ussd.code.nothing.6684464.desc', carrier: 'nothing', category: 'teste', type: 'MMI', id: 'nothing-feedback' },
+  { code: '*#*#0#*#*', titleKey: 'ussd.code.nothing.0.title', descKey: 'ussd.code.nothing.0.desc', carrier: 'nothing', category: 'teste', type: 'MMI', id: 'nothing-diagnostico-geral' },
+  { code: '*#0228#', titleKey: 'ussd.code.nothing.0228.title', descKey: 'ussd.code.nothing.0228.desc', carrier: 'nothing', category: 'teste', type: 'MMI', id: 'nothing-calibracao-bateria' },
+  { code: '*#0000#', titleKey: 'ussd.code.nokia.0000.title', descKey: 'ussd.code.nokia.0000.desc', carrier: 'nokia', category: 'sistema', type: 'MMI', id: 'nokia-firmware' },
+  { code: '*#7780#', titleKey: 'ussd.code.nokia.7780.title', descKey: 'ussd.code.nokia.7780.desc', carrier: 'nokia', category: 'sistema', type: 'MMI', id: 'nokia-restaurar' },
+  { code: '*#7370#', titleKey: 'ussd.code.nokia.7370.title', descKey: 'ussd.code.nokia.7370.desc', carrier: 'nokia', category: 'limpeza', type: 'MMI', id: 'nokia-hard-reset' },
+  { code: '*#2820#', titleKey: 'ussd.code.nokia.2820.title', descKey: 'ussd.code.nokia.2820.desc', carrier: 'nokia', category: 'sistema', type: 'MMI', id: 'nokia-mac-bluetooth' },
+  { code: '*#899#', titleKey: 'ussd.code.realme.899.title', descKey: 'ussd.code.realme.899.desc', carrier: 'realme', category: 'teste', type: 'MMI', id: 'realme-engineermode' },
+  { code: '*#6776#', titleKey: 'ussd.code.realme.6776.title', descKey: 'ussd.code.realme.6776.desc', carrier: 'realme', category: 'sistema', type: 'MMI', id: 'realme-software-details' },
+  { code: '*#*#800#*#*', titleKey: 'ussd.code.realme.800.title', descKey: 'ussd.code.realme.800.desc', carrier: 'realme', category: 'limpeza', type: 'MMI', id: 'realme-feedback-tool' },
+  { code: '*#*#4636#*#*', titleKey: 'ussd.code.pixel.4636.title', descKey: 'ussd.code.pixel.4636.desc', carrier: 'pixel', category: 'teste', type: 'MMI', id: 'pixel-estatisticas' },
+  { code: '*#*#3424#*#*', titleKey: 'ussd.code.pixel.3424.title', descKey: 'ussd.code.pixel.3424.desc', carrier: 'pixel', category: 'sistema', type: 'MMI', id: 'pixel-diagnostic-menu' },
+  { code: '*#*#426#*#*', titleKey: 'ussd.code.pixel.426.title', descKey: 'ussd.code.pixel.426.desc', carrier: 'pixel', category: 'teste', type: 'MMI', id: 'pixel-firebase-diagnostics' },
+  { code: '*#*#3646633#*#*', titleKey: 'ussd.code.mtk.3646633.title', descKey: 'ussd.code.mtk.3646633.desc', carrier: 'geral', category: 'sistema', type: 'MMI', id: 'mtk-engineering-mode' },
+
+  // Novas adições de códigos (Operadoras internacionais e Fabricantes de nicho)
+  { code: '#686#', titleKey: 'ussd.code.tmobile.686.title', descKey: 'ussd.code.tmobile.686.desc', carrier: 'tmobile', category: 'numero', type: 'USSD', id: 'tmobile-proprio-numero' },
+  { code: '#263#', titleKey: 'ussd.code.tmobile.263.title', descKey: 'ussd.code.tmobile.263.desc', carrier: 'tmobile', category: 'sistema', type: 'USSD', id: 'tmobile-id-chamada' },
+  { code: '*#61#', titleKey: 'ussd.code.att.61.title', descKey: 'ussd.code.att.61.desc', carrier: 'att', category: 'numero', type: 'USSD', id: 'att-status-encaminhamento' },
+  { code: '*#33#', titleKey: 'ussd.code.att.33.title', descKey: 'ussd.code.att.33.desc', carrier: 'att', category: 'sistema', type: 'USSD', id: 'att-barramento-chamadas' },
+  { code: '#144#', titleKey: 'ussd.code.orange.144.title', descKey: 'ussd.code.orange.144.desc', carrier: 'orange', category: 'saldo', type: 'USSD', id: 'orange-money-menu' },
+  { code: '*141#', titleKey: 'ussd.code.orange.141.title', descKey: 'ussd.code.orange.141.desc', carrier: 'orange', category: 'numero', type: 'USSD', id: 'orange-callmeback' },
+  { code: '*100#', titleKey: 'ussd.code.movistar.100.title', descKey: 'ussd.code.movistar.100.desc', carrier: 'movistar', category: 'sistema', type: 'USSD', id: 'movistar-menu-prepago' },
+  { code: '*2293#', titleKey: 'ussd.code.movistar.2293.title', descKey: 'ussd.code.movistar.2293.desc', carrier: 'movistar', category: 'internet', type: 'USSD', id: 'movistar-dados-tarifa' },
+  { code: '*333*3#', titleKey: 'ussd.code.jio.3333.title', descKey: 'ussd.code.jio.3333.desc', carrier: 'jio', category: 'internet', type: 'USSD', id: 'jio-uso-dados-detalhado' },
+  { code: '*333*2#', titleKey: 'ussd.code.jio.3332.title', descKey: 'ussd.code.jio.3332.desc', carrier: 'jio', category: 'saldo', type: 'USSD', id: 'jio-consulta-saldo-principal' },
+  { code: '*#*#1472365#*#*', titleKey: 'ussd.code.huawei.1472365.title', descKey: 'ussd.code.huawei.1472365.desc', carrier: 'huawei', category: 'teste', type: 'MMI', id: 'huawei-teste-gps' },
+  { code: '*#*#232339#*#*', titleKey: 'ussd.code.huawei.232339.title', descKey: 'ussd.code.huawei.232339.desc', carrier: 'huawei', category: 'teste', type: 'MMI', id: 'huawei-teste-wifi' },
+  { code: '*#*#83818#*#*', titleKey: 'ussd.code.oneplus.83818.title', descKey: 'ussd.code.oneplus.83818.desc', carrier: 'oneplus', category: 'sistema', type: 'MMI', id: 'oneplus-engineermode-logs' },
+  { code: '*#*#36446337#*#*', titleKey: 'ussd.code.oneplus.36446337.title', descKey: 'ussd.code.oneplus.36446337.desc', carrier: 'oneplus', category: 'teste', type: 'MMI', id: 'oneplus-hardware-eng-test' },
+  { code: '*#*#0588#*#*', titleKey: 'ussd.code.sony.0588.title', descKey: 'ussd.code.sony.0588.desc', carrier: 'sony', category: 'teste', type: 'MMI', id: 'sony-teste-proximidade' },
+  { code: '*#*#973283110#*#*', titleKey: 'ussd.code.sony.973283110.title', descKey: 'ussd.code.sony.973283110.desc', carrier: 'sony', category: 'sistema', type: 'MMI', id: 'sony-servicemode-lte' },
+  { code: '*#*#4636#*#*', titleKey: 'ussd.code.nothing.4636.title', descKey: 'ussd.code.nothing.4636.desc', carrier: 'nothing', category: 'teste', type: 'MMI', id: 'nothing-testing-menu' },
+  { code: '*#*#34971539#*#*', titleKey: 'ussd.code.nothing.34971539.title', descKey: 'ussd.code.nothing.34971539.desc', carrier: 'nothing', category: 'sistema', type: 'MMI', id: 'nothing-camera-firmware' },
+  { code: '*#92702689#', titleKey: 'ussd.code.nokia.warranty.title', descKey: 'ussd.code.nokia.warranty.desc', carrier: 'nokia', category: 'sistema', type: 'MMI', id: 'nokia-warranty-menu' },
+  { code: '*#62#', titleKey: 'ussd.code.nokia.62.title', descKey: 'ussd.code.nokia.62.desc', carrier: 'nokia', category: 'numero', type: 'USSD', id: 'nokia-unreachable-forward' },
+  { code: '*#*#6484#*#*', titleKey: 'ussd.code.realme.6484.title', descKey: 'ussd.code.realme.6484.desc', carrier: 'realme', category: 'teste', type: 'MMI', id: 'realme-cit-hardware-test' },
+  { code: '*#*#232339#*#*', titleKey: 'ussd.code.realme.232339.title', descKey: 'ussd.code.realme.232339.desc', carrier: 'realme', category: 'teste', type: 'MMI', id: 'realme-wlan-wifi-test' },
+  { code: '*#*#8255#*#*', titleKey: 'ussd.code.pixel.8255.title', descKey: 'ussd.code.pixel.8255.desc', carrier: 'pixel', category: 'sistema', type: 'MMI', id: 'pixel-gtalk-service-monitor' },
+  { code: '*#*#759#*#*', titleKey: 'ussd.code.pixel.759.title', descKey: 'ussd.code.pixel.759.desc', carrier: 'pixel', category: 'sistema', type: 'MMI', id: 'pixel-rlz-debug-ui' },
+
+  // MTS (Russia)
+  { code: '*100#', titleKey: 'ussd.code.mts.100.title', descKey: 'ussd.code.mts.100.desc', carrier: 'mts', category: 'saldo', type: 'USSD', id: 'mts-consultar-saldo' },
+  { code: '*111*0887#', titleKey: 'ussd.code.mts.0887.title', descKey: 'ussd.code.mts.0887.desc', carrier: 'mts', category: 'numero', type: 'USSD', id: 'mts-descobrir-numero' },
+  { code: '*100*1#', titleKey: 'ussd.code.mts.1001.title', descKey: 'ussd.code.mts.1001.desc', carrier: 'mts', category: 'internet', type: 'USSD', id: 'mts-saldo-internet' },
+  { code: '*111#', titleKey: 'ussd.code.mts.111.title', descKey: 'ussd.code.mts.111.desc', carrier: 'mts', category: 'sistema', type: 'USSD', id: 'mts-menu-interativo' },
+
+  // MegaFon (Russia)
+  { code: '*100#', titleKey: 'ussd.code.megafon.100.title', descKey: 'ussd.code.megafon.100.desc', carrier: 'megafon', category: 'saldo', type: 'USSD', id: 'megafon-consultar-saldo' },
+  { code: '*205#', titleKey: 'ussd.code.megafon.205.title', descKey: 'ussd.code.megafon.205.desc', carrier: 'megafon', category: 'numero', type: 'USSD', id: 'megafon-descobrir-numero' },
+  { code: '*558#', titleKey: 'ussd.code.megafon.558.title', descKey: 'ussd.code.megafon.558.desc', carrier: 'megafon', category: 'internet', type: 'USSD', id: 'megafon-saldo-internet' },
+  { code: '*105*3#', titleKey: 'ussd.code.megafon.1053.title', descKey: 'ussd.code.megafon.1053.desc', carrier: 'megafon', category: 'sistema', type: 'USSD', id: 'megafon-tarifa-ativa' },
+
+  // Tele2 (Russia)
+  { code: '*105#', titleKey: 'ussd.code.tele2.105.title', descKey: 'ussd.code.tele2.105.desc', carrier: 'tele2', category: 'saldo', type: 'USSD', id: 'tele2-consultar-saldo' },
+  { code: '*201#', titleKey: 'ussd.code.tele2.201.title', descKey: 'ussd.code.tele2.201.desc', carrier: 'tele2', category: 'numero', type: 'USSD', id: 'tele2-descobrir-numero' },
+  { code: '*155*0#', titleKey: 'ussd.code.tele2.1550.title', descKey: 'ussd.code.tele2.1550.desc', carrier: 'tele2', category: 'internet', type: 'USSD', id: 'tele2-saldo-internet' },
+  { code: '*153#', titleKey: 'ussd.code.tele2.153.title', descKey: 'ussd.code.tele2.153.desc', carrier: 'tele2', category: 'sistema', type: 'USSD', id: 'tele2-servicos-pagos' },
+
+  // Beeline (Russia)
+  { code: '*102#', titleKey: 'ussd.code.beeline.102.title', descKey: 'ussd.code.beeline.102.desc', carrier: 'beeline', category: 'saldo', type: 'USSD', id: 'beeline-consultar-saldo' },
+  { code: '*110*10#', titleKey: 'ussd.code.beeline.11010.title', descKey: 'ussd.code.beeline.11010.desc', carrier: 'beeline', category: 'numero', type: 'USSD', id: 'beeline-descobrir-numero' },
+  { code: '*110*06#', titleKey: 'ussd.code.beeline.11006.title', descKey: 'ussd.code.beeline.11006.desc', carrier: 'beeline', category: 'internet', type: 'USSD', id: 'beeline-saldo-internet' },
+  { code: '*141#', titleKey: 'ussd.code.beeline.141.title', descKey: 'ussd.code.beeline.141.desc', carrier: 'beeline', category: 'sistema', type: 'USSD', id: 'beeline-credito-confianca' },
 ];

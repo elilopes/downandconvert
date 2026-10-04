@@ -41,16 +41,61 @@ import { spawn } from 'child_process';
 import youtubedl from 'youtube-dl-exec';
 
 function injectSEO(html: string, reqPath: string): string {
-  const pathSlug = reqPath.replace(/^\//, '').replace(/\/$/, '').toLowerCase();
+  let cleanPath = reqPath.split('?')[0].replace(/^\//, '').replace(/\/$/, '').toLowerCase();
   
-  if (!pathSlug) return html;
+  // Extrai prefixo de idioma se presente (pt, en, ru, hi, ko)
+  const langPrefixes = ['pt', 'en', 'ru', 'hi', 'ko'];
+  let lang = 'pt';
+  const segments = cleanPath.split('/').filter(Boolean);
+  if (segments.length > 0 && langPrefixes.includes(segments[0])) {
+    lang = segments[0];
+    segments.shift();
+    cleanPath = segments.join('/');
+  }
+
+  const pathSlug = cleanPath;
+  
+  // Adiciona tags hreflang de idiomas internacionais se não existirem
+  const hreflangTags = `
+    <link rel="alternate" hreflang="pt" href="https://downandconvert.onrender.com/pt" />
+    <link rel="alternate" hreflang="en" href="https://downandconvert.onrender.com/en" />
+    <link rel="alternate" hreflang="ru" href="https://downandconvert.onrender.com/ru" />
+    <link rel="alternate" hreflang="hi" href="https://downandconvert.onrender.com/hi" />
+    <link rel="alternate" hreflang="ko" href="https://downandconvert.onrender.com/ko" />
+  `;
+
+  let updatedHtml = html;
+  if (!updatedHtml.includes('hreflang="en"')) {
+    updatedHtml = updatedHtml.replace('</head>', `${hreflangTags}\n</head>`);
+  }
+
+  if (!pathSlug) {
+    if (lang === 'en') {
+      return updatedHtml
+        .replace(/<title>.*?<\/title>/i, `<title>Media Converter & Video Downloader | Down&Convert</title>`)
+        .replace(/<meta\s+name=["']description["']\s+content=["'][^"]*["']\s*\/?>/i, `<meta name="description" content="Free unlimited media converter and social video downloader. Convert MP4, MP3, WAV and secret USSD codes." />`);
+    } else if (lang === 'ru') {
+      return updatedHtml
+        .replace(/<title>.*?<\/title>/i, `<title>Конвертер медиа и загрузчик видео | Down&Convert</title>`)
+        .replace(/<meta\s+name=["']description["']\s+content=["'][^"]*["']\s*\/?>/i, `<meta name="description" content="Бесплатный безлимитный конвертер медиа и загрузчик видео. MP4, MP3, USSD коды и характеристики смартфонов." />`);
+    } else if (lang === 'hi') {
+      return updatedHtml
+        .replace(/<title>.*?<\/title>/i, `<title>मीडिया कनवर्टर और वीडियो डाउनलोडर | Down&Convert</title>`)
+        .replace(/<meta\s+name=["']description["']\s+content=["'][^"]*["']\s*\/?>/i, `<meta name="description" content="मुफ्त असीमित मीडिया कनवर्टर और सोशल वीडियो डाउनलोडर। MP4, MP3, यूएसएसडी कोड और स्मार्टफोन स्पेक्स।" />`);
+    } else if (lang === 'ko') {
+      return updatedHtml
+        .replace(/<title>.*?<\/title>/i, `<title>미디어 변환기 및 비디오 다운로더 | Down&Convert</title>`)
+        .replace(/<meta\s+name=["']description["']\s+content=["'][^"]*["']\s*\/?>/i, `<meta name="description" content="무료 무제한 미디어 변환기 및 동영상 다운로더. MP4, MP3, 스마트폰 스펙 및 USSD 코드." />`);
+    }
+    return updatedHtml;
+  }
 
   const device = mockedSmartphones.find(s => s.id === pathSlug);
   if (device) {
     const title = `${device.brand} ${device.model} - Ficha Técnica e Análise | Down&Convert`;
     const description = `Confira a ficha técnica completa, benchmark, câmeras e bateria do ${device.brand} ${device.model}. Descubra se vale a pena!`;
     
-    return html
+    return updatedHtml
       .replace(/<title>.*?<\/title>/i, `<title>${title}</title>`)
       .replace(/<meta\s+name=["']description["']\s+content=["'][^"]*["']\s*\/?>/i, `<meta name="description" content="${description}" />`)
       .replace(/<meta\s+property=["']og:title["']\s+content=["'][^"]*["']\s*\/?>/i, `<meta property="og:title" content="${title}" />`)
@@ -62,14 +107,14 @@ function injectSEO(html: string, reqPath: string): string {
     const title = `Código Secreto ${ussd.code} (${ussd.carrier.toUpperCase()}) - ${ussd.id.replace(/-/g, ' ')} | Down&Convert`;
     const description = `Descubra para que serve o código USSD/MMI ${ussd.code} da operadora/fabricante ${ussd.carrier.toUpperCase()}. Veja comandos úteis e funções secretas do seu celular.`;
     
-    return html
+    return updatedHtml
       .replace(/<title>.*?<\/title>/i, `<title>${title}</title>`)
       .replace(/<meta\s+name=["']description["']\s+content=["'][^"]*["']\s*\/?>/i, `<meta name="description" content="${description}" />`)
       .replace(/<meta\s+property=["']og:title["']\s+content=["'][^"]*["']\s*\/?>/i, `<meta property="og:title" content="${title}" />`)
       .replace(/<meta\s+property=["']og:description["']\s+content=["'][^"]*["']\s*\/?>/i, `<meta property="og:description" content="${description}" />`);
   }
 
-  return html;
+  return updatedHtml;
 }
 
 
@@ -1221,7 +1266,7 @@ async function startServer() {
     systemInstruction?: string,
     responseMimeType?: string
   ): Promise<string> {
-    const geminiModels = ['gemini-3.6-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
+    const geminiModels = ['gemini-3.8-flash'];
 
     // 1. Tenta os modelos Gemini na sequência
     for (const model of geminiModels) {
@@ -1553,7 +1598,7 @@ async function startServer() {
           "Não inclua resumos nem textos como 'Aqui está a transcrição:'. Retorne estritamente o texto transcrito literal.";
 
         const response = await ai.models.generateContent({
-          model: 'gemini-3.6-flash',
+          model: 'gemini-3.5-transcribe',
           contents: {
             parts: [
               {
@@ -1576,7 +1621,7 @@ async function startServer() {
         return res.json({
           success: true,
           mode: 'slow',
-          model: 'gemini-3.6-flash',
+          model: 'gemini-3.5-transcribe',
           text: resultText,
           duration: durationSecs
         });
@@ -2530,6 +2575,18 @@ Regras:
       return true;
     }
 
+    // 6. Notícias corporativas genéricas, disputas de mercado, demissões, relatórios financeiros ou processos judiciais de Big Techs (não-hardware)
+    const corporatePattern = /\b(demissões|demissoes|demissão|demissao|layoffs?|lucro|prejuízo|prejuizo|faturamento|receita|financeiro|financeiros|bolsa\s+de\s+valores|acionistas|wall\s+street|antitruste|monopólio|monopolio|multa|processo\s+contra|processado\s+por|adquirir|aquisição|aquisicao|compra\s+da|fusão|fusao|patente|patentes|ceo|lay-off|lay-offs)\b/i;
+    if (corporatePattern.test(combined) && !/\b(smartphone|celular|phone|watch|ring|laptop|chip|soc|bateria|camera|câmera|sensor)\b/i.test(combined)) {
+      return true;
+    }
+
+    // 7. Filtro Positivo de Gadget / Hardware (notícias SOMENTE sobre gadgets/hardware/eletrônicos)
+    const isGadgetOrTech = /\b(gadget|smartwatch|relo|wearable|phone|smartphone|celular|telefone|tablet|notebook|laptop|pc|desktop|computador|hardware|processador|cpu|gpu|chip|soc|bateria|battery|charger|carregador|camera|câmera|fones?|headphone|earbud|display|tela|screen|oled|amoled|lcd|sensor|biosensor|bluetooth|wifi|wi-fi|nfc|gps|gsm|mmi|ussd|sim\s*card|roteador|modem|console|ring|óculos|glasses|headset|orion|quest|vision\s+pro|vision\s+air|invenção|invencao|descoberta|graphene|grafeno|tecnologia|dispositivo|aparelho|eletrônico|eletronico)\b/i;
+    if (!isGadgetOrTech.test(combined)) {
+      return true; // Exclui se não contiver nenhuma palavra relacionada a gadgets ou hardware
+    }
+
     return false;
   }
 
@@ -2631,7 +2688,14 @@ Regras:
       { url: 'https://olhardigital.com.br/feed/', author: 'Olhar Digital', isPrimary: false },
       { url: 'https://rss.tecmundo.com.br/feed', author: 'TecMundo', isPrimary: false },
       { url: 'https://www.showmetech.com.br/feed/', author: 'Showmetech', isPrimary: false },
-      { url: 'https://gizmodo.uol.com.br/feed/', author: 'Gizmodo Brasil', isPrimary: false }
+      { url: 'https://gizmodo.uol.com.br/feed/', author: 'Gizmodo Brasil', isPrimary: false },
+      { url: 'https://gizmodo.com/feed/', author: 'Gizmodo US', isPrimary: false },
+      { url: 'https://feeds.bloomberg.com/technology/news.rss', author: 'Bloomberg', isPrimary: false },
+      { url: 'https://www.sammobile.com/feed/', author: 'SamMobile', isPrimary: false },
+      { url: 'https://techcrunch.com/feed/', author: 'TechCrunch', isPrimary: false },
+      { url: 'https://tek.sapo.pt/rss', author: 'SAPO Tek', isPrimary: false },
+      { url: 'https://4gnews.pt/feed/', author: '4gnews', isPrimary: false },
+      { url: 'https://pplware.sapo.pt/feed/', author: 'Pplware', isPrimary: false }
     ];
 
     const rawItems = [];
