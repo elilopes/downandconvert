@@ -1297,9 +1297,139 @@ async function startServer() {
     systemInstruction?: string,
     responseMimeType?: string
   ): Promise<string> {
-    const geminiModels = ['gemini-3.8-flash'];
+    const messages: any[] = [];
+    if (systemInstruction) {
+      messages.push({ role: 'system', content: systemInstruction });
+    } else {
+      messages.push({ role: 'system', content: 'Você é um assistente especializado. Responda no formato solicitado.' });
+    }
+    messages.push({ role: 'user', content: prompt });
 
-    // 1. Tenta os modelos Gemini na sequência
+    // 1. Tenta Groq API (Llama 3.3, DeepSeek R1, Qwen 2.5, Mixtral)
+    const rawGroq = process.env.GROQ_API_KEY || '';
+    const groqKey = rawGroq.replace(/^["']|["']$/g, '').trim();
+    if (groqKey) {
+      const groqModels = ['llama-3.3-70b-versatile', 'deepseek-r1-distill-llama-70b', 'qwen-2.5-32b', 'mixtral-8x7b-32768'];
+      for (const model of groqModels) {
+        try {
+          console.log(`[AI Fallback] Tentando Groq AI (${model})...`);
+          const body: any = { model, messages, temperature: 0.3 };
+          if (responseMimeType === 'application/json') body.response_format = { type: 'json_object' };
+
+          const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${groqKey}` },
+            body: JSON.stringify(body)
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const text = data.choices?.[0]?.message?.content;
+            if (text) return text;
+          }
+        } catch (e: any) {
+          console.warn(`[AI Fallback] Groq (${model}) falhou:`, e?.message || e);
+        }
+      }
+    }
+
+    // 2. Tenta OpenRouter API (Acesso Unificado a IAs Open-Source)
+    const rawOrKey = process.env.OPENROUTER_API_KEY || '';
+    const openrouterKey = rawOrKey.replace(/^["']|["']$/g, '').trim();
+    if (openrouterKey) {
+      const orModels = ['deepseek/deepseek-r1', 'meta-llama/llama-3.3-70b-instruct', 'qwen/qwen-2.5-72b-instruct'];
+      for (const model of orModels) {
+        try {
+          console.log(`[AI Fallback] Tentando OpenRouter (${model})...`);
+          const body: any = { model, messages, temperature: 0.3 };
+          if (responseMimeType === 'application/json') body.response_format = { type: 'json_object' };
+
+          const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${openrouterKey}` },
+            body: JSON.stringify(body)
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const text = data.choices?.[0]?.message?.content;
+            if (text) return text;
+          }
+        } catch (e: any) {
+          console.warn(`[AI Fallback] OpenRouter (${model}) falhou:`, e?.message || e);
+        }
+      }
+    }
+
+    // 3. Tenta DeepSeek AI Oficial
+    const rawDsKey = process.env.DEEPSEEK_API_KEY || '';
+    const deepseekKey = rawDsKey.replace(/^["']|["']$/g, '').trim();
+    if (deepseekKey) {
+      try {
+        console.log('[AI Fallback] Tentando DeepSeek AI Oficial (deepseek-chat)...');
+        const dsBody: any = { model: 'deepseek-chat', messages, temperature: 0.3 };
+        if (responseMimeType === 'application/json') dsBody.response_format = { type: 'json_object' };
+
+        const dsResponse = await fetch('https://api.deepseek.com/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${deepseekKey}` },
+          body: JSON.stringify(dsBody)
+        });
+        if (dsResponse.ok) {
+          const dsData = await dsResponse.json();
+          const content = dsData.choices?.[0]?.message?.content;
+          if (content) return content;
+        }
+      } catch (dsErr: any) {
+        console.warn('[AI Fallback] Erro de conexão com DeepSeek AI:', dsErr?.message || dsErr);
+      }
+    }
+
+    // 4. Tenta Mistral AI Oficial
+    const rawMistralKey = process.env.MISTRAL_API_KEY || '';
+    const mistralKey = rawMistralKey.replace(/^["']|["']$/g, '').trim();
+    if (mistralKey) {
+      try {
+        console.log('[AI Fallback] Tentando Mistral AI (open-mixtral-8x7b)...');
+        const body: any = { model: 'open-mixtral-8x7b', messages, temperature: 0.3 };
+        const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${mistralKey}` },
+          body: JSON.stringify(body)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const text = data.choices?.[0]?.message?.content;
+          if (text) return text;
+        }
+      } catch (e: any) {
+        console.warn('[AI Fallback] Erro no Mistral AI:', e?.message || e);
+      }
+    }
+
+    // 5. Tenta Ollama / VPS Auto-Hospedado (ex: Servidor Contabo)
+    const rawOllamaUrl = process.env.OLLAMA_BASE_URL || '';
+    const ollamaUrl = rawOllamaUrl.replace(/^["']|["']$/g, '').trim();
+    if (ollamaUrl) {
+      try {
+        console.log(`[AI Fallback] Tentando Ollama VPS (${ollamaUrl})...`);
+        const endpoint = ollamaUrl.endsWith('/') ? `${ollamaUrl}v1/chat/completions` : `${ollamaUrl}/v1/chat/completions`;
+        const body: any = { model: 'llama3.3', messages, temperature: 0.3 };
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const text = data.choices?.[0]?.message?.content;
+          if (text) return text;
+        }
+      } catch (e: any) {
+        console.warn('[AI Fallback] Erro na conexão com Ollama VPS:', e?.message || e);
+      }
+    }
+
+    // 6. Tenta modelos Gemini na sequência
+    const geminiModels = ['gemini-3.8-flash'];
     for (const model of geminiModels) {
       try {
         console.log(`[AI Fallback] Tentando geração com modelo Gemini (${model})...`);
@@ -1320,97 +1450,31 @@ async function startServer() {
       }
     }
 
-    // 2. Tenta DeepSeek AI se chave estiver disponível
-    const rawDsKey = process.env.DEEPSEEK_API_KEY || '';
-    const deepseekKey = rawDsKey.replace(/^["']|["']$/g, '').trim();
-    if (deepseekKey) {
-      try {
-        console.log('[AI Fallback] Tentando geração com DeepSeek AI...');
-        const messages: any[] = [];
-        if (systemInstruction) {
-          messages.push({ role: 'system', content: systemInstruction });
-        } else {
-          messages.push({ role: 'system', content: 'Você é um assistente especializado. Responda no formato solicitado.' });
-        }
-        messages.push({ role: 'user', content: prompt });
-
-        const dsBody: any = {
-          model: 'deepseek-chat',
-          messages,
-          temperature: 0.3
-        };
-        if (responseMimeType === 'application/json') {
-          dsBody.response_format = { type: 'json_object' };
-        }
-
-        const dsResponse = await fetch('https://api.deepseek.com/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${deepseekKey}`
-          },
-          body: JSON.stringify(dsBody)
-        });
-
-        if (dsResponse.ok) {
-          const dsData = await dsResponse.json();
-          const content = dsData.choices?.[0]?.message?.content;
-          if (content) return content;
-        } else {
-          const errTxt = await dsResponse.text();
-          console.warn('[AI Fallback] DeepSeek API retornou erro HTTP:', dsResponse.status, errTxt);
-        }
-      } catch (dsErr: any) {
-        console.warn('[AI Fallback] Erro de conexão com DeepSeek AI:', dsErr?.message || dsErr);
-      }
-    }
-
-    // 3. Tenta OpenAI se chave estiver disponível
+    // 7. Tenta OpenAI se chave estiver disponível
     const rawOaKey = process.env.OPENAI_API_KEY || '';
     const openaiKey = rawOaKey.replace(/^["']|["']$/g, '').trim();
     if (openaiKey) {
       try {
         console.log('[AI Fallback] Tentando geração com OpenAI (gpt-4o-mini)...');
-        const messages: any[] = [];
-        if (systemInstruction) {
-          messages.push({ role: 'system', content: systemInstruction });
-        } else {
-          messages.push({ role: 'system', content: 'Você é um assistente especializado. Responda no formato solicitado.' });
-        }
-        messages.push({ role: 'user', content: prompt });
-
-        const oaBody: any = {
-          model: 'gpt-4o-mini',
-          messages,
-          temperature: 0.3
-        };
-        if (responseMimeType === 'application/json') {
-          oaBody.response_format = { type: 'json_object' };
-        }
+        const oaBody: any = { model: 'gpt-4o-mini', messages, temperature: 0.3 };
+        if (responseMimeType === 'application/json') oaBody.response_format = { type: 'json_object' };
 
         const oaResponse = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${openaiKey}`
-          },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${openaiKey}` },
           body: JSON.stringify(oaBody)
         });
-
         if (oaResponse.ok) {
           const oaData = await oaResponse.json();
           const content = oaData.choices?.[0]?.message?.content;
           if (content) return content;
-        } else {
-          const oaErr = await oaResponse.text();
-          console.warn('[AI Fallback] OpenAI API retornou erro HTTP:', oaResponse.status, oaErr);
         }
       } catch (oaErr: any) {
         console.warn('[AI Fallback] Erro de conexão com OpenAI:', oaErr?.message || oaErr);
       }
     }
 
-    throw new Error('503 - Todos os provedores de IA (Gemini, DeepSeek e OpenAI) estão indisponíveis no momento. Tente novamente em instantes.');
+    throw new Error('503 - Nenhum provedor de IA (Groq, OpenRouter, DeepSeek, Mistral, Ollama, Gemini) respondeu no momento.');
   }
 
   // =========================================================================
@@ -1450,6 +1514,36 @@ async function startServer() {
       console.error('Erro na comunicação central com a IA:', err);
       return res.status(500).json({ error: err.message || 'Erro interno no processamento da IA.' });
     }
+  });
+
+  // Endpoint de status das IAs Open-Source (Groq, DeepSeek, OpenRouter, Mistral, Ollama, Gemini)
+  app.get('/api/ai/providers', (req, res) => {
+    const rawGemini = process.env.GEMINI_API_KEY || '';
+    const cleanGemini = rawGemini.replace(/^["']|["']$/g, '').trim();
+    const isGeminiValid = !!cleanGemini && cleanGemini !== 'AIzaSyAXbMg3sb2ZUlEXb4D8gPQlgHYtDPsyzes';
+
+    res.json({
+      success: true,
+      providers: {
+        groq: !!(process.env.GROQ_API_KEY && process.env.GROQ_API_KEY.replace(/^["']|["']$/g, '').trim()),
+        deepseek: !!(process.env.DEEPSEEK_API_KEY && process.env.DEEPSEEK_API_KEY.replace(/^["']|["']$/g, '').trim()),
+        openrouter: !!(process.env.OPENROUTER_API_KEY && process.env.OPENROUTER_API_KEY.replace(/^["']|["']$/g, '').trim()),
+        mistral: !!(process.env.MISTRAL_API_KEY && process.env.MISTRAL_API_KEY.replace(/^["']|["']$/g, '').trim()),
+        together: !!(process.env.TOGETHER_API_KEY && process.env.TOGETHER_API_KEY.replace(/^["']|["']$/g, '').trim()),
+        ollama: !!(process.env.OLLAMA_BASE_URL && process.env.OLLAMA_BASE_URL.replace(/^["']|["']$/g, '').trim()),
+        gemini: isGeminiValid,
+        openai: !!(process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.replace(/^["']|["']$/g, '').trim())
+      },
+      models: [
+        { id: 'llama-3.3-70b', name: 'Llama 3.3 70B (Meta AI)', defaultProvider: 'groq' },
+        { id: 'deepseek-r1', name: 'DeepSeek R1 (Raciocínio Lógico)', defaultProvider: 'groq' },
+        { id: 'deepseek-v3', name: 'DeepSeek V3 (Chat & Código)', defaultProvider: 'deepseek' },
+        { id: 'qwen-2.5-32b', name: 'Qwen 2.5 32B/72B (Alibaba AI)', defaultProvider: 'groq' },
+        { id: 'mixtral-8x7b', name: 'Mixtral 8x7B (Mistral AI)', defaultProvider: 'groq' },
+        { id: 'whisper-v3', name: 'Whisper Large v3 (Transcrição)', defaultProvider: 'groq' },
+        { id: 'gemma-2', name: 'Google Gemma 2', defaultProvider: 'gemini' }
+      ]
+    });
   });
 
   // =========================================================================

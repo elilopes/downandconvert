@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Music, ShieldCheck, Sparkles, Flame, Globe, ChevronDown, Smartphone, Palette, Moon, Sun, Eye, Contrast, Share2, Copy, Check } from 'lucide-react';
+import { Music, ShieldCheck, Sparkles, Flame, Globe, ChevronDown, Smartphone, Palette, Moon, Sun, Eye, Contrast, Share2, Copy, Check, Cpu } from 'lucide-react';
 import { useLanguage, Language } from '../contexts/LanguageContext';
 import { useTheme, Theme } from '../contexts/ThemeContext';
 import { PopularCodesModal } from './PopularCodesModal';
 import { ShareLanguageModal } from './ShareLanguageModal';
+import { OpenSourceAiModal } from './OpenSourceAiModal';
 
 interface HeaderProps {
   darkMode: boolean;
@@ -19,6 +20,7 @@ export const Header: React.FC<HeaderProps> = ({ darkMode, setDarkMode, onOpenFAQ
   const [themeOpen, setThemeOpen] = useState(false);
   const [isPopularModalOpen, setIsPopularModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isOpenSourceModalOpen, setIsOpenSourceModalOpen] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -91,6 +93,16 @@ export const Header: React.FC<HeaderProps> = ({ darkMode, setDarkMode, onOpenFAQ
                 {t('header.free')}
               </span>
             </div>
+
+            {/* IAs Open-Source Hub Button */}
+            <button
+              onClick={() => setIsOpenSourceModalOpen(true)}
+              className="text-xs font-bold px-3 py-2 rounded-xl bg-gradient-to-r from-purple-500/15 to-cyan-500/15 border border-purple-500/30 text-purple-300 hover:text-white hover:border-purple-400 transition-all inline-flex items-center gap-1.5 shadow-sm cursor-pointer"
+              title="Hub de IAs Open-Source (DeepSeek, Llama 3.3, Qwen, Mistral, Whisper)"
+            >
+              <Cpu className="w-4 h-4 text-purple-400 animate-pulse" />
+              <span className="hidden sm:inline">IAs Open-Source</span>
+            </button>
 
             {/* Popular Codes Modal Button */}
             <button
@@ -244,6 +256,11 @@ export const Header: React.FC<HeaderProps> = ({ darkMode, setDarkMode, onOpenFAQ
       <ShareLanguageModal
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
+      />
+
+      <OpenSourceAiModal
+        isOpen={isOpenSourceModalOpen}
+        onClose={() => setIsOpenSourceModalOpen(false)}
       />
     </>
   );
