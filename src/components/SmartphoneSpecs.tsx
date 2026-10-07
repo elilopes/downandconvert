@@ -22,12 +22,21 @@ const getCompatibleGamesForPhone = (phone: SmartphoneType): GameCompatibility[] 
 
   if (isSmartwatch) {
     const heavyGameTitles = [
-      { title: "Red Dead Redemption (Port Oficial)", genre: "Ação / Mundo Aberto AAA" },
-      { title: "Call of Duty: Warzone Mobile", genre: "Battle Royale Pesado" },
-      { title: "XCOM 2 Collection", genre: "Estratégia Tática AAA" },
       { title: "Genshin Impact", genre: "RPG de Mundo Aberto" },
+      { title: "Delta Force Mobile", genre: "FPS Tático Militar (UE5)" },
+      { title: "Honkai: Star Rail", genre: "RPG de Turnos 3D" },
+      { title: "Diablo Immortal", genre: "MMO Action RPG" },
+      { title: "Final Fantasy XIV Mobile", genre: "MMORPG de Larga Escala" },
+      { title: "Call of Duty: Mobile", genre: "FPS Battle Royale" },
+      { title: "PUBG Mobile", genre: "Battle Royale Tático" },
+      { title: "Asphalt Legends Unite", genre: "Corrida Arcade" },
+      { title: "Minecraft", genre: "Sandbox / Sobrevivência" },
+      { title: "League of Legends: Wild Rift", genre: "MOBA 5v5 Competitivo" },
+      { title: "Call of Duty: Warzone Mobile", genre: "Battle Royale Pesado" },
+      { title: "Resident Evil Village / 4 Remake", genre: "Survival Horror AAA" },
       { title: "Wuthering Waves", genre: "Action RPG de Mundo Aberto" },
-      { title: "Resident Evil Village / 4 Remake", genre: "Survival Horror AAA" }
+      { title: "XCOM 2 Collection", genre: "Estratégia Tática AAA" },
+      { title: "Red Dead Redemption (Port Oficial)", genre: "Ação / Mundo Aberto AAA" }
     ];
 
     return heavyGameTitles.map(g => ({
@@ -211,6 +220,240 @@ const getCompatibleGamesForPhone = (phone: SmartphoneType): GameCompatibility[] 
       note: "Requer chips topo de linha específicos com aceleração por hardware dedicada.",
       isSupported: false,
       unsupportedReason: "Exige chipsets da linha Apple A Pro ou Snapdragon de última geração."
+    });
+  }
+
+  // 7. Delta Force Mobile
+  if (antutu >= 900000 || maxRam >= 8) {
+    games.push({
+      title: "Delta Force Mobile",
+      genre: "FPS Tático Militar (UE5)",
+      graphics: antutu >= 1500000 ? "Máximo / 60-120 FPS" : "Mínimo / 30 FPS",
+      fps: antutu >= 1500000 ? "60 - 120 FPS (Fluido)" : "30 FPS (Instável)",
+      badge: antutu >= 1500000 ? "Gráficos Extremos" : "Configuração Mínima",
+      badgeColor: antutu >= 1500000 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
+      note: antutu >= 1500000 ? "Excelente taxa de quadros e shaders completos de última geração." : "Pode sofrer quedas bruscas de FPS e superaquecimento.",
+      isSupported: true
+    });
+  } else {
+    games.push({
+      title: "Delta Force Mobile",
+      genre: "FPS Tático Militar (UE5)",
+      graphics: "Não Roda / Incompatível",
+      fps: "Não Executa",
+      badge: "Incompatível",
+      badgeColor: "bg-red-500/10 text-red-400 border-red-500/30",
+      note: "Motor Unreal Engine 5 e malhas poligonais muito pesadas para este chipset.",
+      isSupported: false,
+      unsupportedReason: "Exige hardware potente com ao menos 8GB de RAM."
+    });
+  }
+
+  // 8. Honkai: Star Rail
+  if (antutu >= 650000 && maxRam >= 6) {
+    games.push({
+      title: "Honkai: Star Rail",
+      genre: "RPG de Turnos 3D",
+      graphics: antutu >= 1300000 ? "Máximo / 60 FPS" : "Mínimo / 30 FPS",
+      fps: antutu >= 1300000 ? "60 FPS (Estáveis)" : "30 FPS (Quedas ocasionais)",
+      badge: antutu >= 1300000 ? "Desempenho Perfeito" : "Configuração Mínima",
+      badgeColor: antutu >= 1300000 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
+      note: antutu >= 1300000 ? "Batalhas limpas, rápidas e sem qualquer engasgo." : "Efeitos visuais pesados forçam a redução dos gráficos.",
+      isSupported: true
+    });
+  } else {
+    games.push({
+      title: "Honkai: Star Rail",
+      genre: "RPG de Turnos 3D",
+      graphics: "Incompatível",
+      fps: "< 15 FPS",
+      badge: "Não Recomendado",
+      badgeColor: "bg-red-500/10 text-red-400 border-red-500/30",
+      note: "Efeitos de partículas e texturas de alta qualidade causam travamento total.",
+      isSupported: false,
+      unsupportedReason: "Requer chipset intermediário-alto e no mínimo 6GB de RAM."
+    });
+  }
+
+  // 9. Diablo Immortal
+  if (antutu >= 500000 && maxRam >= 4) {
+    games.push({
+      title: "Diablo Immortal",
+      genre: "MMO Action RPG",
+      graphics: antutu >= 1100000 ? "Muito Alto (60 FPS)" : "Baixo (30 FPS)",
+      fps: antutu >= 1100000 ? "60 FPS" : "30 FPS",
+      badge: antutu >= 1100000 ? "Qualidade Alta" : "Configuração Mínima",
+      badgeColor: antutu >= 1100000 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
+      note: antutu >= 1100000 ? "Ótima performance mesmo com muitos inimigos na tela." : "Jogável com resolução reduzida e detalhes visuais desativados.",
+      isSupported: true
+    });
+  } else {
+    games.push({
+      title: "Diablo Immortal",
+      genre: "MMO Action RPG",
+      graphics: "Incompatível",
+      fps: "< 15 FPS",
+      badge: "Incompatível",
+      badgeColor: "bg-red-500/10 text-red-400 border-red-500/30",
+      note: "Não suporta a renderização de múltiplos efeitos físicos e magias simultâneas.",
+      isSupported: false,
+      unsupportedReason: "Exige processamento gráfico intermediário ou superior."
+    });
+  }
+
+  // 10. Final Fantasy XIV Mobile
+  if (antutu >= 800000 || maxRam >= 6) {
+    games.push({
+      title: "Final Fantasy XIV Mobile",
+      genre: "MMORPG de Larga Escala",
+      graphics: antutu >= 1450000 ? "Máximo / Alto" : "Mínimo / Desempenho",
+      fps: antutu >= 1450000 ? "60 FPS (Estáveis)" : "30 FPS",
+      badge: antutu >= 1450000 ? "Perfeito" : "Configuração Mínima",
+      badgeColor: antutu >= 1450000 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
+      note: antutu >= 1450000 ? "Mundo renderizado com riqueza de detalhes e sombras suaves." : "Cidades cheias de jogadores podem apresentar quedas severas de FPS.",
+      isSupported: true
+    });
+  } else {
+    games.push({
+      title: "Final Fantasy XIV Mobile",
+      genre: "MMORPG de Larga Escala",
+      graphics: "Incompatível",
+      fps: "Não Roda",
+      badge: "Incompatível",
+      badgeColor: "bg-red-500/10 text-red-400 border-red-500/30",
+      note: "Complexidade geométrica e de rede excedem a capacidade deste dispositivo.",
+      isSupported: false,
+      unsupportedReason: "Requer chipsets modernos com alta eficiência de CPU e GPU."
+    });
+  }
+
+  // 11. Call of Duty: Mobile
+  if (antutu >= 250000 && maxRam >= 3) {
+    games.push({
+      title: "Call of Duty: Mobile",
+      genre: "FPS Battle Royale",
+      graphics: antutu >= 700000 ? "Muito Alto (120 FPS)" : "Baixo / Médio (60 FPS)",
+      fps: antutu >= 700000 ? "90 - 120 FPS" : "45 - 60 FPS",
+      badge: antutu >= 700000 ? "Configuração Máxima" : "Configuração Mínima / Média",
+      badgeColor: antutu >= 700000 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
+      note: antutu >= 700000 ? "Suporta máxima taxa de atualização física da tela e texturas HD." : "Altamente otimizado, roda de forma muito fluida com ajustes de desempenho.",
+      isSupported: true
+    });
+  } else {
+    games.push({
+      title: "Call of Duty: Mobile",
+      genre: "FPS Battle Royale",
+      graphics: "Incompatível / Travamentos",
+      fps: "< 20 FPS",
+      badge: "Não Recomendado",
+      badgeColor: "bg-red-500/10 text-red-400 border-red-500/30",
+      note: "Processamento e memória insuficientes para carregar os recursos do jogo de forma segura.",
+      isSupported: false,
+      unsupportedReason: "Exige pelo menos 3GB de RAM e processador básico quad-core ou octa-core."
+    });
+  }
+
+  // 12. PUBG Mobile
+  if (antutu >= 250000 && maxRam >= 3) {
+    games.push({
+      title: "PUBG Mobile",
+      genre: "Battle Royale Tático",
+      graphics: antutu >= 750000 ? "Ultra HD / Extremo" : "Suave / Balanceado",
+      fps: antutu >= 750000 ? "90 FPS Estáveis" : "40 - 60 FPS",
+      badge: antutu >= 750000 ? "Configuração Máxima" : "Configuração Mínima / Média",
+      badgeColor: antutu >= 750000 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
+      note: antutu >= 750000 ? "Estabilidade completa de FPS e visão de renderização estendida." : "Excelente estabilidade ao usar gráficos baixos em disputas competitivas.",
+      isSupported: true
+    });
+  } else {
+    games.push({
+      title: "PUBG Mobile",
+      genre: "Battle Royale Tático",
+      graphics: "Incompatível",
+      fps: "< 20 FPS",
+      badge: "Não Recomendado",
+      badgeColor: "bg-red-500/10 text-red-400 border-red-500/30",
+      note: "Não suporta o carregamento contínuo de mapa grande e renderização de adversários.",
+      isSupported: false,
+      unsupportedReason: "Exige no mínimo 3GB de RAM."
+    });
+  }
+
+  // 13. Asphalt Legends Unite
+  if (antutu >= 400000 && maxRam >= 4) {
+    games.push({
+      title: "Asphalt Legends Unite",
+      genre: "Corrida Arcade",
+      graphics: antutu >= 1000000 ? "Alta Qualidade / HDR" : "Desempenho (Mínima)",
+      fps: antutu >= 1000000 ? "60 FPS" : "30 FPS",
+      badge: antutu >= 1000000 ? "Gráficos Excelentes" : "Configuração Mínima",
+      badgeColor: antutu >= 1000000 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
+      note: antutu >= 1000000 ? "Efeitos de partículas, reflexos de luz e HDR completos." : "Funciona bem, mas perde o brilho visual e reflexos na pintura dos carros.",
+      isSupported: true
+    });
+  } else {
+    games.push({
+      title: "Asphalt Legends Unite",
+      genre: "Corrida Arcade",
+      graphics: "Incompatível / Travamentos",
+      fps: "< 15 FPS",
+      badge: "Incompatível",
+      badgeColor: "bg-red-500/10 text-red-400 border-red-500/30",
+      note: "GPU antiga ou memória RAM limitada impedem a execução estável do motor gráfico.",
+      isSupported: false,
+      unsupportedReason: "Exige GPU moderna compatível com OpenGL ES 3.2 ou Vulkan."
+    });
+  }
+
+  // 14. Minecraft
+  if (antutu >= 200000 && maxRam >= 3) {
+    games.push({
+      title: "Minecraft",
+      genre: "Sandbox / Sobrevivência",
+      graphics: antutu >= 700000 ? "Máxima (32+ Chunks) / Shaders" : "Mínima (8-12 Chunks)",
+      fps: antutu >= 700000 ? "60+ FPS Estáveis" : "30 - 50 FPS",
+      badge: antutu >= 700000 ? "Distância Extrema" : "Configuração Mínima",
+      badgeColor: antutu >= 700000 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
+      note: antutu >= 700000 ? "Suporta shaders leves e renderização de grandes criações." : "Funciona adequadamente reduzindo a quantidade de blocos simulados simultaneamente.",
+      isSupported: true
+    });
+  } else {
+    games.push({
+      title: "Minecraft",
+      genre: "Sandbox / Sobrevivência",
+      graphics: "Incompatível / Lento",
+      fps: "< 15 FPS",
+      badge: "Não Recomendado",
+      badgeColor: "bg-red-500/10 text-red-400 border-red-500/30",
+      note: "Tempo de carregamento excessivo e travamentos severos em mundos grandes.",
+      isSupported: false,
+      unsupportedReason: "Requer CPU e armazenamento mais rápidos com pelo menos 3GB de RAM."
+    });
+  }
+
+  // 15. League of Legends: Wild Rift
+  if (antutu >= 250000 && maxRam >= 3) {
+    games.push({
+      title: "League of Legends: Wild Rift",
+      genre: "MOBA 5v5 Competitivo",
+      graphics: antutu >= 750000 ? "Gráficos no Ultra (120 FPS)" : "Gráficos no Baixo (60 FPS)",
+      fps: antutu >= 750000 ? "90 - 120 FPS Estáveis" : "60 FPS",
+      badge: antutu >= 750000 ? "Configuração Máxima" : "Configuração Mínima",
+      badgeColor: antutu >= 750000 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
+      note: antutu >= 750000 ? "Excelente performance competitiva com máxima clareza visual de feitiços." : "Jogo muito otimizado, mantendo 60 FPS consistentes em resoluções mais baixas.",
+      isSupported: true
+    });
+  } else {
+    games.push({
+      title: "League of Legends: Wild Rift",
+      genre: "MOBA 5v5 Competitivo",
+      graphics: "Incompatível / Lentidão",
+      fps: "< 25 FPS",
+      badge: "Não Recomendado",
+      badgeColor: "bg-red-500/10 text-red-400 border-red-500/30",
+      note: "Aparelho pode apresentar travamentos sérios em lutas de equipe (teamfights).",
+      isSupported: false,
+      unsupportedReason: "Exige CPU com boa frequência single-core e no mínimo 3GB de RAM."
     });
   }
 
@@ -899,10 +1142,23 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
                   <p className="text-[10px] text-slate-400 mb-2 leading-tight">
                     Filtra dispositivos que executam o jogo (Config. Mínima a Gráficos Máximos):
                   </p>
-                  <div className="flex flex-col gap-1.5 mt-1">
+                  <div className="flex flex-col gap-1.5 mt-1 max-h-72 overflow-y-auto custom-scrollbar pr-1">
                     {[
-                      { name: 'Call of Duty: Warzone Mobile', icon: '🔫' },
-                      { name: 'XCOM 2 Collection', icon: '🛸' }
+                      { name: 'Genshin Impact', icon: '🌌' },
+                      { name: 'Delta Force Mobile', icon: '🪖' },
+                      { name: 'Honkai: Star Rail', icon: '☄️' },
+                      { name: 'Diablo Immortal', icon: '😈' },
+                      { name: 'Final Fantasy XIV Mobile', icon: '⚔️' },
+                      { name: 'Call of Duty: Mobile', icon: '🔫' },
+                      { name: 'PUBG Mobile', icon: '🛩️' },
+                      { name: 'Asphalt Legends Unite', icon: '🏎️' },
+                      { name: 'Minecraft', icon: '⛏️' },
+                      { name: 'League of Legends: Wild Rift', icon: '🧙' },
+                      { name: 'Call of Duty: Warzone Mobile', icon: '💥' },
+                      { name: 'Resident Evil Village / 4 Remake', icon: '🧟' },
+                      { name: 'Wuthering Waves', icon: '🌊' },
+                      { name: 'XCOM 2 Collection', icon: '👽' },
+                      { name: 'Red Dead Redemption (Port Oficial)', icon: '🤠' }
                     ].map(game => {
                       const isChecked = selectedGames.includes(game.name);
                       return (
@@ -1803,7 +2059,7 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
                 </div>
               </div>
 
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider pt-2">Compatibilidade com Jogos Pesados (Warzone Mobile, Red Dead, XCOM 2, Genshin, Wuthering Waves, RE Village):</h3>
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider pt-2">Compatibilidade com Jogos Pesados (Genshin, Delta Force, Honkai Star Rail, Diablo, CoD Mobile, PUBG, Asphalt, Minecraft, Wild Rift):</h3>
 
               <div className="grid grid-cols-1 gap-3">
                 {getCompatibleGamesForPhone(selectedPhoneForGames).map((game, idx) => (

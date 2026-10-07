@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, X, CheckCircle2, Cpu, Copy, ExternalLink, Zap, Terminal, AlertCircle, RefreshCw, Server, Send } from 'lucide-react';
+import { Sparkles, X, CheckCircle2, Cpu, Copy, ExternalLink, Zap, AlertCircle, RefreshCw, Server, Send } from 'lucide-react';
 
 interface OpenSourceAiModalProps {
   isOpen: boolean;
@@ -160,9 +160,6 @@ export const OpenSourceAiModal: React.FC<OpenSourceAiModalProps> = ({ isOpen, on
               <h2 className="text-xl font-bold bg-gradient-to-r from-cyan-300 via-indigo-200 to-purple-300 bg-clip-text text-transparent">
                 Hub de IAs Open-Source
               </h2>
-              <p className="text-xs text-slate-400">
-                DeepSeek R1/V3 • Llama 3.3 • Qwen 2.5 • Mistral • Whisper • Gemma 2
-              </p>
             </div>
           </div>
           <button
@@ -177,42 +174,23 @@ export const OpenSourceAiModal: React.FC<OpenSourceAiModalProps> = ({ isOpen, on
         {/* Scrollable Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
 
-          {/* Onde Salvar as Chaves - Banner Explicativo */}
-          <div className="p-4 rounded-2xl bg-slate-800/50 border border-slate-700/60 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-amber-300 font-bold text-sm">
-                <Terminal className="w-4 h-4 text-amber-400" />
-                <span>Onde salvar as chaves de API e Variáveis?</span>
-              </div>
+          {/* Status dos Provedores Conectados */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
+                <Zap className="w-4 h-4 text-cyan-400" />
+                <span>Status dos Provedores Detectados em Tempo Real</span>
+              </h3>
               <button
                 type="button"
                 onClick={fetchStatus}
                 disabled={isLoading}
-                className="flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 bg-cyan-500/10 px-3 py-1.5 rounded-lg border border-cyan-500/20 transition-colors"
+                className="flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 bg-cyan-500/10 px-3 py-1.5 rounded-lg border border-cyan-500/20 transition-colors cursor-pointer"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
                 <span>Atualizar Status</span>
               </button>
             </div>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Você pode configurar as variáveis de duas formas simples:
-            </p>
-            <ul className="text-xs text-slate-300 space-y-1.5 pl-4 list-disc">
-              <li>
-                <strong>Opção 1 (AI Studio Secrets):</strong> Adicione o nome da variável e o valor no painel de <strong className="text-cyan-300">Secrets (Configurações do Projeto)</strong> do AI Studio.
-              </li>
-              <li>
-                <strong>Opção 2 (Arquivo .env):</strong> No arquivo <code className="bg-slate-950 px-1.5 py-0.5 rounded text-cyan-300 font-mono">.env</code> na raiz do projeto, insira a chave (ex: <code className="bg-slate-950 px-1.5 py-0.5 rounded text-amber-300 font-mono">GROQ_API_KEY="sua_chave"</code>).
-              </li>
-            </ul>
-          </div>
-
-          {/* Status dos Provedores Conectados */}
-          <div>
-            <h3 className="text-sm font-bold text-slate-200 mb-3 flex items-center gap-2">
-              <Zap className="w-4 h-4 text-cyan-400" />
-              <span>Status dos Provedores Detectados em Tempo Real</span>
-            </h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
                 { name: 'Groq Cloud', key: 'groq', label: 'Llama 3.3 / DeepSeek / Whisper' },
@@ -257,7 +235,7 @@ export const OpenSourceAiModal: React.FC<OpenSourceAiModalProps> = ({ isOpen, on
           <div>
             <h3 className="text-sm font-bold text-slate-200 mb-3 flex items-center gap-2">
               <Server className="w-4 h-4 text-purple-400" />
-              <span>Nomes exatos das Variáveis & Onde obter as Chaves</span>
+              <span>Nomes das variáveis das chaves</span>
             </h3>
 
             <div className="space-y-3">
@@ -279,15 +257,6 @@ export const OpenSourceAiModal: React.FC<OpenSourceAiModalProps> = ({ isOpen, on
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => copyToClipboard(v.name, v.name)}
-                      className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors cursor-pointer"
-                    >
-                      <Copy className="w-3.5 h-3.5 text-cyan-400" />
-                      <span>{copiedVar === v.name ? 'Copiado!' : 'Copiar Variável'}</span>
-                    </button>
-
                     <a
                       href={v.link}
                       target="_blank"

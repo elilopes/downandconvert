@@ -20,6 +20,8 @@ import {
   Download,
   RefreshCw,
   Newspaper,
+  ExternalLink,
+  FileText,
 } from 'lucide-react';
 import { AudioFormat, VideoItem, ConversionOptions, CropOptions } from './types';
 import { Header } from './components/Header';
@@ -55,6 +57,121 @@ import {
 import { encodeWithFFmpeg } from './utils/ffmpegEncoder';
 import { encodeOnServer } from './utils/serverEncoder';
 import { useLanguage, Language } from './contexts/LanguageContext';
+
+const supportedFormatsInfo = [
+  {
+    ext: '.mp4',
+    type: 'video',
+    name: 'MPEG-4 Part 14',
+    wiki: 'https://pt.wikipedia.org/wiki/MPEG-4_Part_14',
+    desc: 'O formato de container digital mais popular da atualidade. É amplamente utilizado para compartilhar vídeos com alta qualidade e excelente taxa de compressão na internet.'
+  },
+  {
+    ext: '.mkv',
+    type: 'video',
+    name: 'Matroska',
+    wiki: 'https://pt.wikipedia.org/wiki/Matroska',
+    desc: 'Um formato de container livre, aberto e extremamente flexível. Permite armazenar um número ilimitado de faixas de vídeo, áudio, legendas e imagens em um único arquivo.'
+  },
+  {
+    ext: '.webm',
+    type: 'video',
+    name: 'WebM',
+    wiki: 'https://pt.wikipedia.org/wiki/WebM',
+    desc: 'Formato de mídia digital livre de royalties desenvolvido pelo Google. Projetado sob medida para a web moderna (HTML5), oferecendo compressão superior para streaming.'
+  },
+  {
+    ext: '.mov',
+    type: 'video',
+    name: 'QuickTime File Format',
+    wiki: 'https://pt.wikipedia.org/wiki/QuickTime',
+    desc: 'Formato contêiner multimídia desenvolvido originalmente pela Apple. É nativo do QuickTime, sendo o padrão para gravação em iPhones e amplamente usado em edição profissional.'
+  },
+  {
+    ext: '.avi',
+    type: 'video',
+    name: 'Audio Video Interleave',
+    wiki: 'https://pt.wikipedia.org/wiki/Audio_Video_Interleave',
+    desc: 'Formato clássico criado pela Microsoft. Embora seja um formato antigo e produza arquivos maiores, oferece compatibilidade universal em praticamente qualquer reprodutor.'
+  },
+  {
+    ext: '.flv',
+    type: 'video',
+    name: 'Flash Video',
+    wiki: 'https://pt.wikipedia.org/wiki/Flash_Video',
+    desc: 'Formato de container consagrado no passado para transmissão de vídeos via Adobe Flash Player. Atualmente substituído por formatos mais modernos de streaming.'
+  },
+  {
+    ext: '.3gp',
+    type: 'video',
+    name: '3GP',
+    wiki: 'https://pt.wikipedia.org/wiki/3GP',
+    desc: 'Formato contêiner definido pelo projeto 3GPP para redes celulares de terceira geração (3G), otimizado para economizar tráfego de dados e espaço em celulares antigos.'
+  },
+  {
+    ext: '.ts',
+    type: 'video',
+    name: 'MPEG Transport Stream',
+    wiki: 'https://pt.wikipedia.org/wiki/MPEG-TS',
+    desc: 'Formato de transmissão e empacotamento usado para radiodifusão e streaming ao vivo (HLS). Divide a transmissão em pequenos segmentos para facilitar a entrega contínua.'
+  },
+  {
+    ext: '.m4v',
+    type: 'video',
+    name: 'M4V',
+    wiki: 'https://pt.wikipedia.org/wiki/M4V',
+    desc: 'Formato contêiner desenvolvido pela Apple. Muito semelhante ao formato MP4, porém focado no ecossistema Apple e frequentemente associado à proteção por direitos autorais DRM.'
+  },
+  {
+    ext: '.gif',
+    type: 'video',
+    name: 'Graphics Interchange Format',
+    wiki: 'https://pt.wikipedia.org/wiki/Graphics_Interchange_Format',
+    desc: 'Formato de imagem bitmap consagrado na internet por suportar animações curtas em loop infinito e sem áudio, excelente para reações rápidas e memes.'
+  },
+  {
+    ext: '.mp3',
+    type: 'audio',
+    name: 'MPEG-1 Audio Layer III',
+    wiki: 'https://pt.wikipedia.org/wiki/MP3',
+    desc: 'O formato de áudio digital comprimido mais famoso e utilizado da história. Revolucionou o compartilhamento de músicas na web pela sua excelente relação tamanho-qualidade.'
+  },
+  {
+    ext: '.wav',
+    type: 'audio',
+    name: 'Waveform Audio File Format',
+    wiki: 'https://pt.wikipedia.org/wiki/WAV',
+    desc: 'Formato de áudio digital sem perdas (lossless) criado pela Microsoft e IBM. Armazena o som de forma crua e não compactada, oferecendo fidelidade máxima de estúdio.'
+  },
+  {
+    ext: '.aac',
+    type: 'audio',
+    name: 'Advanced Audio Coding',
+    wiki: 'https://pt.wikipedia.org/wiki/Advanced_Audio_Coding',
+    desc: 'Formato de áudio desenvolvido como o sucessor tecnológico do MP3. Alcança qualidade sonora visivelmente superior ao MP3 na mesma taxa de amostragem de dados.'
+  },
+  {
+    ext: '.flac',
+    type: 'audio',
+    name: 'Free Lossless Audio Codec',
+    wiki: 'https://pt.wikipedia.org/wiki/Free_Lossless_Audio_Codec',
+    desc: 'Codec de áudio de alta fidelidade sem perdas de qualidade. Reduz o tamanho do arquivo original em até 50% mantendo uma reprodução bit a bit idêntica ao som de estúdio.'
+  },
+  {
+    ext: '.ogg',
+    type: 'audio',
+    name: 'Ogg Vorbis',
+    wiki: 'https://pt.wikipedia.org/wiki/Ogg',
+    desc: 'Formato contêiner multimídia livre, aberto e sem patentes mantido pela Xiph.Org. Costuma abrigar faixas de áudio comprimidas pelo codec Vorbis de excelente desempenho.'
+  },
+  {
+    ext: '.opus',
+    type: 'audio',
+    name: 'Opus Codec',
+    wiki: 'https://pt.wikipedia.org/wiki/Opus_(codec)',
+    desc: 'Formato de compressão de áudio altamente dinâmico e padronizado pela IETF. Otimizado para comunicação de voz e música em tempo real com latência ultrabaixa na internet.'
+  }
+];
 
 export default function App() {
   const { t, lang, setLang } = useLanguage();
@@ -1017,8 +1134,109 @@ export default function App() {
               </div>
             )}
 
+            {/* Supported Formats & Media Encyclopedia Section */}
+            <section className="mt-16 max-w-4xl mx-auto bg-slate-900/40 border border-slate-800/60 rounded-3xl p-8 shadow-xl">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                  <FileText className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-extrabold text-white">
+                    {lang === 'PT' ? 'Enciclopédia de Mídia' : 'Media Encyclopedia'}
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {lang === 'PT' 
+                      ? 'Saiba mais sobre a tecnologia de cada formato de áudio e vídeo suportado  na conversão deste site.' 
+                      : 'Learn more about the technology of each supported audio and video format in the conversion of this site.'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Video Formats Section */}
+              <div className="mb-8">
+                <h3 className="text-xs font-bold text-cyan-300 uppercase tracking-wider mb-4 border-b border-slate-800/60 pb-2 flex items-center gap-2">
+                  <span className="w-1.5 h-3 bg-cyan-400 rounded-full" />
+                  Formatos de Vídeo e Animação
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {supportedFormatsInfo.filter(f => f.type === 'video').map((format) => (
+                    <div 
+                      key={format.ext} 
+                      className="p-4 bg-slate-950/60 border border-slate-800/60 hover:border-cyan-500/30 rounded-2xl transition-all duration-200 shadow-sm flex flex-col justify-between group"
+                    >
+                      <div>
+                        <div className="flex items-baseline justify-between mb-2">
+                          <span className="text-base font-black text-cyan-400 font-mono tracking-tight group-hover:text-cyan-300 transition-colors">
+                            {format.ext}
+                          </span>
+                          <span className="text-[10px] text-slate-500 font-medium px-2 py-0.5 rounded bg-slate-900 border border-slate-800/40">
+                            {format.name}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-300 leading-relaxed mb-3">
+                          {format.desc}
+                        </p>
+                      </div>
+                      <div className="mt-auto pt-2 border-t border-slate-900/40">
+                        <a
+                          href={format.wiki}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-400 transition-colors font-medium"
+                        >
+                          <span>Artigo na Wikipédia</span>
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Audio Formats Section */}
+              <div>
+                <h3 className="text-xs font-bold text-emerald-300 uppercase tracking-wider mb-4 border-b border-slate-800/60 pb-2 flex items-center gap-2">
+                  <span className="w-1.5 h-3 bg-emerald-400 rounded-full" />
+                  Formatos de Áudio de Alta Performance
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {supportedFormatsInfo.filter(f => f.type === 'audio').map((format) => (
+                    <div 
+                      key={format.ext} 
+                      className="p-4 bg-slate-950/60 border border-slate-800/60 hover:border-emerald-500/30 rounded-2xl transition-all duration-200 shadow-sm flex flex-col justify-between group"
+                    >
+                      <div>
+                        <div className="flex items-baseline justify-between mb-2">
+                          <span className="text-base font-black text-emerald-400 font-mono tracking-tight group-hover:text-emerald-300 transition-colors">
+                            {format.ext}
+                          </span>
+                          <span className="text-[10px] text-slate-500 font-medium px-2 py-0.5 rounded bg-slate-900 border border-slate-800/40">
+                            {format.name}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-300 leading-relaxed mb-3">
+                          {format.desc}
+                        </p>
+                      </div>
+                      <div className="mt-auto pt-2 border-t border-slate-900/40">
+                        <a
+                          href={format.wiki}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-400 transition-colors font-medium"
+                        >
+                          <span>Artigo na Wikipédia</span>
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+
             {/* Editorial Guide Section for AdSense Policy Compliance */}
-            <section className="mt-16 max-w-4xl mx-auto bg-slate-900/70 border border-slate-800/80 rounded-3xl p-8 shadow-xl">
+            <section className="mt-8 max-w-4xl mx-auto bg-slate-900/70 border border-slate-800/80 rounded-3xl p-8 shadow-xl">
               <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-emerald-400" />
                 {t('editorial.media.title')}

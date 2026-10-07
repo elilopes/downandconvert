@@ -98,7 +98,7 @@ export const Header: React.FC<HeaderProps> = ({ darkMode, setDarkMode, onOpenFAQ
             <button
               onClick={() => setIsOpenSourceModalOpen(true)}
               className="text-xs font-bold px-3 py-2 rounded-xl bg-gradient-to-r from-purple-500/15 to-cyan-500/15 border border-purple-500/30 text-purple-300 hover:text-white hover:border-purple-400 transition-all inline-flex items-center gap-1.5 shadow-sm cursor-pointer"
-              title="Hub de IAs Open-Source (DeepSeek, Llama 3.3, Qwen, Mistral, Whisper)"
+              title="Hub de IAs Open-Source"
             >
               <Cpu className="w-4 h-4 text-purple-400 animate-pulse" />
               <span className="hidden sm:inline">IAs Open-Source</span>
