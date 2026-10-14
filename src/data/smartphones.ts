@@ -36,7 +36,7 @@ export interface Smartphone {
       opticalZoom: number;
       stabilization: boolean;
       faceDetection: boolean;
-      recordingResolution: 'HD' | 'FHD' | '2K' | '4K' | '8K';
+      recordingResolution: 'VGA' | 'HD' | 'FHD' | '2K' | '4K' | '8K';
       slowMotion: boolean;
       maxFocusAngle: number;
       touchFocus: boolean;
@@ -5007,7 +5007,7 @@ export const mockedSmartphones: Smartphone[] = [
       "gpu": { "model": "Broadcom VideoCore IV", "brand": "Broadcom" },
       "ram": [1],
       "storage": { "options": [16], "expandable": true },
-      "camera": { "rear": 3.15, "front": 1.3, "opticalZoom": 1, "stabilization": false, "faceDetection": false, "recordingResolution": "720p", "slowMotion": false, "maxFocusAngle": 0, "touchFocus": false },
+      "camera": { "rear": 3.15, "front": 1.3, "opticalZoom": 1, "stabilization": false, "faceDetection": false, "recordingResolution": "HD", "slowMotion": false, "maxFocusAngle": 0, "touchFocus": false },
       "battery": { "capacity": 4000, "chargingTypes": ["USB 2.0"] },
       "performance": { "antutu": 12000, "geekbench": "300/600", "tdMark": 1000 },
       "features": { "hasGps": true, "hasNfc": false, "network": "3G", "simCards": 1, "hasDigitalTv": false, "hasPhysicalKeyboard": false, "hasFingerprint": false, "supportsWhatsApp": true, "simTypes": ["Micro-SIM"], "hasCompass": false, "hasUsbOtg": false }
@@ -5027,7 +5027,7 @@ export const mockedSmartphones: Smartphone[] = [
       "gpu": { "model": "Adreno 305", "brand": "Qualcomm" },
       "ram": [1.5],
       "storage": { "options": [8, 16], "expandable": true },
-      "camera": { "rear": 3.15, "front": 1.3, "opticalZoom": 1, "stabilization": false, "faceDetection": false, "recordingResolution": "720p", "slowMotion": false, "maxFocusAngle": 0, "touchFocus": false },
+      "camera": { "rear": 3.15, "front": 1.3, "opticalZoom": 1, "stabilization": false, "faceDetection": false, "recordingResolution": "HD", "slowMotion": false, "maxFocusAngle": 0, "touchFocus": false },
       "battery": { "capacity": 4000, "chargingTypes": ["USB 2.0"] },
       "performance": { "antutu": 18000, "geekbench": "400/1100", "tdMark": 1500 },
       "features": { "hasGps": true, "hasNfc": false, "network": "3G", "simCards": 1, "hasDigitalTv": true, "hasPhysicalKeyboard": false, "hasFingerprint": false, "supportsWhatsApp": true, "simTypes": ["Micro-SIM"], "hasCompass": false, "hasUsbOtg": false }
@@ -5087,7 +5087,7 @@ export const mockedSmartphones: Smartphone[] = [
       "gpu": { "model": "Adreno 330", "brand": "Qualcomm" },
       "ram": [3],
       "storage": { "options": [16], "expandable": true },
-      "camera": { "rear": 8.1, "front": 2.2, "opticalZoom": 1, "stabilization": true, "faceDetection": true, "recordingResolution": "1080p", "slowMotion": false, "maxFocusAngle": 0, "touchFocus": true },
+      "camera": { "rear": 8.1, "front": 2.2, "opticalZoom": 1, "stabilization": true, "faceDetection": true, "recordingResolution": "HD", "slowMotion": false, "maxFocusAngle": 0, "touchFocus": true },
       "battery": { "capacity": 6000, "chargingTypes": ["USB 2.0"] },
       "performance": { "antutu": 35000, "geekbench": "900/2700", "tdMark": 4500 },
       "features": { "hasGps": true, "hasNfc": true, "network": "4G", "simCards": 1, "hasDigitalTv": true, "hasPhysicalKeyboard": false, "hasFingerprint": false, "supportsWhatsApp": true, "simTypes": ["Micro-SIM"], "hasCompass": true, "hasUsbOtg": true }
