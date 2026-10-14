@@ -4992,5 +4992,145 @@ export const mockedSmartphones: Smartphone[] = [
       performance: { antutu: 15000, geekbench: '30/90', tdMark: 50 },
       features: { hasGps: false, hasNfc: false, network: 'Wi-Fi', simCards: 0, hasDigitalTv: false, hasPhysicalKeyboard: false, hasFingerprint: false, supportsWhatsApp: true, simTypes: ['Sem suporte'], hasCompass: false, hasUsbOtg: false }
     }
+  },
+  {
+    "id": "samsung-galaxy-tab-3-7-0",
+    "deviceType": "tablet",
+    "brand": "Samsung",
+    "model": "Galaxy Tab 3 7.0 (P3200)",
+    "os": "Android",
+    "osVersion": "Android 4.1 Jelly Bean",
+    "releaseYear": 2013,
+    "specs": {
+      "screen": { "type": "TFT", "size": 7.0, "resolution": "1024 x 600", "refreshRate": 60, "isFoldable": false },
+      "processor": { "chipset": "Dual Core", "cpuBrand": "Samsung", "cores": 2, "architecture": 32 },
+      "gpu": { "model": "Broadcom VideoCore IV", "brand": "Broadcom" },
+      "ram": [1],
+      "storage": { "options": [16], "expandable": true },
+      "camera": { "rear": 3.15, "front": 1.3, "opticalZoom": 1, "stabilization": false, "faceDetection": false, "recordingResolution": "720p", "slowMotion": false, "maxFocusAngle": 0, "touchFocus": false },
+      "battery": { "capacity": 4000, "chargingTypes": ["USB 2.0"] },
+      "performance": { "antutu": 12000, "geekbench": "300/600", "tdMark": 1000 },
+      "features": { "hasGps": true, "hasNfc": false, "network": "3G", "simCards": 1, "hasDigitalTv": false, "hasPhysicalKeyboard": false, "hasFingerprint": false, "supportsWhatsApp": true, "simTypes": ["Micro-SIM"], "hasCompass": false, "hasUsbOtg": false }
+    }
+  },
+  {
+    "id": "samsung-galaxy-tab-4-7-0",
+    "deviceType": "tablet",
+    "brand": "Samsung",
+    "model": "Galaxy Tab 4 7.0 TV",
+    "os": "Android",
+    "osVersion": "Android 4.4 KitKat",
+    "releaseYear": 2014,
+    "specs": {
+      "screen": { "type": "TFT", "size": 7.0, "resolution": "1280 x 800", "refreshRate": 60, "isFoldable": false },
+      "processor": { "chipset": "Quad Core 1.2 GHz", "cpuBrand": "Qualcomm", "cores": 4, "architecture": 32 },
+      "gpu": { "model": "Adreno 305", "brand": "Qualcomm" },
+      "ram": [1.5],
+      "storage": { "options": [8, 16], "expandable": true },
+      "camera": { "rear": 3.15, "front": 1.3, "opticalZoom": 1, "stabilization": false, "faceDetection": false, "recordingResolution": "720p", "slowMotion": false, "maxFocusAngle": 0, "touchFocus": false },
+      "battery": { "capacity": 4000, "chargingTypes": ["USB 2.0"] },
+      "performance": { "antutu": 18000, "geekbench": "400/1100", "tdMark": 1500 },
+      "features": { "hasGps": true, "hasNfc": false, "network": "3G", "simCards": 1, "hasDigitalTv": true, "hasPhysicalKeyboard": false, "hasFingerprint": false, "supportsWhatsApp": true, "simTypes": ["Micro-SIM"], "hasCompass": false, "hasUsbOtg": false }
+    }
+  },
+  {
+    "id": "dl-e-tv",
+    "deviceType": "tablet",
+    "brand": "DL",
+    "model": "E-TV TP-250",
+    "os": "Android",
+    "osVersion": "Android 4.2 Jelly Bean",
+    "releaseYear": 2013,
+    "specs": {
+      "screen": { "type": "TFT LCD", "size": 7.0, "resolution": "800 x 480", "refreshRate": 60, "isFoldable": false },
+      "processor": { "chipset": "Cortex A9 Dual Core", "cpuBrand": "ARM", "cores": 2, "architecture": 32 },
+      "gpu": { "model": "Mali-400", "brand": "ARM" },
+      "ram": [1],
+      "storage": { "options": [8], "expandable": true },
+      "camera": { "rear": 0, "front": 0.3, "opticalZoom": 1, "stabilization": false, "faceDetection": false, "recordingResolution": "VGA", "slowMotion": false, "maxFocusAngle": 0, "touchFocus": false },
+      "battery": { "capacity": 3000, "chargingTypes": ["USB 2.0"] },
+      "performance": { "antutu": 10000, "geekbench": "250/500", "tdMark": 800 },
+      "features": { "hasGps": true, "hasNfc": false, "network": "Wi-Fi", "simCards": 0, "hasDigitalTv": true, "hasPhysicalKeyboard": false, "hasFingerprint": false, "supportsWhatsApp": true, "simTypes": [], "hasCompass": false, "hasUsbOtg": true }
+    }
+  },
+  {
+    "id": "dl-droidtv",
+    "deviceType": "tablet",
+    "brand": "DL",
+    "model": "DroidTV",
+    "os": "Android",
+    "osVersion": "Android 4.0 Ice Cream Sandwich",
+    "releaseYear": 2013,
+    "specs": {
+      "screen": { "type": "TFT LCD", "size": 7.0, "resolution": "800 x 480", "refreshRate": 60, "isFoldable": false },
+      "processor": { "chipset": "1.2 GHz + DSP", "cpuBrand": "DL", "cores": 1, "architecture": 32 },
+      "gpu": { "model": "Mali-400", "brand": "ARM" },
+      "ram": [1],
+      "storage": { "options": [4, 8], "expandable": true },
+      "camera": { "rear": 0, "front": 0.3, "opticalZoom": 1, "stabilization": false, "faceDetection": false, "recordingResolution": "VGA", "slowMotion": false, "maxFocusAngle": 0, "touchFocus": false },
+      "battery": { "capacity": 3000, "chargingTypes": ["USB 2.0"] },
+      "performance": { "antutu": 8000, "geekbench": "200/400", "tdMark": 600 },
+      "features": { "hasGps": true, "hasNfc": false, "network": "Wi-Fi", "simCards": 0, "hasDigitalTv": true, "hasPhysicalKeyboard": false, "hasFingerprint": false, "supportsWhatsApp": true, "simTypes": [], "hasCompass": false, "hasUsbOtg": true }
+    }
+  },
+  {
+    "id": "sony-xperia-z2-tablet",
+    "deviceType": "tablet",
+    "brand": "Sony",
+    "model": "Xperia Z2 Tablet",
+    "os": "Android",
+    "osVersion": "Android 4.4.2 KitKat",
+    "releaseYear": 2014,
+    "specs": {
+      "screen": { "type": "IPS LCD (TRILUMINOS)", "size": 10.1, "resolution": "1920 x 1200", "refreshRate": 60, "isFoldable": false },
+      "processor": { "chipset": "Snapdragon 801", "cpuBrand": "Qualcomm", "cores": 4, "architecture": 32 },
+      "gpu": { "model": "Adreno 330", "brand": "Qualcomm" },
+      "ram": [3],
+      "storage": { "options": [16], "expandable": true },
+      "camera": { "rear": 8.1, "front": 2.2, "opticalZoom": 1, "stabilization": true, "faceDetection": true, "recordingResolution": "1080p", "slowMotion": false, "maxFocusAngle": 0, "touchFocus": true },
+      "battery": { "capacity": 6000, "chargingTypes": ["USB 2.0"] },
+      "performance": { "antutu": 35000, "geekbench": "900/2700", "tdMark": 4500 },
+      "features": { "hasGps": true, "hasNfc": true, "network": "4G", "simCards": 1, "hasDigitalTv": true, "hasPhysicalKeyboard": false, "hasFingerprint": false, "supportsWhatsApp": true, "simTypes": ["Micro-SIM"], "hasCompass": true, "hasUsbOtg": true }
+    }
+  },
+  {
+    "id": "multilaser-tab-tv",
+    "deviceType": "tablet",
+    "brand": "Multilaser",
+    "model": "Tab TV (NB046)",
+    "os": "Android",
+    "osVersion": "Android 4.0 Ice Cream Sandwich",
+    "releaseYear": 2013,
+    "specs": {
+      "screen": { "type": "TFT Capacitiva", "size": 7.0, "resolution": "800 x 480", "refreshRate": 60, "isFoldable": false },
+      "processor": { "chipset": "Cortex A8 1.2 GHz", "cpuBrand": "ARM", "cores": 1, "architecture": 32 },
+      "gpu": { "model": "Mali-400", "brand": "ARM" },
+      "ram": [0.5],
+      "storage": { "options": [4], "expandable": true },
+      "camera": { "rear": 0, "front": 0.3, "opticalZoom": 1, "stabilization": false, "faceDetection": false, "recordingResolution": "VGA", "slowMotion": false, "maxFocusAngle": 0, "touchFocus": false },
+      "battery": { "capacity": 3000, "chargingTypes": ["USB 2.0"] },
+      "performance": { "antutu": 6000, "geekbench": "150/300", "tdMark": 400 },
+      "features": { "hasGps": false, "hasNfc": false, "network": "Wi-Fi", "simCards": 0, "hasDigitalTv": true, "hasPhysicalKeyboard": false, "hasFingerprint": false, "supportsWhatsApp": false, "simTypes": [], "hasCompass": false, "hasUsbOtg": true }
+    }
+  },
+  {
+    "id": "positivo-t701-tv",
+    "deviceType": "tablet",
+    "brand": "Positivo",
+    "model": "T701 TV",
+    "os": "Android",
+    "osVersion": "Android 4.2 Jelly Bean",
+    "releaseYear": 2014,
+    "specs": {
+      "screen": { "type": "TFT LCD", "size": 7.0, "resolution": "800 x 480", "refreshRate": 60, "isFoldable": false },
+      "processor": { "chipset": "Dual Core 1.0 GHz", "cpuBrand": "ARM", "cores": 2, "architecture": 32 },
+      "gpu": { "model": "Mali-400", "brand": "ARM" },
+      "ram": [1],
+      "storage": { "options": [8], "expandable": true },
+      "camera": { "rear": 2.0, "front": 0.3, "opticalZoom": 1, "stabilization": false, "faceDetection": false, "recordingResolution": "VGA", "slowMotion": false, "maxFocusAngle": 0, "touchFocus": false },
+      "battery": { "capacity": 2500, "chargingTypes": ["USB 2.0"] },
+      "performance": { "antutu": 9000, "geekbench": "220/450", "tdMark": 500 },
+      "features": { "hasGps": false, "hasNfc": false, "network": "Wi-Fi", "simCards": 0, "hasDigitalTv": true, "hasPhysicalKeyboard": false, "hasFingerprint": false, "supportsWhatsApp": true, "simTypes": [], "hasCompass": false, "hasUsbOtg": true }
+    }
   }
 ];
