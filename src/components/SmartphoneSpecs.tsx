@@ -36,7 +36,9 @@ const getCompatibleGamesForPhone = (phone: SmartphoneType): GameCompatibility[] 
       { title: "Resident Evil Village / 4 Remake", genre: "Survival Horror AAA" },
       { title: "Wuthering Waves", genre: "Action RPG de Mundo Aberto" },
       { title: "XCOM 2 Collection", genre: "Estratégia Tática AAA" },
-      { title: "Red Dead Redemption (Port Oficial)", genre: "Ação / Mundo Aberto AAA" }
+      { title: "Red Dead Redemption (Port Oficial)", genre: "Ação / Mundo Aberto AAA" },
+      { title: "Free Fire (Garena / Edições)", genre: "Battle Royale Otimizado" },
+      { title: "Roblox", genre: "Metaverso / Sandbox 3D" }
     ];
 
     return heavyGameTitles.map(g => ({
@@ -328,15 +330,18 @@ const getCompatibleGamesForPhone = (phone: SmartphoneType): GameCompatibility[] 
   }
 
   // 11. Call of Duty: Mobile
-  if (antutu >= 250000 && maxRam >= 3) {
+  const codMobileSupported = (antutu >= 60000 && maxRam >= 3) || antutu >= 180000;
+  if (codMobileSupported) {
+    const isUltra = antutu >= 700000;
+    const isMed = antutu >= 200000;
     games.push({
       title: "Call of Duty: Mobile",
       genre: "FPS Battle Royale",
-      graphics: antutu >= 700000 ? "Muito Alto (120 FPS)" : "Baixo / Médio (60 FPS)",
-      fps: antutu >= 700000 ? "90 - 120 FPS" : "45 - 60 FPS",
-      badge: antutu >= 700000 ? "Configuração Máxima" : "Configuração Mínima / Média",
-      badgeColor: antutu >= 700000 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
-      note: antutu >= 700000 ? "Suporta máxima taxa de atualização física da tela e texturas HD." : "Altamente otimizado, roda de forma muito fluida com ajustes de desempenho.",
+      graphics: isUltra ? "Muito Alto (120 FPS)" : isMed ? "Médio (60 FPS)" : "Baixo / Mínimo (30 FPS)",
+      fps: isUltra ? "90 - 120 FPS" : isMed ? "50 - 60 FPS" : "25 - 30 FPS",
+      badge: isUltra ? "Configuração Máxima" : isMed ? "Configuração Moderada" : "Configuração Mínima",
+      badgeColor: isUltra ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : isMed ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
+      note: isUltra ? "Suporta máxima taxa de atualização física da tela e texturas HD." : isMed ? "Altamente otimizado, roda de forma muito fluida com ajustes médios." : "Roda de forma satisfatória em gráficos Baixos com taxa de quadros estável.",
       isSupported: true
     });
   } else {
@@ -354,15 +359,18 @@ const getCompatibleGamesForPhone = (phone: SmartphoneType): GameCompatibility[] 
   }
 
   // 12. PUBG Mobile
-  if (antutu >= 250000 && maxRam >= 3) {
+  const pubgSupported = (antutu >= 60000 && maxRam >= 3) || antutu >= 180000;
+  if (pubgSupported) {
+    const isUltra = antutu >= 750000;
+    const isMed = antutu >= 200000;
     games.push({
       title: "PUBG Mobile",
       genre: "Battle Royale Tático",
-      graphics: antutu >= 750000 ? "Ultra HD / Extremo" : "Suave / Balanceado",
-      fps: antutu >= 750000 ? "90 FPS Estáveis" : "40 - 60 FPS",
-      badge: antutu >= 750000 ? "Configuração Máxima" : "Configuração Mínima / Média",
-      badgeColor: antutu >= 750000 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
-      note: antutu >= 750000 ? "Estabilidade completa de FPS e visão de renderização estendida." : "Excelente estabilidade ao usar gráficos baixos em disputas competitivas.",
+      graphics: isUltra ? "Ultra HD / Extremo" : isMed ? "Balanceado / HD" : "Suave / Mínimo",
+      fps: isUltra ? "90 FPS Estáveis" : isMed ? "45 - 60 FPS" : "25 - 30 FPS",
+      badge: isUltra ? "Configuração Máxima" : isMed ? "Configuração Moderada" : "Configuração Mínima",
+      badgeColor: isUltra ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : isMed ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
+      note: isUltra ? "Estabilidade completa de FPS e visão de renderização estendida." : isMed ? "Boa estabilidade em configurações balanceadas." : "Executável com fluidez satisfatória em gráficos Suaves.",
       isSupported: true
     });
   } else {
@@ -380,7 +388,7 @@ const getCompatibleGamesForPhone = (phone: SmartphoneType): GameCompatibility[] 
   }
 
   // 13. Asphalt Legends Unite
-  if (antutu >= 400000 && maxRam >= 4) {
+  if (antutu >= 350000 && maxRam >= 4) {
     games.push({
       title: "Asphalt Legends Unite",
       genre: "Corrida Arcade",
@@ -406,15 +414,18 @@ const getCompatibleGamesForPhone = (phone: SmartphoneType): GameCompatibility[] 
   }
 
   // 14. Minecraft
-  if (antutu >= 200000 && maxRam >= 3) {
+  const minecraftSupported = antutu >= 40000 || maxRam >= 2;
+  if (minecraftSupported) {
+    const isMax = antutu >= 700000;
+    const isMed = antutu >= 140000;
     games.push({
       title: "Minecraft",
       genre: "Sandbox / Sobrevivência",
-      graphics: antutu >= 700000 ? "Máxima (32+ Chunks) / Shaders" : "Mínima (8-12 Chunks)",
-      fps: antutu >= 700000 ? "60+ FPS Estáveis" : "30 - 50 FPS",
-      badge: antutu >= 700000 ? "Distância Extrema" : "Configuração Mínima",
-      badgeColor: antutu >= 700000 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
-      note: antutu >= 700000 ? "Suporta shaders leves e renderização de grandes criações." : "Funciona adequadamente reduzindo a quantidade de blocos simulados simultaneamente.",
+      graphics: isMax ? "Máxima (32+ Chunks) / Shaders" : isMed ? "Média / Alta (12-16 Chunks)" : "Mínima (6-8 Chunks)",
+      fps: isMax ? "60+ FPS Estáveis" : isMed ? "45 - 60 FPS" : "25 - 35 FPS",
+      badge: isMax ? "Distância Extrema" : isMed ? "Fluidez Completa" : "Configuração Mínima",
+      badgeColor: isMax ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : isMed ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
+      note: isMax ? "Suporta shaders leves e renderização de grandes criações." : isMed ? "Roda com excelente distância de renderização sem engasgos." : "Roda na configuração mínima com simulação reduzida de blocos mantendo boa jogabilidade.",
       isSupported: true
     });
   } else {
@@ -427,20 +438,23 @@ const getCompatibleGamesForPhone = (phone: SmartphoneType): GameCompatibility[] 
       badgeColor: "bg-red-500/10 text-red-400 border-red-500/30",
       note: "Tempo de carregamento excessivo e travamentos severos em mundos grandes.",
       isSupported: false,
-      unsupportedReason: "Requer CPU e armazenamento mais rápidos com pelo menos 3GB de RAM."
+      unsupportedReason: "Requer CPU e armazenamento mais rápidos com pelo menos 2GB de RAM."
     });
   }
 
   // 15. League of Legends: Wild Rift
-  if (antutu >= 250000 && maxRam >= 3) {
+  const wildRiftSupported = (antutu >= 50000 && maxRam >= 2) || antutu >= 180000;
+  if (wildRiftSupported) {
+    const isUltra = antutu >= 750000;
+    const isMed = antutu >= 180000;
     games.push({
       title: "League of Legends: Wild Rift",
       genre: "MOBA 5v5 Competitivo",
-      graphics: antutu >= 750000 ? "Gráficos no Ultra (120 FPS)" : "Gráficos no Baixo (60 FPS)",
-      fps: antutu >= 750000 ? "90 - 120 FPS Estáveis" : "60 FPS",
-      badge: antutu >= 750000 ? "Configuração Máxima" : "Configuração Mínima",
-      badgeColor: antutu >= 750000 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
-      note: antutu >= 750000 ? "Excelente performance competitiva com máxima clareza visual de feitiços." : "Jogo muito otimizado, mantendo 60 FPS consistentes em resoluções mais baixas.",
+      graphics: isUltra ? "Gráficos no Ultra (120 FPS)" : isMed ? "Médio / 60 FPS" : "Mínimo / 30-40 FPS",
+      fps: isUltra ? "90 - 120 FPS Estáveis" : isMed ? "60 FPS" : "30 - 45 FPS",
+      badge: isUltra ? "Configuração Máxima" : isMed ? "Alta Taxa (60 FPS)" : "Configuração Mínima",
+      badgeColor: isUltra ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : isMed ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
+      note: isUltra ? "Excelente performance competitiva com máxima clareza visual de feitiços." : isMed ? "Jogo muito otimizado, mantendo 60 FPS consistentes." : "Funciona muito bem em resoluções mais baixas e 30 FPS estáveis.",
       isSupported: true
     });
   } else {
@@ -448,12 +462,70 @@ const getCompatibleGamesForPhone = (phone: SmartphoneType): GameCompatibility[] 
       title: "League of Legends: Wild Rift",
       genre: "MOBA 5v5 Competitivo",
       graphics: "Incompatível / Lentidão",
-      fps: "< 25 FPS",
+      fps: "< 20 FPS",
       badge: "Não Recomendado",
       badgeColor: "bg-red-500/10 text-red-400 border-red-500/30",
       note: "Aparelho pode apresentar travamentos sérios em lutas de equipe (teamfights).",
       isSupported: false,
-      unsupportedReason: "Exige CPU com boa frequência single-core e no mínimo 3GB de RAM."
+      unsupportedReason: "Exige CPU com boa frequência single-core e no mínimo 2GB de RAM."
+    });
+  }
+
+  // 16. Free Fire (Garena Free Fire / Edições)
+  const freeFireSupported = antutu >= 30000 || maxRam >= 1.5;
+  if (freeFireSupported) {
+    const isUltra = antutu >= 180000;
+    const isMed = antutu >= 60000;
+    games.push({
+      title: "Free Fire (Garena / Edições)",
+      genre: "Battle Royale Otimizado",
+      graphics: isUltra ? "Ultra / Alto FPS (60 FPS)" : isMed ? "Padrão / Alto FPS" : "Suave (30 FPS)",
+      fps: isUltra ? "60 FPS Estáveis" : isMed ? "45 - 60 FPS" : "30 FPS",
+      badge: isUltra ? "Configuração Máxima" : isMed ? "Excelente Fluidez" : "Configuração Mínima",
+      badgeColor: isUltra ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : isMed ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
+      note: isUltra ? "Jogo roda no gráfico máximo sem aquecimento ou oscilações." : isMed ? "Ótima resposta tátil e movimentação fluida em partidas normais." : "Roda de forma satisfatória em gráficos Suaves.",
+      isSupported: true
+    });
+  } else {
+    games.push({
+      title: "Free Fire (Garena / Edições)",
+      genre: "Battle Royale Otimizado",
+      graphics: "Incompatível",
+      fps: "< 15 FPS",
+      badge: "Incompatível",
+      badgeColor: "bg-red-500/10 text-red-400 border-red-500/30",
+      note: "Hardware muito legado ou memória RAM insuficiente.",
+      isSupported: false,
+      unsupportedReason: "Exige ao menos 1.5GB de RAM."
+    });
+  }
+
+  // 17. Roblox
+  const robloxSupported = antutu >= 40000 || maxRam >= 2;
+  if (robloxSupported) {
+    const isUltra = antutu >= 300000;
+    const isMed = antutu >= 90000;
+    games.push({
+      title: "Roblox",
+      genre: "Metaverso / Sandbox 3D",
+      graphics: isUltra ? "Gráficos Máximos (Nível 10)" : isMed ? "Gráficos Médios (Nível 4-7)" : "Gráficos Mínimos (Nível 1-3)",
+      fps: isUltra ? "60 FPS Estáveis" : isMed ? "40 - 60 FPS" : "25 - 35 FPS",
+      badge: isUltra ? "Qualidade Máxima" : isMed ? "Desempenho Bom" : "Configuração Mínima",
+      badgeColor: isUltra ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : isMed ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
+      note: isUltra ? "Carrega mundos complexos e ricos em física com fluidez sólida." : isMed ? "Roda a maioria das experiências com ótimo equilíbrio." : "Experiências comuns rodam bem; mapas gigantescos podem exigir baixar os gráficos no menu.",
+      isSupported: true
+    });
+  } else {
+    games.push({
+      title: "Roblox",
+      genre: "Metaverso / Sandbox 3D",
+      graphics: "Incompatível",
+      fps: "< 15 FPS",
+      badge: "Não Recomendado",
+      badgeColor: "bg-red-500/10 text-red-400 border-red-500/30",
+      note: "Travamentos severos e erros de alocação de memória.",
+      isSupported: false,
+      unsupportedReason: "Exige ao menos 2GB de RAM e processador moderno."
     });
   }
 
@@ -462,12 +534,13 @@ const getCompatibleGamesForPhone = (phone: SmartphoneType): GameCompatibility[] 
 
 const NETWORK_STEPS = ['any', '3G', '4G', '5G', 'Wi-Fi'];
 const STORAGE_STEPS = [0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048];
-const SELFIE_STEPS = [0, 8, 12, 16, 32, 50, 60];
-const SCREEN_STEPS = [0, 3, 4, 5, 6, 7, 8, 10, 11, 12, 14];
+const SELFIE_STEPS = [0, 0.3, 1.2, 2, 5, 8, 12, 16, 32, 50, 60];
+const REAR_CAM_STEPS = [0, 0.3, 2, 3.2, 5, 8, 12, 48, 64, 108, 200];
+const SCREEN_STEPS = [0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 18];
 const BATTERY_STEPS = [0, 150, 300, 500, 1000, 2000, 3000, 4000, 5000, 6000, 8000, 10000];
 const RAM_STEPS = [0, 0.5, 1, 1.5, 2, 4, 6, 8, 12, 16];
-const RECORDING_RES_STEPS = ['any', 'HD', 'FHD', '2K', '4K', '8K'] as const;
-const RES_RANK_MAP: Record<string, number> = { 'HD': 1, 'FHD': 2, '2K': 3, '4K': 4, '8K': 5 };
+const RECORDING_RES_STEPS = ['any', 'VGA', 'SD', 'HD', 'FHD', '2K', '4K', '8K'] as const;
+const RES_RANK_MAP: Record<string, number> = { 'VGA': 1, 'SD': 2, 'HD': 3, 'FHD': 4, '2K': 5, '4K': 6, '8K': 7 };
 
 export type DeviceTier = 'entrada' | 'intermediário' | 'topo de linha';
 
@@ -505,6 +578,7 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
   const [isBrandExpanded, setIsBrandExpanded] = useState<boolean>(true);
   const [isGamesExpanded, setIsGamesExpanded] = useState<boolean>(true);
   const [selectedGames, setSelectedGames] = useState<string[]>([]);
+  const [gameFilterMode, setGameFilterMode] = useState<'any' | 'all'>('any');
   const [selectedPhoneForGames, setSelectedPhoneForGames] = useState<SmartphoneType | null>(null);
   const [selectedPhoneForSimilar, setSelectedPhoneForSimilar] = useState<SmartphoneType | null>(null);
   
@@ -541,7 +615,8 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
   const [minCores, setMinCores] = useState<number>(0);
   const [minScreenSize, setMinScreenSize] = useState<number>(0);
   const [selfieStepIndex, setSelfieStepIndex] = useState<number>(0);
-  const [recResIndex, setRecResIndex] = useState<number>(0); // 0: any, 1: HD, 2: FHD, 3: 2K, 4: 4K, 5: 8K
+  const [rearCamStepIndex, setRearCamStepIndex] = useState<number>(0);
+  const [recResIndex, setRecResIndex] = useState<number>(0); // 0: any, 1: VGA, 2: SD, 3: HD, 4: FHD, 5: 2K, 6: 4K, 7: 8K
   
   // Select Filters
   const [architecture, setArchitecture] = useState<'any' | '32' | '64'>('any');
@@ -578,6 +653,7 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
 
   const minStorage = STORAGE_STEPS[storageStepIndex] || 0;
   const minFrontCamera = SELFIE_STEPS[selfieStepIndex] || 0;
+  const minRearCamera = REAR_CAM_STEPS[rearCamStepIndex] || 0;
 
   const toggleBrand = (brand: string) => {
     setSelectedBrands(prev => prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]);
@@ -607,6 +683,7 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
     setMinCores(0);
     setMinScreenSize(0);
     setSelfieStepIndex(0);
+    setRearCamStepIndex(0);
     setRecResIndex(0);
     setArchitecture('any');
     setSimCards('any');
@@ -629,7 +706,315 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
     setHasUsbOtg(false);
     setHasNfc(false);
     setSlowMotion(false);
+    setSelectedGames([]);
+    setGameFilterMode('any');
     setSearchTerm('');
+  };
+
+  const handleSaveDevicePdf = (phone: SmartphoneType) => {
+    const printIframe = document.createElement('iframe');
+    printIframe.setAttribute('title', `Ficha Técnica - ${phone.brand} ${phone.model}`);
+    printIframe.style.position = 'fixed';
+    printIframe.style.right = '0';
+    printIframe.style.bottom = '0';
+    printIframe.style.width = '0';
+    printIframe.style.height = '0';
+    printIframe.style.border = '0';
+    printIframe.style.opacity = '0';
+    printIframe.style.pointerEvents = 'none';
+    document.body.appendChild(printIframe);
+
+    const doc = printIframe.contentWindow?.document;
+    if (!doc) return;
+
+    const p = phone.specs;
+    const compatibleGames = getCompatibleGamesForPhone(phone);
+    const tier = getDeviceTier(phone);
+    const dateStr = new Date().toLocaleDateString('pt-BR');
+
+    const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Ficha Técnica - ${phone.brand} ${phone.model}</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 10mm 12mm;
+    }
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      color: #0f172a;
+      background: #ffffff;
+      margin: 0;
+      padding: 0;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid #0284c7;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+    .brand-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #0369a1;
+      margin: 0 0 2px 0;
+    }
+    .subtitle {
+      font-size: 11px;
+      color: #64748b;
+      margin: 0;
+    }
+    .badges {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge-tier { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .badge-year { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+    .badge-os { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .card {
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 6px 8px;
+      background: #f8fafc;
+    }
+    .card-title {
+      font-size: 10px;
+      font-weight: 700;
+      color: #0284c7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 0 0 4px 0;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 2px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    td {
+      padding: 2px 0;
+      vertical-align: top;
+      font-size: 10px;
+    }
+    td.label {
+      color: #64748b;
+      width: 45%;
+      font-weight: 600;
+    }
+    td.val {
+      color: #0f172a;
+      font-weight: 500;
+    }
+    
+    .games-box {
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 6px 8px;
+      background: #ffffff;
+      margin-top: 4px;
+    }
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      margin-top: 4px;
+    }
+    .game-item {
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 4px 5px;
+      background: #f8fafc;
+    }
+    .game-item.supported {
+      border-color: #a7f3d0;
+      background: #f0fdf4;
+    }
+    .game-item.unsupported {
+      border-color: #fecaca;
+      background: #fef2f2;
+    }
+    .game-name {
+      font-weight: 700;
+      font-size: 9px;
+      color: #1e293b;
+      margin-bottom: 1px;
+    }
+    .game-meta {
+      font-size: 8px;
+      font-weight: 600;
+    }
+    .text-green { color: #059669; }
+    .text-red { color: #dc2626; }
+    
+    .footer {
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 9px;
+      color: #94a3b8;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1 class="brand-title">${phone.brand} ${phone.model}</h1>
+      <p class="subtitle">Ficha Técnica Oficial e Testes de Compatibilidade</p>
+    </div>
+    <div class="badges">
+      <span class="badge badge-tier">${tier}</span>
+      <span class="badge badge-year">${phone.releaseYear}</span>
+      <span class="badge badge-os">${phone.os} ${phone.osVersion ? '(' + phone.osVersion + ')' : ''}</span>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- Tela -->
+    <div class="card">
+      <div class="card-title">📱 Tela & Dimensões</div>
+      <table>
+        <tr><td class="label">Tamanho:</td><td class="val">${p.screen.size}" polegadas</td></tr>
+        <tr><td class="label">Tipo de Painel:</td><td class="val">${p.screen.type}</td></tr>
+        <tr><td class="label">Resolução:</td><td class="val">${p.screen.resolution}</td></tr>
+        <tr><td class="label">Taxa de Atualização:</td><td class="val">${p.screen.refreshRate} Hz</td></tr>
+        <tr><td class="label">Formato Dobrável:</td><td class="val">${p.screen.isFoldable ? 'Sim' : 'Não'}</td></tr>
+      </table>
+    </div>
+
+    <!-- Processamento & Desempenho -->
+    <div class="card">
+      <div class="card-title">⚡ Processador & Gráficos</div>
+      <table>
+        <tr><td class="label">Chipset:</td><td class="val">${p.processor.chipset}</td></tr>
+        <tr><td class="label">Núcleos / Arquitetura:</td><td class="val">${p.processor.cores} cores (${p.processor.architecture}-bit)</td></tr>
+        <tr><td class="label">Marca da CPU:</td><td class="val">${p.processor.cpuBrand}</td></tr>
+        <tr><td class="label">GPU Integrada:</td><td class="val">${p.gpu.model} (${p.gpu.brand})</td></tr>
+        <tr><td class="label">AnTuTu Benchmark:</td><td class="val">${p.performance?.antutu ? p.performance.antutu.toLocaleString() + ' pts' : 'N/A'}</td></tr>
+        <tr><td class="label">Geekbench / 3DMark:</td><td class="val">${p.performance?.geekbench || 'N/A'} | ${p.performance?.tdMark || 'N/A'}</td></tr>
+      </table>
+    </div>
+
+    <!-- Memória & Bateria -->
+    <div class="card">
+      <div class="card-title">💾 Memória, Armazenamento & Bateria</div>
+      <table>
+        <tr><td class="label">Memória RAM:</td><td class="val">${p.ram.join(' / ')} GB</td></tr>
+        <tr><td class="label">Armazenamento:</td><td class="val">${p.storage.options.join(' / ')} GB</td></tr>
+        <tr><td class="label">Expansível (MicroSD):</td><td class="val">${p.storage.expandable ? 'Sim' : 'Não'}</td></tr>
+        <tr><td class="label">Capacidade da Bateria:</td><td class="val">${p.battery.capacity} mAh</td></tr>
+        <tr><td class="label">Tipos de Carga:</td><td class="val">${p.battery.chargingTypes.join(', ')}</td></tr>
+      </table>
+    </div>
+
+    <!-- Câmeras -->
+    <div class="card">
+      <div class="card-title">📷 Câmeras & Vídeo</div>
+      <table>
+        <tr><td class="label">Câmera Traseira:</td><td class="val">${p.camera.rear} MP</td></tr>
+        <tr><td class="label">Câmera Frontal:</td><td class="val">${p.camera.front} MP</td></tr>
+        <tr><td class="label">Gravação de Vídeo:</td><td class="val">${p.camera.recordingResolution}</td></tr>
+        <tr><td class="label">Estabilização / Foco:</td><td class="val">${p.camera.stabilization ? 'Sim (OIS/EIS)' : 'Não'} | ${p.camera.touchFocus ? 'Touch' : 'Auto'}</td></tr>
+        <tr><td class="label">Zoom Óptico / Lenta:</td><td class="val">${p.camera.opticalZoom ? p.camera.opticalZoom + 'x' : 'Digital'} | ${p.camera.slowMotion ? 'Sim' : 'Não'}</td></tr>
+        <tr><td class="label">Detecção Facial:</td><td class="val">${p.camera.faceDetection ? 'Sim' : 'Não'}</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Conectividade & Recursos Extras -->
+  <div class="card" style="margin-bottom: 8px;">
+    <div class="card-title">🌐 Conectividade & Sensores</div>
+    <table style="width: 100%;">
+      <tr>
+        <td class="label" style="width: 15%;">Rede:</td><td class="val" style="width: 35%;">${p.features.network}</td>
+        <td class="label" style="width: 15%;">NFC:</td><td class="val" style="width: 35%;">${p.features.hasNfc ? 'Sim' : 'Não'}</td>
+      </tr>
+      <tr>
+        <td class="label">Chips SIM:</td><td class="val">${p.features.simCards} (${p.features.simTypes.join(', ')})</td>
+        <td class="label">GPS:</td><td class="val">${p.features.hasGps ? 'Sim' : 'Não'}</td>
+      </tr>
+      <tr>
+        <td class="label">Biometria:</td><td class="val">${p.features.hasFingerprint ? 'Sim' : 'Não'}</td>
+        <td class="label">TV Digital:</td><td class="val">${p.features.hasDigitalTv ? 'Sim' : 'Não'}</td>
+      </tr>
+      <tr>
+        <td class="label">Bússola / OTG:</td><td class="val">${p.features.hasCompass ? 'Sim' : 'Não'} | OTG: ${p.features.hasUsbOtg ? 'Sim' : 'Não'}</td>
+        <td class="label">WhatsApp:</td><td class="val">${p.features.supportsWhatsApp ? 'Suportado' : 'Sem suporte'}</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Compatibilidade com Jogos -->
+  <div class="games-box">
+    <div class="card-title" style="margin-bottom: 2px;">🎮 Compatibilidade com Jogos Pesados & Populares</div>
+    <div class="games-grid">
+      ${compatibleGames.map(g => `
+        <div class="game-item ${g.isSupported ? 'supported' : 'unsupported'}">
+          <div class="game-name">${g.title}</div>
+          <div class="game-meta ${g.isSupported ? 'text-green' : 'text-red'}">
+            ${g.isSupported ? '✓ ' + g.badge + ' (' + g.fps + ')' : '✗ ' + g.badge}
+          </div>
+          <div style="font-size: 7.5px; color: #64748b; margin-top: 1px;">
+            ${g.graphics}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>Gerado em: ${dateStr} • Down&Convert Especificações Técnicas</span>
+    <span>https://downandconvert.onrender.com</span>
+  </div>
+</body>
+</html>`;
+
+    doc.open();
+    doc.write(html);
+    doc.close();
+
+    setTimeout(() => {
+      try {
+        printIframe.contentWindow?.focus();
+        printIframe.contentWindow?.print();
+      } catch (e) {
+        console.error('Print error:', e);
+      }
+      setTimeout(() => {
+        if (document.body.contains(printIframe)) {
+          document.body.removeChild(printIframe);
+        }
+      }, 3000);
+    }, 250);
   };
 
   const handleSharePhone = async (phone: typeof mockedSmartphones[0]) => {
@@ -700,6 +1085,7 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
     if (minCores > 0) count++;
     if (minScreenSize > 0) count++;
     if (minFrontCamera > 0) count++;
+    if (minRearCamera > 0) count++;
     if (recResIndex > 0) count++;
     if (architecture !== 'any') count++;
     if (simCards !== 'any') count++;
@@ -724,7 +1110,7 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
     if (slowMotion) count++;
     if (searchTerm.trim().length > 0) count++;
     return count;
-  }, [selectedBrands, selectedReleaseYears, selectedOS, selectedCpuBrands, selectedGpuBrands, minRam, minStorage, minCores, minScreenSize, minFrontCamera, recResIndex, architecture, simCards, networkIndex, digitalTv, physicalKeyboard, foldable, expandableMemory, opticalZoom, stabilization, faceDetection, fingerprint, hasGps, supportsWhatsApp, onlyWithoutWhatsApp, minBattery, selectedSimTypes, selectedChargingTypes, hasCompass, hasUsbOtg, hasNfc, slowMotion, searchTerm]);
+  }, [selectedBrands, selectedReleaseYears, selectedOS, selectedCpuBrands, selectedGpuBrands, minRam, minStorage, minCores, minScreenSize, minFrontCamera, minRearCamera, recResIndex, architecture, simCards, networkIndex, digitalTv, physicalKeyboard, foldable, expandableMemory, opticalZoom, stabilization, faceDetection, fingerprint, hasGps, supportsWhatsApp, onlyWithoutWhatsApp, minBattery, selectedSimTypes, selectedChargingTypes, hasCompass, hasUsbOtg, hasNfc, slowMotion, searchTerm]);
 
   // Handle SEO Meta Tags for Dynamic Routes
   React.useEffect(() => {
@@ -761,6 +1147,8 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
       const tier = getDeviceTier(phone);
       const normalizedTier = normalizeTextForSearch(tier);
       
+      const phoneGames = getCompatibleGamesForPhone(phone);
+      
       const matchesSearch = term === '' || 
                             normalizeTextForSearch(phone.model).includes(term) || 
                             normalizeTextForSearch(phone.brand).includes(term) ||
@@ -771,15 +1159,16 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
                             normalizeTextForSearch(phone.os).includes(term) ||
                             (phone.osVersion && normalizeTextForSearch(phone.osVersion).includes(term)) ||
                             normalizedTier === term ||
-                            ((term === 'tv' || term.includes('tv digital') || term.includes('digital tv') || term.includes('televisao')) && p.features.hasDigitalTv);
+                            ((term === 'tv' || term.includes('tv digital') || term.includes('digital tv') || term.includes('televisao')) && p.features.hasDigitalTv) ||
+                            phoneGames.some(g => g.isSupported && normalizeTextForSearch(g.title).includes(term));
                             
       const matchesCategoryTier = selectedCategoryTier === 'all' || tier === selectedCategoryTier;
       
       const matchesBrand = selectedBrands.length === 0 || selectedBrands.includes(phone.brand);
       const matchesReleaseYear = selectedReleaseYears.length === 0 || selectedReleaseYears.includes(phone.releaseYear);
       const matchesOS = selectedOS.length === 0 || selectedOS.includes(phone.os);
-      const matchesCpuBrand = selectedCpuBrands.length === 0 || selectedCpuBrands.includes(p.processor.cpuBrand);
-      const matchesGpuBrand = selectedGpuBrands.length === 0 || selectedGpuBrands.includes(p.gpu.brand);
+      const matchesCpuBrands = selectedCpuBrands.length === 0 || selectedCpuBrands.includes(p.processor.cpuBrand);
+      const matchesGpuBrands = selectedGpuBrands.length === 0 || selectedGpuBrands.includes(p.gpu.brand);
       const matchesRam = minRam === 0 || Math.max(...p.ram) >= minRam;
       const matchesStorage = minStorage === 0 || Math.max(...p.storage.options) >= minStorage;
       const matchesMinCores = minCores === 0 || p.processor.cores === minCores;
@@ -791,7 +1180,8 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
       const matchesNetwork = networkIndex === 0 || p.features.network === NETWORK_STEPS[networkIndex];
       const matchesExpandable = !expandableMemory || p.storage.expandable;
       const matchesMinScreen = minScreenSize === 0 || p.screen.size >= minScreenSize;
-      const matchesMinFrontCam = minFrontCamera === 0 || p.camera.front === minFrontCamera;
+      const matchesMinFrontCam = minFrontCamera === 0 || p.camera.front >= minFrontCamera;
+      const matchesMinRearCam = minRearCamera === 0 || p.camera.rear >= minRearCamera;
       const matchesBattery = minBattery === 0 || p.battery.capacity >= minBattery;
       const matchesSimTypes = selectedSimTypes.length === 0 || selectedSimTypes.every(st => {
         if (st === 'Sem suporte') {
@@ -811,25 +1201,30 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
       const matchesWhatsApp = (!supportsWhatsApp || p.features.supportsWhatsApp) &&
                             (!onlyWithoutWhatsApp || !p.features.supportsWhatsApp);
       
-      // Resolução de gravação em slider hierárquico
+      // Resolução de gravação em slider
       const phoneResRank = RES_RANK_MAP[p.camera.recordingResolution] || 0;
       const matchesRecRes = recResIndex === 0 || phoneResRank === recResIndex;
 
       const matchesGps = !hasGps || p.features.hasGps;
 
-      const matchesGames = selectedGames.length === 0 || selectedGames.every(gameName => {
-        const phoneGames = getCompatibleGamesForPhone(phone);
-        return phoneGames.some(g => g.title.toLowerCase().includes(gameName.toLowerCase()) && g.isSupported);
-      });
+      const matchesGames = selectedGames.length === 0 || (
+        gameFilterMode === 'any'
+          ? selectedGames.some(gameName => {
+              return phoneGames.some(g => g.title.toLowerCase().includes(gameName.toLowerCase()) && g.isSupported);
+            })
+          : selectedGames.every(gameName => {
+              return phoneGames.some(g => g.title.toLowerCase().includes(gameName.toLowerCase()) && g.isSupported);
+            })
+      );
 
-      return matchesSearch && matchesCategoryTier && matchesBrand && matchesReleaseYear && matchesGames && matchesOS && matchesCpuBrand && matchesGpuBrand &&
+      return matchesSearch && matchesCategoryTier && matchesBrand && matchesReleaseYear && matchesGames && matchesOS && matchesCpuBrands && matchesGpuBrands &&
              matchesRam && matchesStorage && matchesMinCores && matchesArchitecture &&
              matchesSimCards && matchesDigitalTv && matchesPhysicalKeyboard && matchesFoldable &&
-             matchesNetwork && matchesExpandable && matchesMinScreen && matchesMinFrontCam &&
+             matchesNetwork && matchesExpandable && matchesMinScreen && matchesMinFrontCam && matchesMinRearCam &&
              matchesOpticalZoom && matchesStabilization && matchesFaceDetection && matchesFingerprint &&
              matchesRecRes && matchesGps && matchesWhatsApp && matchesBattery && matchesSimTypes && matchesChargingTypes && matchesCompass && matchesUsbOtg && matchesNfc && matchesSlowMotion;
     });
-  }, [searchTerm, selectedCategoryTier, selectedBrands, selectedReleaseYears, selectedGames, selectedOS, selectedCpuBrands, selectedGpuBrands, minRam, minStorage, minCores, architecture, simCards, digitalTv, physicalKeyboard, foldable, networkIndex, expandableMemory, minScreenSize, minFrontCamera, opticalZoom, stabilization, faceDetection, fingerprint, recResIndex, hasGps, supportsWhatsApp, onlyWithoutWhatsApp, minBattery, selectedSimTypes, selectedChargingTypes, hasCompass, hasUsbOtg, hasNfc, slowMotion]);
+  }, [searchTerm, selectedCategoryTier, selectedBrands, selectedReleaseYears, selectedGames, gameFilterMode, selectedOS, selectedCpuBrands, selectedGpuBrands, minRam, minStorage, minCores, architecture, simCards, digitalTv, physicalKeyboard, foldable, networkIndex, expandableMemory, minScreenSize, minFrontCamera, minRearCamera, opticalZoom, stabilization, faceDetection, fingerprint, recResIndex, hasGps, supportsWhatsApp, onlyWithoutWhatsApp, minBattery, selectedSimTypes, selectedChargingTypes, hasCompass, hasUsbOtg, hasNfc, slowMotion]);
 
   const CheckboxFilter: React.FC<{ label: string, checked: boolean, onChange: (c: boolean) => void, textSize?: string }> = ({ label, checked, onChange, textSize = "text-sm" }) => (
     <label className="flex items-center gap-2 cursor-pointer group select-none">
@@ -1139,24 +1534,46 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
               </button>
               {isGamesExpanded && (
                 <div className="p-2.5 pt-0 border-t border-slate-800/60 mt-1">
-                  <p className="text-[10px] text-slate-400 mb-2 leading-tight">
-                    Filtra dispositivos que executam o jogo (Config. Mínima a Gráficos Máximos):
-                  </p>
+                  <div className="flex items-center justify-between gap-1 mb-2">
+                    <p className="text-[10px] text-slate-400 leading-tight">
+                      {gameFilterMode === 'any' ? 'Roda qualquer selecionado (OU):' : 'Roda todos selecionados (E):'}
+                    </p>
+                    <div className="flex items-center bg-slate-900 border border-slate-700/60 rounded-lg p-0.5 text-[10px] shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setGameFilterMode('any')}
+                        className={`px-2 py-0.5 rounded cursor-pointer transition-colors ${gameFilterMode === 'any' ? 'bg-purple-600 text-white font-bold' : 'text-slate-400 hover:text-white'}`}
+                        title="Exibir aparelhos que rodam pelo menos um dos jogos selecionados"
+                      >
+                        OU
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setGameFilterMode('all')}
+                        className={`px-2 py-0.5 rounded cursor-pointer transition-colors ${gameFilterMode === 'all' ? 'bg-purple-600 text-white font-bold' : 'text-slate-400 hover:text-white'}`}
+                        title="Exibir apenas aparelhos que rodam todos os jogos selecionados ao mesmo tempo"
+                      >
+                        E
+                      </button>
+                    </div>
+                  </div>
                   <div className="flex flex-col gap-1.5 mt-1 max-h-72 overflow-y-auto custom-scrollbar pr-1">
                     {[
-                      { name: 'Genshin Impact', icon: '🌌' },
-                      { name: 'Delta Force Mobile', icon: '🪖' },
-                      { name: 'Honkai: Star Rail', icon: '☄️' },
-                      { name: 'Diablo Immortal', icon: '😈' },
-                      { name: 'Final Fantasy XIV Mobile', icon: '⚔️' },
-                      { name: 'Call of Duty: Mobile', icon: '🔫' },
-                      { name: 'PUBG Mobile', icon: '🛩️' },
-                      { name: 'Asphalt Legends Unite', icon: '🏎️' },
+                      { name: 'Free Fire', icon: '🔥' },
+                      { name: 'Roblox', icon: '🧱' },
                       { name: 'Minecraft', icon: '⛏️' },
+                      { name: 'PUBG Mobile', icon: '🛩️' },
+                      { name: 'Call of Duty: Mobile', icon: '🔫' },
                       { name: 'League of Legends: Wild Rift', icon: '🧙' },
+                      { name: 'Asphalt Legends Unite', icon: '🏎️' },
+                      { name: 'Diablo Immortal', icon: '😈' },
+                      { name: 'Honkai: Star Rail', icon: '☄️' },
+                      { name: 'Genshin Impact', icon: '🌌' },
+                      { name: 'Final Fantasy XIV Mobile', icon: '⚔️' },
+                      { name: 'Delta Force Mobile', icon: '🪖' },
+                      { name: 'Wuthering Waves', icon: '🌊' },
                       { name: 'Call of Duty: Warzone Mobile', icon: '💥' },
                       { name: 'Resident Evil Village / 4 Remake', icon: '🧟' },
-                      { name: 'Wuthering Waves', icon: '🌊' },
                       { name: 'XCOM 2 Collection', icon: '👽' },
                       { name: 'Red Dead Redemption (Port Oficial)', icon: '🤠' }
                     ].map(game => {
@@ -1589,7 +2006,38 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
               <h4 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">Câmera & Vídeo</h4>
               <div className="flex flex-col gap-4">
                 
-                {/* Câmera Selfie Slider com números padrões */}
+                {/* Câmera Traseira Principal Slider com 0.3 MP */}
+                <div>
+                  <div className="flex justify-between items-center text-xs text-slate-400 mb-1">
+                    <span>Câmera Traseira</span>
+                    <span className="text-cyan-400 font-bold">{minRearCamera === 0 ? t('smartphones.any') : `${minRearCamera}MP`}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max={REAR_CAM_STEPS.length - 1}
+                    step="1"
+                    value={rearCamStepIndex}
+                    onChange={(e) => setRearCamStepIndex(Number(e.target.value))}
+                    className="w-full accent-cyan-500 cursor-pointer"
+                  />
+                  {/* Números padrões embaixo do slide de Câmera Traseira */}
+                  <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono mt-1 px-0.5 select-none overflow-x-auto">
+                    {REAR_CAM_STEPS.map((rearVal, idx) => (
+                      <button
+                        key={rearVal}
+                        type="button"
+                        onClick={() => setRearCamStepIndex(idx)}
+                        className={`hover:text-cyan-400 cursor-pointer transition-colors ${rearCamStepIndex === idx ? 'text-cyan-400 font-bold scale-110' : ''}`}
+                        title={rearVal === 0 ? t('smartphones.any') : `${rearVal}MP`}
+                      >
+                        {rearVal === 0 ? t('smartphones.any') : rearVal}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Câmera Selfie Slider com 0.3 MP */}
                 <div>
                   <div className="flex justify-between items-center text-xs text-slate-400 mb-1">
                     <span>{t('smartphones.minFrontCamera')}</span>
@@ -1605,7 +2053,7 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
                     className="w-full accent-cyan-500 cursor-pointer"
                   />
                   {/* Números padrões embaixo do slide de Câmera Selfie */}
-                  <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono mt-1 px-0.5 select-none">
+                  <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono mt-1 px-0.5 select-none overflow-x-auto">
                     {SELFIE_STEPS.map((selfieVal, idx) => (
                       <button
                         key={selfieVal}
@@ -1620,7 +2068,7 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
                   </div>
                 </div>
                 
-                {/* Resolução de Gravação em SLIDER com os números/nomes embaixo (qualquer, HD, FHD, 2k, 4k, 8k) */}
+                {/* Resolução de Gravação em SLIDER (Qualquer, VGA, SD, HD, FHD, 2K, 4K, 8K) */}
                 <div>
                   <div className="flex justify-between items-center text-xs text-slate-400 mb-1">
                     <span>{t('smartphones.recordingResolution')}</span>
@@ -1631,20 +2079,20 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
                   <input
                     type="range"
                     min="0"
-                    max="5"
+                    max={RECORDING_RES_STEPS.length - 1}
                     step="1"
                     value={recResIndex}
                     onChange={(e) => setRecResIndex(Number(e.target.value))}
                     className="w-full accent-cyan-500 cursor-pointer"
                   />
                   {/* Números/etiquetas embaixo do slide na sequência solicitada */}
-                  <div className="flex justify-between items-center text-[10px] text-slate-400 font-semibold mt-1 px-0.5 select-none">
-                    {['Qualquer', 'HD', 'FHD', '2K', '4K', '8K'].map((label, idx) => (
+                  <div className="flex justify-between items-center text-[10px] text-slate-400 font-semibold mt-1 px-0.5 select-none overflow-x-auto">
+                    {['Qualquer', 'VGA', 'SD', 'HD', 'FHD', '2K', '4K', '8K'].map((label, idx) => (
                       <button
                         key={label}
                         type="button"
                         onClick={() => setRecResIndex(idx)}
-                        className={`hover:text-cyan-400 cursor-pointer transition-colors ${recResIndex === idx ? 'text-cyan-400 font-extrabold scale-110' : ''}`}
+                        className={`hover:text-cyan-400 cursor-pointer transition-colors shrink-0 ${recResIndex === idx ? 'text-cyan-400 font-extrabold scale-110' : ''}`}
                         title={idx === 0 ? t('smartphones.any') : label}
                       >
                         {idx === 0 ? t('smartphones.any') : label}
@@ -1964,9 +2412,9 @@ export const SmartphoneSpecs: React.FC<SmartphoneSpecsProps> = ({ focusedDeviceI
                     {/* Save as PDF Button */}
                     <button
                       type="button"
-                      onClick={() => window.print()}
+                      onClick={() => handleSaveDevicePdf(phone)}
                       className="inline-flex items-center justify-center gap-1.5 px-2 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/20 rounded-xl text-[11px] font-bold transition-all cursor-pointer shadow-sm print:hidden w-full"
-                      title="Salvar em PDF"
+                      title={`Salvar ficha técnica de ${phone.brand} ${phone.model} em PDF`}
                     >
                       <FileDown className="w-3.5 h-3.5 text-rose-400" />
                       <span>PDF</span>
