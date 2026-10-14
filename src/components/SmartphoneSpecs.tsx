@@ -5,7 +5,7 @@ import { mockedSmartphones, Smartphone as SmartphoneType } from '../data/smartph
 import { PhoneComparisonModal } from './PhoneComparisonModal';
 import { SimilarDevicesModal } from './SimilarDevicesModal';
 
-interface GameCompatibility {
+export interface GameCompatibility {
   title: string;
   genre: string;
   graphics: string;
@@ -17,7 +17,7 @@ interface GameCompatibility {
   unsupportedReason?: string;
 }
 
-const getCompatibleGamesForPhone = (phone: SmartphoneType): GameCompatibility[] => {
+export const getCompatibleGamesForPhone = (phone: SmartphoneType): GameCompatibility[] => {
   const isSmartwatch = phone.deviceType === 'smartwatch';
 
   if (isSmartwatch) {
@@ -58,6 +58,18 @@ const getCompatibleGamesForPhone = (phone: SmartphoneType): GameCompatibility[] 
   const chipset = phone.specs.processor.chipset.toLowerCase();
   const ramOptions = Array.isArray(phone.specs.ram) ? phone.specs.ram : [phone.specs.ram];
   const maxRam = Math.max(...ramOptions);
+
+  // Dispositivos intermediários e semelhantes com pleno suporte a jogos competitivos/populares
+  // Inclui LG Q7 Plus, Moto G5S Plus TV, LG G3, K12 Prime, Moto G6 Plus, Galaxy Note 3, Xperia Z1
+  const isTargetOrSimilarMid = 
+    phone.id === 'lg-q7-plus' ||
+    phone.id === 'moto-g5s-plus-tv' ||
+    phone.id === 'lg-g3-lollipop' ||
+    phone.id === 'lg-k12-prime' ||
+    phone.id === 'moto-g6-plus' ||
+    phone.id === 'galaxy-note3-lollipop' ||
+    phone.id === 'sony-xperia-z1-lollipop' ||
+    (antutu >= 45000 && maxRam >= 2 && !isSmartwatch);
 
   // We want to evaluate these heavy games for all phones:
   // - Call of Duty: Warzone Mobile
@@ -330,18 +342,22 @@ const getCompatibleGamesForPhone = (phone: SmartphoneType): GameCompatibility[] 
   }
 
   // 11. Call of Duty: Mobile
-  const codMobileSupported = (antutu >= 60000 && maxRam >= 3) || antutu >= 180000;
+  const codMobileSupported = isTargetOrSimilarMid || (antutu >= 45000 && maxRam >= 2) || antutu >= 180000;
   if (codMobileSupported) {
     const isUltra = antutu >= 700000;
     const isMed = antutu >= 200000;
     games.push({
       title: "Call of Duty: Mobile",
       genre: "FPS Battle Royale",
-      graphics: isUltra ? "Muito Alto (120 FPS)" : isMed ? "Médio (60 FPS)" : "Baixo / Mínimo (30 FPS)",
+      graphics: isUltra ? "Muito Alto (120 FPS)" : isMed ? "Médio (60 FPS)" : "Configuração Mínima (Gráficos no Baixo)",
       fps: isUltra ? "90 - 120 FPS" : isMed ? "50 - 60 FPS" : "25 - 30 FPS",
       badge: isUltra ? "Configuração Máxima" : isMed ? "Configuração Moderada" : "Configuração Mínima",
       badgeColor: isUltra ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : isMed ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
-      note: isUltra ? "Suporta máxima taxa de atualização física da tela e texturas HD." : isMed ? "Altamente otimizado, roda de forma muito fluida com ajustes médios." : "Roda de forma satisfatória em gráficos Baixos com taxa de quadros estável.",
+      note: isUltra 
+        ? "Suporta máxima taxa de atualização física da tela e texturas HD." 
+        : isMed 
+        ? "Altamente otimizado, roda de forma muito fluida com ajustes médios." 
+        : "SUPORTADO — Roda na Configuração Mínima (Gráficos no Baixo, taxa de quadros Média em 25 a 30 FPS).",
       isSupported: true
     });
   } else {
@@ -354,23 +370,27 @@ const getCompatibleGamesForPhone = (phone: SmartphoneType): GameCompatibility[] 
       badgeColor: "bg-red-500/10 text-red-400 border-red-500/30",
       note: "Processamento e memória insuficientes para carregar os recursos do jogo de forma segura.",
       isSupported: false,
-      unsupportedReason: "Exige pelo menos 3GB de RAM e processador básico quad-core ou octa-core."
+      unsupportedReason: "Exige pelo menos 2GB de RAM e processador quad-core ou octa-core."
     });
   }
 
   // 12. PUBG Mobile
-  const pubgSupported = (antutu >= 60000 && maxRam >= 3) || antutu >= 180000;
+  const pubgSupported = isTargetOrSimilarMid || (antutu >= 45000 && maxRam >= 2) || antutu >= 180000;
   if (pubgSupported) {
     const isUltra = antutu >= 750000;
     const isMed = antutu >= 200000;
     games.push({
       title: "PUBG Mobile",
       genre: "Battle Royale Tático",
-      graphics: isUltra ? "Ultra HD / Extremo" : isMed ? "Balanceado / HD" : "Suave / Mínimo",
+      graphics: isUltra ? "Ultra HD / Extremo" : isMed ? "Balanceado / HD" : "Configuração Mínima (Gráficos no Suave)",
       fps: isUltra ? "90 FPS Estáveis" : isMed ? "45 - 60 FPS" : "25 - 30 FPS",
       badge: isUltra ? "Configuração Máxima" : isMed ? "Configuração Moderada" : "Configuração Mínima",
       badgeColor: isUltra ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : isMed ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
-      note: isUltra ? "Estabilidade completa de FPS e visão de renderização estendida." : isMed ? "Boa estabilidade em configurações balanceadas." : "Executável com fluidez satisfatória em gráficos Suaves.",
+      note: isUltra 
+        ? "Estabilidade completa de FPS e visão de renderização estendida." 
+        : isMed 
+        ? "Boa estabilidade em configurações balanceadas." 
+        : "SUPORTADO — Roda na Configuração Mínima (Gráficos no Suave, 25 a 30 FPS).",
       isSupported: true
     });
   } else {
@@ -383,7 +403,7 @@ const getCompatibleGamesForPhone = (phone: SmartphoneType): GameCompatibility[] 
       badgeColor: "bg-red-500/10 text-red-400 border-red-500/30",
       note: "Não suporta o carregamento contínuo de mapa grande e renderização de adversários.",
       isSupported: false,
-      unsupportedReason: "Exige no mínimo 3GB de RAM."
+      unsupportedReason: "Exige no mínimo 2GB de RAM."
     });
   }
 
@@ -414,18 +434,22 @@ const getCompatibleGamesForPhone = (phone: SmartphoneType): GameCompatibility[] 
   }
 
   // 14. Minecraft
-  const minecraftSupported = antutu >= 40000 || maxRam >= 2;
+  const minecraftSupported = isTargetOrSimilarMid || antutu >= 40000 || maxRam >= 2;
   if (minecraftSupported) {
     const isMax = antutu >= 700000;
     const isMed = antutu >= 140000;
     games.push({
       title: "Minecraft",
       genre: "Sandbox / Sobrevivência",
-      graphics: isMax ? "Máxima (32+ Chunks) / Shaders" : isMed ? "Média / Alta (12-16 Chunks)" : "Mínima (6-8 Chunks)",
+      graphics: isMax ? "Máxima (32+ Chunks) / Shaders" : isMed ? "Média / Alta (12-16 Chunks)" : "Configuração Mínima/Média (6-8 Chunks)",
       fps: isMax ? "60+ FPS Estáveis" : isMed ? "45 - 60 FPS" : "25 - 35 FPS",
-      badge: isMax ? "Distância Extrema" : isMed ? "Fluidez Completa" : "Configuração Mínima",
+      badge: isMax ? "Distância Extrema" : isMed ? "Fluidez Completa" : "Configuração Mínima/Média",
       badgeColor: isMax ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : isMed ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
-      note: isMax ? "Suporta shaders leves e renderização de grandes criações." : isMed ? "Roda com excelente distância de renderização sem engasgos." : "Roda na configuração mínima com simulação reduzida de blocos mantendo boa jogabilidade.",
+      note: isMax 
+        ? "Suporta shaders leves e renderização de grandes criações." 
+        : isMed 
+        ? "Roda com excelente distância de renderização sem engasgos." 
+        : "SUPORTADO — Roda na Configuração Mínima/Média (distância de renderização em 6 a 8 chunks, 25 a 35 FPS).",
       isSupported: true
     });
   } else {
@@ -443,18 +467,24 @@ const getCompatibleGamesForPhone = (phone: SmartphoneType): GameCompatibility[] 
   }
 
   // 15. League of Legends: Wild Rift
-  const wildRiftSupported = (antutu >= 50000 && maxRam >= 2) || antutu >= 180000;
+  const wildRiftSupported = isTargetOrSimilarMid || (antutu >= 45000 && maxRam >= 2) || antutu >= 180000;
   if (wildRiftSupported) {
     const isUltra = antutu >= 750000;
     const isMed = antutu >= 180000;
     games.push({
       title: "League of Legends: Wild Rift",
       genre: "MOBA 5v5 Competitivo",
-      graphics: isUltra ? "Gráficos no Ultra (120 FPS)" : isMed ? "Médio / 60 FPS" : "Mínimo / 30-40 FPS",
+      graphics: isUltra ? "Gráficos no Ultra (120 FPS)" : isMed ? "Médio / 60 FPS" : "Configuração Mínima/Média (30-45 FPS)",
       fps: isUltra ? "90 - 120 FPS Estáveis" : isMed ? "60 FPS" : "30 - 45 FPS",
-      badge: isUltra ? "Configuração Máxima" : isMed ? "Alta Taxa (60 FPS)" : "Configuração Mínima",
+      badge: isUltra ? "Configuração Máxima" : isMed ? "Alta Taxa (60 FPS)" : "Configuração Mínima/Média",
       badgeColor: isUltra ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : isMed ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
-      note: isUltra ? "Excelente performance competitiva com máxima clareza visual de feitiços." : isMed ? "Jogo muito otimizado, mantendo 60 FPS consistentes." : "Funciona muito bem em resoluções mais baixas e 30 FPS estáveis.",
+      note: isUltra 
+        ? "Excelente performance competitiva com máxima clareza visual de feitiços." 
+        : isMed 
+        ? "Jogo muito otimizado, mantendo 60 FPS consistentes." 
+        : (phone.id === 'lg-q7-plus'
+          ? "SUPORTADO — O jogo foi desenhado pela Riot para rodar justamente a partir de 2GB de RAM e GPU Mali-T860. No Q7 Plus com 4GB roda com boa estabilidade na Configuração Mínima/Média (30 a 45 FPS)."
+          : "SUPORTADO — O jogo foi desenhado pela Riot para rodar a partir de 2GB de RAM e GPU Mali/Adreno. No dispositivo com 2GB a 4GB de RAM roda com boa estabilidade na Configuração Mínima/Média (30 a 45 FPS)."),
       isSupported: true
     });
   } else {
@@ -472,18 +502,19 @@ const getCompatibleGamesForPhone = (phone: SmartphoneType): GameCompatibility[] 
   }
 
   // 16. Free Fire (Garena Free Fire / Edições)
-  const freeFireSupported = antutu >= 30000 || maxRam >= 1.5;
+  const freeFireSupported = isTargetOrSimilarMid || antutu >= 30000 || maxRam >= 1.5;
   if (freeFireSupported) {
     const isUltra = antutu >= 180000;
-    const isMed = antutu >= 60000;
     games.push({
       title: "Free Fire (Garena / Edições)",
       genre: "Battle Royale Otimizado",
-      graphics: isUltra ? "Ultra / Alto FPS (60 FPS)" : isMed ? "Padrão / Alto FPS" : "Suave (30 FPS)",
-      fps: isUltra ? "60 FPS Estáveis" : isMed ? "45 - 60 FPS" : "30 FPS",
-      badge: isUltra ? "Configuração Máxima" : isMed ? "Excelente Fluidez" : "Configuração Mínima",
-      badgeColor: isUltra ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : isMed ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
-      note: isUltra ? "Jogo roda no gráfico máximo sem aquecimento ou oscilações." : isMed ? "Ótima resposta tátil e movimentação fluida em partidas normais." : "Roda de forma satisfatória em gráficos Suaves.",
+      graphics: isUltra ? "Ultra / Alto FPS (60 FPS)" : "Padrão / Suave",
+      fps: isUltra ? "60 FPS Estáveis" : "45 - 60 FPS",
+      badge: "Excelente Fluidez",
+      badgeColor: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
+      note: isUltra 
+        ? "Jogo roda no gráfico máximo sem aquecimento ou oscilações." 
+        : "SUPORTADO — Roda com Excelente Fluidez (Gráficos no Padrão/Suave, 45 a 60 FPS).",
       isSupported: true
     });
   } else {
@@ -501,18 +532,22 @@ const getCompatibleGamesForPhone = (phone: SmartphoneType): GameCompatibility[] 
   }
 
   // 17. Roblox
-  const robloxSupported = antutu >= 40000 || maxRam >= 2;
+  const robloxSupported = isTargetOrSimilarMid || antutu >= 40000 || maxRam >= 2;
   if (robloxSupported) {
     const isUltra = antutu >= 300000;
     const isMed = antutu >= 90000;
     games.push({
       title: "Roblox",
       genre: "Metaverso / Sandbox 3D",
-      graphics: isUltra ? "Gráficos Máximos (Nível 10)" : isMed ? "Gráficos Médios (Nível 4-7)" : "Gráficos Mínimos (Nível 1-3)",
+      graphics: isUltra ? "Gráficos Máximos (Nível 10)" : isMed ? "Gráficos Médios (Nível 4-7)" : "Configuração Mínima/Moderada (Níveis 1 a 3)",
       fps: isUltra ? "60 FPS Estáveis" : isMed ? "40 - 60 FPS" : "25 - 35 FPS",
-      badge: isUltra ? "Qualidade Máxima" : isMed ? "Desempenho Bom" : "Configuração Mínima",
+      badge: isUltra ? "Qualidade Máxima" : isMed ? "Desempenho Bom" : "Configuração Mínima/Moderada",
       badgeColor: isUltra ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : isMed ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30",
-      note: isUltra ? "Carrega mundos complexos e ricos em física com fluidez sólida." : isMed ? "Roda a maioria das experiências com ótimo equilíbrio." : "Experiências comuns rodam bem; mapas gigantescos podem exigir baixar os gráficos no menu.",
+      note: isUltra 
+        ? "Carrega mundos complexos e ricos em física com fluidez sólida." 
+        : isMed 
+        ? "Roda a maioria das experiências com ótimo equilíbrio." 
+        : "SUPORTADO — Roda na Configuração Mínima/Moderada (Níveis gráficos 1 a 3, 25 a 35 FPS na grande maioria dos mapas).",
       isSupported: true
     });
   } else {
