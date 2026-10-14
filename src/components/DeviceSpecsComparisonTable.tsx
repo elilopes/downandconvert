@@ -315,7 +315,7 @@ export const DeviceSpecsComparisonTable: React.FC<DeviceSpecsComparisonTableProp
           getValue: (p) => {
             const res = p.specs.camera.recordingResolution;
             return {
-              display: `${res} (${res === '4K' ? '2160p' : res === '8K' ? '4320p' : '1080p'})`,
+              display: `${res} (${res === 'VGA' ? '480p VGA' : res === 'SD' ? '480p SD' : res === 'HD' ? '720p' : res === 'FHD' ? '1080p' : res === '2K' ? '1440p' : res === '4K' ? '2160p' : '4320p'})`,
               isAdvantage: res === '4K' || res === '8K'
             };
           }
